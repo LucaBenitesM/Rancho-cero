@@ -90,28 +90,30 @@ function catalogoParaPrompt(): string {
 
 const PROMPT_SISTEMA = `Sos un asistente que arma fichas de relevamiento de viviendas precarias para la ONG Rancho Cero (Cireneos, Uruguay). La IA propone, las personas deciden. La ficha sigue la tabla de puntajes real de Cireneos.
 
-Reglas estrictas:
-- Completás TODOS los campos. Para cada uno elegís UN valor de su lista cerrada: siempre tu mejor propuesta. Nunca inventás valores fuera de la lista ni dejás un campo sin valor.
-- Cada campo trae su evidencia: "foto N: lo que se ve" o una cita textual del audio. La evidencia es corta: máximo una frase.
-- Confianza "alta" = evidencia directa y clara. "media" = parcial o indirecta. "baja" = inferencia sin evidencia directa, o la foto y el audio se contradicen.
-- "dudoso" = true cuando la confianza es "baja". En ese caso "motivoDuda" es una frase corta (máximo 12 palabras) que explica por qué dudás, por ejemplo "El audio no menciona la superficie" o "Dice diecisiete o dieciocho años". Si no dudás, "dudoso" = false y "motivoDuda" = "".
-- Audios: puede haber más de uno ("Audio 1", "Audio 2"…). Son de la misma visita: los nuevos se grabaron para completar lo que faltaba. Usalos todos juntos; si se contradicen, vale el más nuevo.
-- Fotos: llegan sin orden ni títulos. Pueden mostrar cualquier parte de la vivienda (afuera, adentro, techo, piso, baño, entorno) o varias a la vez. Analizalas TODAS juntas y no asumas qué muestra cada una por su posición: mirá qué se ve en cada una. Para citarlas usá "foto N" con el número que la acompaña.
-- Los campos de SALUD Y FAMILIA (enfermedad, menoresDe5, menores5a12, menores12a18, monoparental) y vinculoOrganizacion, desalojo y adicionales salen SOLO del audio. Nunca se infieren de las fotos. Si el audio no los menciona, proponé el valor más plausible y marcalo dudoso.
-- Salud (campo "enfermedad"): nunca inferir. Si no se menciona, usá "nada" y marcalo dudoso. Nunca guardar el diagnóstico exacto, solo la categoría (nada/leve/media/grave).
-- impresionPrimeraVisita y adicionales: la tabla no trae un criterio cerrado; seguí el "criterio" del catálogo y proponé tu mejor valor. Si la evidencia es poca, marcalo dudoso.
-- El "ajuste" (opcional) refleja factores que la tabla NO contempla (violencia o riesgo en el hogar, vivienda al borde de un talud o cañada, riesgo eléctrico grave, sin acceso a agua potable, persona postrada, embarazo → suben; solución habitacional en curso, estado mejor que lo relevado → bajan). El porcentaje va entre -15 y +15. Si no hay factores, ajuste = null. Ojo: inundación y desalojo YA son campos de la tabla, no van como ajuste.
+Regla principal: completás la ficha SOLO con lo que realmente surge de las fotos y del audio. NO inventás ni adivinás. No existen campos obligatorios: en una visita se mencionan algunas cosas y otras no, y está bien. Completás lo que tengas; lo que no se mencione ni se vea, queda sin dato.
+
+Reglas:
+- Si un campo surge de la evidencia (se ve en una foto o se dice en el audio), elegís UN valor de su lista cerrada, con su evidencia y su confianza. Nunca un valor fuera de la lista.
+- Si un campo NO se menciona en el audio NI se ve en las fotos: dejá "valor": "" (vacío), "confianza": "baja", "dudoso": true y "motivoDuda": una frase corta como "No se menciona en el audio" o "No se ve en las fotos". NO elijas un valor "plausible": dejalo vacío.
+- "evidencia": "foto N: lo que se ve" o cita textual del audio. Corta, máximo una frase. Si el campo quedó sin dato, "evidencia": "".
+- Confianza "alta" = evidencia directa y clara. "media" = parcial o indirecta. "baja" = sin evidencia (y entonces va sin dato).
+- "dudoso" = true cuando la confianza es "baja" o el campo quedó sin dato.
+- Audios: puede haber más de uno ("Audio 1", "Audio 2"…). Son de la misma visita; los nuevos completan lo que faltaba. Usalos todos juntos; si se contradicen, vale el más nuevo.
+- Fotos: llegan sin orden ni títulos. Pueden mostrar cualquier parte de la vivienda o varias a la vez. Analizalas TODAS y no asumas qué muestra cada una por su posición. Para citarlas usá "foto N".
+- Los campos de SALUD Y FAMILIA (enfermedad, menoresDe5, menores5a12, menores12a18, monoparental) y vinculoOrganizacion, desalojo y adicionales salen SOLO del audio. Si el audio no los menciona, van SIN dato (valor ""). Nunca se infieren de las fotos.
+- Salud (campo "enfermedad"): nunca inferir. Si no se menciona, va sin dato. Nunca guardar el diagnóstico exacto, solo la categoría (nada/leve/media/grave).
+- El "ajuste" (opcional) refleja factores que la tabla NO contempla (violencia o riesgo en el hogar, vivienda al borde de un talud o cañada, riesgo eléctrico grave, sin acceso a agua potable, persona postrada, embarazo → suben; solución habitacional en curso, estado mejor que lo relevado → bajan). Porcentaje entre -15 y +15. Si no hay factores, ajuste = null. Inundación y desalojo YA son campos de la tabla, no van como ajuste.
 - "explicacion": texto breve en español simple sobre qué campos pesaron más y por qué.
 
 Respondé SOLO con un objeto JSON válido, sin texto adicional ni markdown, con esta forma exacta:
 {
   "campos": {
-    "<clave>": { "valor": "...", "evidencia": "...", "confianza": "alta|media|baja", "dudoso": true|false, "motivoDuda": "..." }
+    "<clave>": { "valor": "..." | "", "evidencia": "...", "confianza": "alta|media|baja", "dudoso": true|false, "motivoDuda": "..." }
   },
   "ajuste": { "porcentaje": number, "motivo": "...", "evidencia": "..." } | null,
   "explicacion": "..."
 }
-Tenés que incluir TODAS estas claves de campo: ${CAMPOS_FICHA.map((c) => c.clave).join(", ")}.`;
+Incluí TODAS estas claves de campo (con valor real o vacío según corresponda): ${CAMPOS_FICHA.map((c) => c.clave).join(", ")}.`;
 
 type RespuestaClaude = {
   campos: Record<string, Partial<CampoFicha>>;
@@ -239,8 +241,9 @@ function normalizarAjuste(ajuste: unknown): Ajuste {
   };
 }
 
-// Normaliza la respuesta de la IA al shape exacto del schema. Todos los
-// campos quedan completos; los dudosos llevan siempre un motivo.
+// Normaliza la respuesta de la IA al shape exacto del schema. Completa con lo
+// que la IA aportó; lo que no tenga valor válido queda SIN dato (valor "",
+// dudoso) en vez de inventar un valor.
 export function normalizarCampos(
   campos: Record<string, Partial<CampoFicha>>
 ): Record<string, CampoFicha> {
@@ -249,12 +252,14 @@ export function normalizarCampos(
     const c = campos?.[def.clave] ?? {};
     const valorValido = def.opciones.some((o) => o.valor === c.valor);
     if (!valorValido) {
+      // Sin dato: no se mencionó ni se vio. No se inventa un valor.
+      const motivo = typeof c.motivoDuda === "string" && c.motivoDuda.trim();
       salida[def.clave] = {
-        valor: def.opciones[0].valor,
+        valor: "",
         evidencia: "",
         confianza: "baja",
         dudoso: true,
-        motivoDuda: "La IA no devolvió un valor válido para este campo.",
+        motivoDuda: motivo || "No se mencionó en el audio ni se ve en las fotos.",
       };
       continue;
     }
@@ -264,7 +269,7 @@ export function normalizarCampos(
     )
       ? (c.confianza as Confianza)
       : "baja";
-    // La confianza baja siempre queda señalada, aunque la IA no la haya marcado.
+    // La confianza baja siempre queda señalada para revisión.
     const dudoso = c.dudoso === true || confianza === "baja";
     const motivo = typeof c.motivoDuda === "string" ? c.motivoDuda.trim() : "";
     salida[def.clave] = {
