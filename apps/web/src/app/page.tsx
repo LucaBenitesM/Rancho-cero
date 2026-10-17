@@ -2,36 +2,31 @@
 
 import { api } from "@rancho-cero/backend/convex/_generated/api";
 import { useQuery } from "convex/react";
-import {
-  ArrowRight,
-  Heart,
-  HandHeart,
-  Home as HomeIcon,
-  ListOrdered,
-  ShieldCheck,
-  Sparkles,
-} from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 const ROLES = [
   {
     href: "/dashboard",
-    icon: ShieldCheck,
     titulo: "Soy coordinador",
     desc: "Reviso el ranking, acepto ajustes y apruebo historias y campañas.",
   },
   {
     href: "/dashboard",
-    icon: HandHeart,
     titulo: "Soy voluntario",
     desc: "Cargo visitas con fotos y audio, y reviso lo que la IA marcó como dudoso.",
   },
   {
     href: "/campana",
-    icon: Heart,
     titulo: "Quiero donar",
-    desc: "Veo campañas e impacto y colaboro. No necesitás iniciar sesión.",
+    desc: "Conocé las campañas, el impacto y colaborá. No necesitás iniciar sesión.",
   },
+] as const;
+
+const IMPACTO = [
+  { valor: "1 de 2", detalle: "niños crecen en hogares con precariedad habitacional" },
+  { valor: "US$ 15.000", detalle: "cuesta reemplazar una vivienda por una casa digna" },
+  { valor: "100", detalle: "hogares como meta del programa Rancho Cero" },
 ] as const;
 
 export default function Home() {
@@ -39,83 +34,91 @@ export default function Home() {
   const conectado = healthCheck === "OK";
 
   return (
-    <div className="min-h-full bg-emerald-50/30 dark:bg-transparent">
-      <div className="mx-auto w-full max-w-3xl px-4 py-10">
-        {/* Hero */}
-        <section className="text-center">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-600/30 bg-emerald-600/10 px-3 py-1 text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
-            <Sparkles className="h-3.5 w-3.5" />
-            Cireneos · Uruguay · hackathon de IA
-          </span>
-          <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
-            De una visita a un{" "}
-            <span className="text-emerald-700 dark:text-emerald-500">hogar digno</span>
+    <div className="min-h-full bg-background">
+      {/* Hero */}
+      <section className="border-b border-border/60 bg-muted/30">
+        <div className="mx-auto w-full max-w-5xl px-6 py-16 sm:py-20">
+          <p className="text-xs font-medium uppercase tracking-[0.2em] text-teal-700 dark:text-teal-500">
+            Cireneos · Uruguay
+          </p>
+          <h1 className="mt-4 max-w-2xl text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl">
+            Por un Uruguay con vivienda digna.
           </h1>
-          <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">
-            El voluntario saca fotos y graba un audio; la IA lo convierte en un caso completo,
-            priorizado y listo para buscar financiamiento. Reemplazamos viviendas precarias por
-            casas container de <span className="font-semibold text-foreground">US$ 15.000</span>.
+          <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground">
+            El voluntario toma fotos y graba un audio de la visita; nuestra herramienta lo convierte
+            en un caso completo, priorizado y listo para buscar financiamiento. La tecnología
+            propone, las personas deciden.
           </p>
 
-          {/* Accesos principales */}
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5">
-            <Link
-              href="/ranking"
-              className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700"
-            >
-              <ListOrdered className="h-4 w-4" />
-              Ver ranking de urgencia
-            </Link>
+          <div className="mt-8 flex flex-wrap items-center gap-3">
             <Link
               href="/campana"
-              className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-semibold transition-colors hover:border-emerald-500/40 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20"
+              className="inline-flex items-center gap-2 rounded-md bg-teal-700 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-teal-800"
             >
-              <Heart className="h-4 w-4 text-emerald-600" />
-              Ver campaña
+              Quiero colaborar
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link
+              href="/ranking"
+              className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-5 py-3 text-sm font-medium transition-colors hover:bg-muted"
+            >
+              Ver el ranking de urgencia
             </Link>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Tarjetas de rol */}
-        <section className="mt-10 grid gap-3 sm:grid-cols-3">
-          {ROLES.map(({ href, icon: Icon, titulo, desc }) => (
+      {/* Franja de impacto */}
+      <section className="border-b border-border/60">
+        <div className="mx-auto grid w-full max-w-5xl grid-cols-1 divide-y divide-border/60 px-6 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+          {IMPACTO.map((it) => (
+            <div key={it.detalle} className="py-8 sm:px-8 sm:first:pl-0 sm:last:pr-0">
+              <div className="text-3xl font-semibold tracking-tight text-teal-800 dark:text-teal-400">
+                {it.valor}
+              </div>
+              <p className="mt-1.5 text-sm leading-snug text-muted-foreground">{it.detalle}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Roles */}
+      <section className="mx-auto w-full max-w-5xl px-6 py-16">
+        <h2 className="text-sm font-medium uppercase tracking-[0.15em] text-muted-foreground">
+          Cómo participás
+        </h2>
+        <div className="mt-6 grid gap-px overflow-hidden rounded-lg border border-border/60 bg-border/60 sm:grid-cols-3">
+          {ROLES.map(({ href, titulo, desc }) => (
             <Link
               key={titulo}
               href={href}
-              className="group flex flex-col rounded-2xl border border-border/60 bg-card p-4 transition-all hover:border-emerald-500/40 hover:shadow-sm"
+              className="group flex flex-col bg-card p-6 transition-colors hover:bg-muted/40"
             >
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600/10 text-emerald-600 transition-colors group-hover:bg-emerald-600 group-hover:text-white">
-                <Icon className="h-5 w-5" />
-              </span>
-              <h3 className="mt-3 flex items-center gap-1 text-sm font-semibold">
+              <h3 className="flex items-center justify-between text-base font-medium">
                 {titulo}
-                <ArrowRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100" />
+                <ArrowRight className="h-4 w-4 text-muted-foreground/50 transition-all group-hover:translate-x-0.5 group-hover:text-teal-700" />
               </h3>
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{desc}</p>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{desc}</p>
             </Link>
           ))}
-        </section>
+        </div>
 
-        {/* Pie: principio + estado */}
-        <section className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
-          <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <HomeIcon className="h-3.5 w-3.5 text-emerald-600" />
-            La IA propone, las personas deciden · datos simulados
-          </p>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-card px-2.5 py-1 text-[11px] text-muted-foreground">
+        <div className="mt-10 flex flex-col items-start gap-3 border-t border-border/60 pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+          <span>La IA propone, las personas deciden · datos simulados para la demo</span>
+          <span className="inline-flex items-center gap-1.5">
             <span
-              className={`h-2 w-2 rounded-full ${
+              className={`h-1.5 w-1.5 rounded-full ${
                 conectado
-                  ? "bg-emerald-500"
+                  ? "bg-teal-600"
                   : healthCheck === undefined
                     ? "animate-pulse bg-muted-foreground/50"
                     : "bg-red-500"
               }`}
             />
-            {healthCheck === undefined ? "Conectando…" : conectado ? "Backend conectado" : "Sin backend"}
+            {healthCheck === undefined ? "Conectando…" : conectado ? "Sistema conectado" : "Sin conexión"}
           </span>
-        </section>
-      </div>
+        </div>
+      </section>
     </div>
   );
 }

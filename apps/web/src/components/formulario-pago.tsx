@@ -19,8 +19,8 @@ import { useEffect, useState } from "react";
 //    Los datos de tarjeta deben ir al proveedor de pago, NO a nuestro backend.
 // ─────────────────────────────────────────────────────────────
 
-function formatoUsd(n: number): string {
-  return n.toLocaleString("es-UY", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+function formatoPesos(n: number): string {
+  return n.toLocaleString("es-UY", { style: "currency", currency: "UYU", maximumFractionDigits: 0 });
 }
 
 // Luhn: valida que el número de tarjeta sea plausible (formato, no que exista).
@@ -131,8 +131,8 @@ export function FormularioPago({
         {/* Cabecera */}
         <div className="flex items-center justify-between border-b border-border/60 px-5 py-3.5">
           <div className="flex items-center gap-2">
-            <CreditCard className="h-4 w-4 text-emerald-600" />
-            <span className="text-sm font-semibold">Donar {formatoUsd(monto)}</span>
+            <CreditCard className="h-4 w-4 text-teal-600" />
+            <span className="text-sm font-semibold">Donar {formatoPesos(monto)}</span>
           </div>
           <button
             type="button"
@@ -162,7 +162,7 @@ export function FormularioPago({
               onChange={(e) => setNombre(e.target.value)}
               placeholder="Como figura en la tarjeta"
               autoComplete="off"
-              className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/40"
+              className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500/40"
             />
           </Campo>
 
@@ -176,7 +176,7 @@ export function FormularioPago({
               className={`w-full rounded-xl border bg-background px-3 py-2.5 text-sm tabular-nums outline-none focus:ring-1 ${
                 intentado && errores.numero
                   ? "border-red-400 focus:ring-red-400/40"
-                  : "border-border focus:border-emerald-500 focus:ring-emerald-500/40"
+                  : "border-border focus:border-teal-500 focus:ring-teal-500/40"
               }`}
             />
           </Campo>
@@ -192,7 +192,7 @@ export function FormularioPago({
                 className={`w-full rounded-xl border bg-background px-3 py-2.5 text-sm tabular-nums outline-none focus:ring-1 ${
                   intentado && errores.vencimiento
                     ? "border-red-400 focus:ring-red-400/40"
-                    : "border-border focus:border-emerald-500 focus:ring-emerald-500/40"
+                    : "border-border focus:border-teal-500 focus:ring-teal-500/40"
                 }`}
               />
             </Campo>
@@ -206,7 +206,7 @@ export function FormularioPago({
                 className={`w-full rounded-xl border bg-background px-3 py-2.5 text-sm tabular-nums outline-none focus:ring-1 ${
                   intentado && errores.cvc
                     ? "border-red-400 focus:ring-red-400/40"
-                    : "border-border focus:border-emerald-500 focus:ring-emerald-500/40"
+                    : "border-border focus:border-teal-500 focus:ring-teal-500/40"
                 }`}
               />
             </Campo>
@@ -216,7 +216,7 @@ export function FormularioPago({
             type="button"
             onClick={handleConfirmar}
             disabled={procesando}
-            className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:pointer-events-none disabled:opacity-50"
+            className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl bg-teal-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-teal-700 disabled:pointer-events-none disabled:opacity-50"
           >
             {procesando ? (
               <>
@@ -226,7 +226,7 @@ export function FormularioPago({
             ) : (
               <>
                 <Lock className="h-3.5 w-3.5" />
-                Donar {formatoUsd(monto)} (demo)
+                Donar {formatoPesos(monto)} (demo)
               </>
             )}
           </button>

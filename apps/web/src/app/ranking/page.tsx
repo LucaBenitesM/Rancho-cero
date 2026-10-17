@@ -3,7 +3,7 @@
 import { api } from "@rancho-cero/backend/convex/_generated/api";
 import type { Id } from "@rancho-cero/backend/convex/_generated/dataModel";
 import { useQuery } from "convex/react";
-import { ChevronRight, Info, ListOrdered, MapPin, TrendingUp } from "lucide-react";
+import { ChevronRight, Info, MapPin, TrendingUp } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { FichaCaso } from "@/components/ficha-caso";
@@ -16,12 +16,12 @@ const OPCIONES_ORDEN: { id: Orden; label: string }[] = [
   { id: "alfabetico", label: "A–Z" },
 ];
 
-// Color del puntaje según severidad (rojo = más urgente, verde = menos).
+// Color del puntaje según severidad (rojo = más urgente, teal = menos).
 function tonoPuntaje(p: number): { text: string; bar: string } {
   if (p >= 90) return { text: "text-red-600 dark:text-red-400", bar: "bg-red-500" };
   if (p >= 65) return { text: "text-orange-600 dark:text-orange-400", bar: "bg-orange-500" };
-  if (p >= 40) return { text: "text-emerald-700 dark:text-emerald-400", bar: "bg-emerald-600" };
-  return { text: "text-emerald-600 dark:text-emerald-400", bar: "bg-emerald-400" };
+  if (p >= 40) return { text: "text-teal-800 dark:text-teal-400", bar: "bg-teal-700" };
+  return { text: "text-teal-700 dark:text-teal-500", bar: "bg-teal-500" };
 }
 
 export default function RankingPage() {
@@ -46,35 +46,31 @@ export default function RankingPage() {
     filas && filas.length > 0 ? Math.max(...filas.map((f) => f.puntajeFinal)) : 100;
 
   return (
-    <div className="min-h-full bg-emerald-50/30 dark:bg-transparent">
-      <div className="mx-auto w-full max-w-2xl px-4 py-6">
+    <div className="min-h-full bg-background">
+      <div className="mx-auto w-full max-w-2xl px-6 py-12">
         {/* Encabezado */}
-        <header className="mb-4">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-600 text-white">
-              <ListOrdered className="h-5 w-5" />
-            </span>
-            <div>
-              <h1 className="text-lg font-semibold tracking-tight">Ranking de urgencia</h1>
-              <p className="text-xs text-muted-foreground">
-                Familias priorizadas por la tabla de Cireneos
-              </p>
-            </div>
-          </div>
+        <header className="mb-6">
+          <p className="text-xs font-medium uppercase tracking-[0.2em] text-teal-700 dark:text-teal-500">
+            Priorización
+          </p>
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight">Ranking de urgencia</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Familias priorizadas según la tabla de puntajes de Cireneos.
+          </p>
         </header>
 
         {/* Barra de orden */}
         <div className="mb-3 flex items-center justify-between gap-2">
           <span className="text-xs font-medium text-muted-foreground">Ordenar por</span>
-          <div className="inline-flex rounded-lg border border-border/70 bg-card p-0.5">
+          <div className="inline-flex rounded-md border border-border/70 bg-card p-0.5">
             {OPCIONES_ORDEN.map((op) => (
               <button
                 key={op.id}
                 type="button"
                 onClick={() => setOrden(op.id)}
-                className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
+                className={`rounded px-3 py-1 text-xs font-medium transition-colors ${
                   orden === op.id
-                    ? "bg-emerald-600 text-white"
+                    ? "bg-teal-700 text-white dark:bg-teal-600"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -85,8 +81,8 @@ export default function RankingPage() {
         </div>
 
         {/* Nota */}
-        <div className="mb-3 flex items-center gap-2 rounded-lg border border-border/60 bg-card/70 px-3 py-2 text-[11px] text-muted-foreground">
-          <Info className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
+        <div className="mb-3 flex items-center gap-2 rounded-md border border-border/60 bg-muted/30 px-3 py-2 text-[11px] text-muted-foreground">
+          <Info className="h-3.5 w-3.5 shrink-0 text-teal-700 dark:text-teal-500" />
           <span>
             Datos simulados · puntaje calculado en código (FICHA.md). Tocá una familia para ver su
             ficha.
@@ -122,7 +118,7 @@ export default function RankingPage() {
                     key={fila.id}
                     type="button"
                     onClick={() => setAbierto(fila.id as Id<"casos">)}
-                    className="group flex w-full items-center gap-3 rounded-xl border border-border/60 bg-card p-3.5 text-left transition-all hover:border-emerald-500/50 hover:shadow-sm focus-visible:ring-2 focus-visible:ring-emerald-500/40 focus-visible:outline-none"
+                    className="group flex w-full items-center gap-3 rounded-xl border border-border/60 bg-card p-3.5 text-left transition-all hover:border-teal-600/50 hover:shadow-sm focus-visible:ring-2 focus-visible:ring-teal-600/40 focus-visible:outline-none"
                     aria-label={`Abrir ficha de ${fila.alias}, puntaje ${fila.puntajeFinal}`}
                   >
                     {/* Puesto */}
@@ -131,7 +127,7 @@ export default function RankingPage() {
                         <span
                           className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
                             puesto <= 3
-                              ? "bg-emerald-600 text-white"
+                              ? "bg-teal-700 text-white"
                               : "bg-muted text-muted-foreground"
                           }`}
                         >
@@ -151,7 +147,7 @@ export default function RankingPage() {
                           {fila.barrio}
                         </span>
                         {fila.ajusteAplicado !== 0 && (
-                          <span className="flex items-center gap-0.5 rounded-full bg-emerald-600/10 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700 dark:text-emerald-400">
+                          <span className="flex items-center gap-0.5 rounded-full bg-teal-700/10 px-1.5 py-0.5 text-[10px] font-medium text-teal-700 dark:text-teal-400">
                             <TrendingUp className="h-2.5 w-2.5" />
                             {fila.ajusteAplicado > 0 ? "+" : ""}
                             {Math.round(fila.ajusteAplicado * 100)}%
@@ -177,7 +173,7 @@ export default function RankingPage() {
                         {fila.puntajeFinal}
                       </div>
                       <div className="text-[10px] text-muted-foreground">{fila.total}/135</div>
-                      <ChevronRight className="mt-0.5 h-4 w-4 text-muted-foreground/40 transition-transform group-hover:translate-x-0.5 group-hover:text-emerald-600" />
+                      <ChevronRight className="mt-0.5 h-4 w-4 text-muted-foreground/40 transition-transform group-hover:translate-x-0.5 group-hover:text-teal-700" />
                     </div>
                   </button>
                 );
