@@ -10,9 +10,6 @@ basadas en la tabla de puntajes real de Cireneos ([docs/tabla_puntajes.xlsx](doc
 18 campos en 5 bloques, `peso × puntuación`, máximo 135. La fórmula vive en un
 solo lugar del código (`packages/backend/convex/ficha.ts`).
 
-> La tabla de [FICHA.md](FICHA.md) dice "20 campos" en la fila del total, pero
-> la tabla lista 18 (4 + 3 + 2 + 5 + 4), y la app usa esos 18.
-
 ---
 
 ## La idea en una frase
@@ -332,4 +329,4 @@ aprobar. Decir "una segunda IA revisa y marca cualquier dato identificable".
 - [ ] Grabar el video de toda la demo (respaldo).
 - [ ] Enlace desde el ranking a "Aprobar historia".
 - [ ] Permisos por rol y sacar la opción de crear cuenta.
-- [ ] Corregir "20 campos" → 18 en la fila del total de [FICHA.md](FICHA.md).
+- [x] Corregir "20 campos" → 18 en la fila del total de [FICHA.md](FICHA.md).
