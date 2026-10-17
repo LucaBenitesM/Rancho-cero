@@ -6,77 +6,92 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * Identidad visual de Cireneos / Rancho Cero.
+ * Paleta base (usar estas variables, no colores sueltos en los componentes):
+ *   oliva   #545637  header, footer y secciones destacadas (texto blanco)
+ *   salvia  #8E9460  fondos suaves, bordes y badges
+ *   manteca #F5DE8A  acento: botón principal y link activo del menú
+ *   crema   #FAF8F2  fondo general
+ *   tinta   #1F1F1A  texto
+ * Solo modo claro: el modo oscuro se sacó para mantener la identidad.
+ */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.58 0.22 27);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.809 0.105 251.813);
-  --chart-2: oklch(0.623 0.214 259.815);
-  --chart-3: oklch(0.546 0.245 262.881);
-  --chart-4: oklch(0.488 0.243 264.376);
-  --chart-5: oklch(0.424 0.199 265.638);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
+  --oliva: #545637;
+  --oliva-oscuro: #42442b;
+  --salvia: #8e9460;
+  --salvia-suave: #eceedf;
+  --manteca: #f5de8a;
+  --manteca-oscuro: #ecce62;
+  --crema: #faf8f2;
+  --tinta: #1f1f1a;
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.87 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.371 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.809 0.105 251.813);
-  --chart-2: oklch(0.623 0.214 259.815);
-  --chart-3: oklch(0.546 0.245 262.881);
-  --chart-4: oklch(0.488 0.243 264.376);
-  --chart-5: oklch(0.424 0.199 265.638);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* Urgencia (ranking, ficha e historias): terracota -> mostaza -> salvia.
+     El color "relleno" es para barras y puntos; el "texto" pasa contraste AA sobre crema/blanco. */
+  --urgencia-critica: #b0492b;
+  --urgencia-critica-texto: #8c3a22;
+  --urgencia-alta: #d17f3a;
+  --urgencia-alta-texto: #94501b;
+  --urgencia-media: #d6a93c;
+  --urgencia-media-texto: #765510;
+  --urgencia-baja: #8e9460;
+  --urgencia-baja-texto: #4f5530;
+
+  --background: var(--crema);
+  --foreground: var(--tinta);
+  --card: #ffffff;
+  --card-foreground: var(--tinta);
+  --popover: #ffffff;
+  --popover-foreground: var(--tinta);
+  --primary: var(--oliva);
+  --primary-foreground: #ffffff;
+  --secondary: var(--salvia-suave);
+  --secondary-foreground: var(--oliva-oscuro);
+  --muted: #f1efe6;
+  --muted-foreground: #5f5f55;
+  --accent: var(--manteca);
+  --accent-foreground: var(--tinta);
+  --destructive: #b0392b;
+  --border: #e3e1d3;
+  --input: #d6d4c3;
+  --ring: var(--salvia);
+  --chart-1: var(--oliva);
+  --chart-2: var(--salvia);
+  --chart-3: var(--manteca);
+  --chart-4: var(--urgencia-alta);
+  --chart-5: var(--urgencia-critica);
+  --radius: 0.75rem;
+  --sidebar: var(--crema);
+  --sidebar-foreground: var(--tinta);
+  --sidebar-primary: var(--oliva);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: var(--salvia-suave);
+  --sidebar-accent-foreground: var(--oliva-oscuro);
+  --sidebar-border: #e3e1d3;
+  --sidebar-ring: var(--salvia);
 }
 
 @theme inline {
-  --font-sans: "Inter Variable", sans-serif;
+  /* Las fuentes las carga next/font en apps/web/src/app/layout.tsx. */
+  --font-sans: var(--font-open-sans), "Open Sans", system-ui, sans-serif;
+  --font-heading: var(--font-montserrat), "Montserrat", system-ui, sans-serif;
+  --font-pincel: var(--font-permanent-marker), "Permanent Marker", cursive;
+  --color-oliva: var(--oliva);
+  --color-oliva-oscuro: var(--oliva-oscuro);
+  --color-salvia: var(--salvia);
+  --color-salvia-suave: var(--salvia-suave);
+  --color-manteca: var(--manteca);
+  --color-manteca-oscuro: var(--manteca-oscuro);
+  --color-crema: var(--crema);
+  --color-tinta: var(--tinta);
+  --color-urgencia-critica: var(--urgencia-critica);
+  --color-urgencia-critica-texto: var(--urgencia-critica-texto);
+  --color-urgencia-alta: var(--urgencia-alta);
+  --color-urgencia-alta-texto: var(--urgencia-alta-texto);
+  --color-urgencia-media: var(--urgencia-media);
+  --color-urgencia-media-texto: var(--urgencia-media-texto);
+  --color-urgencia-baja: var(--urgencia-baja);
+  --color-urgencia-baja-texto: var(--urgencia-baja-texto);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -126,5 +141,12 @@
   }
   html {
     @apply font-sans;
+  }
+  h1,
+  h2,
+  h3,
+  .cn-font-heading {
+    /* Variable de next/font directa: las de @theme inline no existen en runtime. */
+    font-family: var(--font-montserrat), "Montserrat", system-ui, sans-serif;
   }
 }

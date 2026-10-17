@@ -17,12 +17,12 @@ const OPCIONES_ORDEN: { id: Orden; label: string }[] = [
   { id: "alfabetico", label: "A–Z" },
 ];
 
-// Color del puntaje según severidad (rojo = más urgente, teal = menos).
+// Color del puntaje según severidad (terracota = más urgente, salvia = menos).
 function tonoPuntaje(p: number): { text: string; bar: string } {
-  if (p >= 90) return { text: "text-red-600 dark:text-red-400", bar: "bg-red-500" };
-  if (p >= 65) return { text: "text-orange-600 dark:text-orange-400", bar: "bg-orange-500" };
-  if (p >= 40) return { text: "text-green-800 dark:text-green-400", bar: "bg-green-700" };
-  return { text: "text-green-700 dark:text-green-500", bar: "bg-green-500" };
+  if (p >= 90) return { text: "text-urgencia-critica-texto", bar: "bg-urgencia-critica" };
+  if (p >= 65) return { text: "text-urgencia-alta-texto", bar: "bg-urgencia-alta" };
+  if (p >= 40) return { text: "text-urgencia-media-texto", bar: "bg-urgencia-media" };
+  return { text: "text-urgencia-baja-texto", bar: "bg-urgencia-baja" };
 }
 
 function Ranking() {
@@ -48,31 +48,32 @@ function Ranking() {
 
   return (
     <div className="min-h-full bg-background">
-      <div className="mx-auto w-full max-w-2xl px-6 py-12">
+      <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
         {/* Encabezado */}
         <header className="mb-6">
-          <p className="text-xs font-medium uppercase tracking-[0.2em] text-green-700 dark:text-green-500">
-            Priorización
+          <p className="font-heading text-xs font-semibold tracking-[0.2em] text-oliva uppercase">
+            Priorizá
           </p>
-          <h1 className="mt-2 text-2xl font-semibold tracking-tight">Ranking de urgencia</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <h1 className="mt-1 text-3xl font-bold text-oliva-oscuro">Ranking de urgencia</h1>
+          <p className="mt-2 text-base text-muted-foreground">
             Familias priorizadas según la tabla de puntajes de Cireneos.
           </p>
         </header>
 
         {/* Barra de orden */}
-        <div className="mb-3 flex items-center justify-between gap-2">
-          <span className="text-xs font-medium text-muted-foreground">Ordenar por</span>
-          <div className="inline-flex rounded-md border border-border/70 bg-card p-0.5">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <span className="text-sm font-semibold text-muted-foreground">Ordenar por</span>
+          <div className="inline-flex rounded-full border border-border bg-card p-1 shadow-sm">
             {OPCIONES_ORDEN.map((op) => (
               <button
                 key={op.id}
                 type="button"
                 onClick={() => setOrden(op.id)}
-                className={`rounded px-3 py-1 text-xs font-medium transition-colors ${
+                aria-pressed={orden === op.id}
+                className={`rounded-full px-4 py-2 text-xs font-semibold transition-colors ${
                   orden === op.id
-                    ? "bg-green-700 text-white dark:bg-green-600"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "bg-oliva text-white"
+                    : "text-muted-foreground hover:text-oliva-oscuro"
                 }`}
               >
                 {op.label}
@@ -82,8 +83,8 @@ function Ranking() {
         </div>
 
         {/* Nota */}
-        <div className="mb-3 flex items-center gap-2 rounded-md border border-border/60 bg-muted/30 px-3 py-2 text-[11px] text-muted-foreground">
-          <Info className="h-3.5 w-3.5 shrink-0 text-green-700 dark:text-green-500" />
+        <div className="mb-4 flex items-center gap-2.5 rounded-2xl border border-salvia/30 bg-salvia-suave/60 px-4 py-3 text-xs text-oliva-oscuro">
+          <Info className="size-4 shrink-0 text-oliva" />
           <span>
             Datos simulados · puntaje calculado en código (FICHA.md). Tocá una familia para ver su
             ficha.
@@ -95,12 +96,12 @@ function Ranking() {
             {[0, 1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="h-[88px] animate-pulse rounded-xl border border-border/60 bg-muted/40"
+                className="h-[96px] animate-pulse rounded-2xl border border-border/60 bg-muted/60"
               />
             ))}
           </div>
         ) : ordenadas.length === 0 ? (
-          <div className="rounded-xl border border-border/60 bg-card p-6 text-center text-sm text-muted-foreground">
+          <div className="rounded-2xl border border-border/80 bg-card p-8 text-center text-sm text-muted-foreground shadow-sm">
             No hay casos cargados todavía.
             <br />
             Corré <code className="text-xs">npx convex run casos:seed</code> en{" "}
@@ -109,7 +110,7 @@ function Ranking() {
         ) : (
           <>
             {/* Contenedor con scroll: ~4 casos visibles, el resto deslizando */}
-            <div className="max-h-[560px] space-y-2.5 overflow-y-auto rounded-xl pr-1 [scrollbar-width:thin]">
+            <div className="max-h-[600px] space-y-3 overflow-y-auto rounded-2xl p-1 [scrollbar-width:thin]">
               {ordenadas.map((fila, i) => {
                 const tono = tonoPuntaje(fila.puntajeFinal);
                 const ancho = Math.max(4, (fila.puntajeFinal / maxFinal) * 100);
@@ -119,17 +120,17 @@ function Ranking() {
                     key={fila.id}
                     type="button"
                     onClick={() => setAbierto(fila.id as Id<"casos">)}
-                    className="group flex w-full items-center gap-3 rounded-xl border border-border/60 bg-card p-3.5 text-left transition-all hover:border-green-600/50 hover:shadow-sm focus-visible:ring-2 focus-visible:ring-green-600/40 focus-visible:outline-none"
+                    className="group flex w-full items-center gap-3 rounded-2xl border border-border/80 bg-card p-4 text-left shadow-[0_1px_2px_rgb(31_31_26/0.04)] transition-all hover:border-salvia hover:shadow-md focus-visible:ring-3 focus-visible:ring-salvia/50 focus-visible:outline-none"
                     aria-label={`Abrir ficha de ${fila.alias}, puntaje ${fila.puntajeFinal}`}
                   >
                     {/* Puesto */}
                     <div className="flex w-7 shrink-0 justify-center">
                       {puesto !== null ? (
                         <span
-                          className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
+                          className={`flex size-7 items-center justify-center rounded-full font-heading text-xs font-bold ${
                             puesto <= 3
-                              ? "bg-green-700 text-white"
-                              : "bg-muted text-muted-foreground"
+                              ? "bg-oliva text-white"
+                              : "bg-salvia-suave text-oliva-oscuro"
                           }`}
                         >
                           {puesto}
@@ -141,14 +142,14 @@ function Ranking() {
 
                     {/* Identidad + barra + explicación */}
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="truncate text-sm font-semibold">{fila.alias}</span>
-                        <span className="flex items-center gap-0.5 truncate text-[11px] text-muted-foreground">
-                          <MapPin className="h-3 w-3" />
+                      <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
+                        <span className="font-heading text-sm font-bold">{fila.alias}</span>
+                        <span className="flex min-w-0 items-center gap-0.5 text-xs text-muted-foreground">
+                          <MapPin className="size-3 shrink-0" />
                           {fila.barrio}
                         </span>
                         {fila.ajusteAplicado !== 0 && (
-                          <span className="flex items-center gap-0.5 rounded-full bg-green-700/10 px-1.5 py-0.5 text-[10px] font-medium text-green-700 dark:text-green-400">
+                          <span className="flex shrink-0 items-center gap-0.5 rounded-full bg-salvia-suave px-1.5 py-0.5 text-[10px] font-semibold text-oliva-oscuro">
                             <TrendingUp className="h-2.5 w-2.5" />
                             {fila.ajusteAplicado > 0 ? "+" : ""}
                             {Math.round(fila.ajusteAplicado * 100)}%
@@ -156,33 +157,40 @@ function Ranking() {
                         )}
                       </div>
 
-                      <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                      <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
                         <div
                           className={`h-full rounded-full ${tono.bar} transition-all`}
                           style={{ width: `${ancho}%` }}
                         />
                       </div>
 
-                      <p className="mt-1.5 line-clamp-1 text-[11px] leading-snug text-muted-foreground">
+                      <p className="mt-1.5 line-clamp-1 text-xs leading-snug text-muted-foreground">
                         {fila.explicacion}
                       </p>
                     </div>
 
                     {/* Puntaje */}
                     <div className="flex shrink-0 flex-col items-end">
-                      <div className={`text-xl font-bold tabular-nums ${tono.text}`}>
+                      <div className={`font-heading text-2xl font-extrabold tabular-nums ${tono.text}`}>
                         {fila.puntajeFinal}
                       </div>
                       <div className="text-[10px] text-muted-foreground">{fila.total}/135</div>
-                      <ChevronRight className="mt-0.5 h-4 w-4 text-muted-foreground/40 transition-transform group-hover:translate-x-0.5 group-hover:text-green-700" />
+                      <ChevronRight className="mt-0.5 size-4 text-muted-foreground/50 transition-transform group-hover:translate-x-0.5 group-hover:text-oliva" />
                     </div>
                   </button>
                 );
               })}
             </div>
-            <p className="mt-2 text-center text-[10px] text-muted-foreground">
+            <p className="mt-3 text-center text-xs text-muted-foreground">
               {ordenadas.length} familias · deslizá para ver todas
             </p>
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+              <span className="font-semibold">Urgencia:</span>
+              <span className="inline-flex items-center gap-1.5"><span className="size-2.5 rounded-full bg-urgencia-critica" /> Muy alta</span>
+              <span className="inline-flex items-center gap-1.5"><span className="size-2.5 rounded-full bg-urgencia-alta" /> Alta</span>
+              <span className="inline-flex items-center gap-1.5"><span className="size-2.5 rounded-full bg-urgencia-media" /> Media</span>
+              <span className="inline-flex items-center gap-1.5"><span className="size-2.5 rounded-full bg-urgencia-baja" /> Baja</span>
+            </div>
           </>
         )}
       </div>

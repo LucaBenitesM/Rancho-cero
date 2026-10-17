@@ -67,11 +67,11 @@ async function comprimirImagen(file: File): Promise<File> {
   }
 }
 
-// Etiqueta y color para la confianza de un campo (los dudosos van en ámbar).
+// Etiqueta y color para la confianza de un campo (los dudosos van en terracota).
 function etiquetaConfianza(c: CampoFicha) {
-  if (c.dudoso) return { texto: "Revisar", clase: "bg-amber-500/15 text-amber-700" };
-  if (c.confianza === "alta") return { texto: "Confianza alta", clase: "bg-green-500/15 text-green-600" };
-  if (c.confianza === "media") return { texto: "Confianza media", clase: "bg-blue-500/15 text-blue-600" };
+  if (c.dudoso) return { texto: "Revisar", clase: "bg-urgencia-alta/15 text-urgencia-alta-texto" };
+  if (c.confianza === "alta") return { texto: "Confianza alta", clase: "bg-salvia-suave text-oliva-oscuro" };
+  if (c.confianza === "media") return { texto: "Confianza media", clase: "bg-manteca/45 text-urgencia-media-texto" };
   return { texto: "Confianza baja", clase: "bg-muted text-muted-foreground" };
 }
 
@@ -300,10 +300,13 @@ function NuevaVisita() {
   const faltan = datosQueFaltan(clavesFaltantes);
 
   return (
-    <main className="container mx-auto max-w-3xl space-y-6 px-4 py-6 overflow-y-auto">
+    <main className="mx-auto w-full max-w-3xl space-y-6 px-4 py-8 sm:px-6 sm:py-12">
       <header>
-        <h1 className="text-xl font-semibold">Nueva visita</h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="font-heading text-xs font-semibold tracking-[0.2em] text-oliva uppercase">
+          Visitá
+        </p>
+        <h1 className="mt-1 text-3xl font-bold text-oliva-oscuro">Nueva visita</h1>
+        <p className="mt-2 text-base leading-relaxed text-muted-foreground">
           Subí de 1 a 6 fotos y un audio. La IA transcribe el audio y completa la ficha; vos la revisás.
         </p>
       </header>
@@ -317,12 +320,16 @@ function NuevaVisita() {
               <CardDescription>Nada se carga sin el consentimiento de la familia.</CardDescription>
             </CardHeader>
             <CardContent>
-              <label className="flex items-center gap-2">
+              <label
+                className={`flex cursor-pointer items-center gap-3 rounded-xl border-2 px-4 py-3.5 transition-colors ${
+                  consentimiento ? "border-salvia bg-salvia-suave" : "border-border hover:border-salvia/60"
+                }`}
+              >
                 <Checkbox
                   checked={consentimiento}
                   onCheckedChange={(v) => setConsentimiento(Boolean(v))}
                 />
-                <span className="text-sm">La familia dio su consentimiento.</span>
+                <span className="text-base font-medium">La familia dio su consentimiento.</span>
               </label>
             </CardContent>
           </Card>
@@ -355,7 +362,13 @@ function NuevaVisita() {
             </CardContent>
           </Card>
 
-          <Button type="button" size="lg" onClick={procesar}>
+          <Button
+            type="button"
+            variant="acento"
+            size="lg"
+            className="w-full sm:w-auto"
+            onClick={procesar}
+          >
             Procesar visita con IA
           </Button>
         </div>
@@ -363,9 +376,9 @@ function NuevaVisita() {
 
       {paso === "procesando" && (
         <Card>
-          <CardContent className="flex flex-col items-center gap-2 py-10">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-            <p className="text-sm text-muted-foreground">
+          <CardContent className="flex flex-col items-center gap-3 py-12">
+            <div className="size-10 animate-spin rounded-full border-4 border-salvia-suave border-t-oliva" />
+            <p className="text-center text-base text-muted-foreground">
               Transcribiendo el audio y completando la ficha…
             </p>
           </CardContent>
@@ -375,12 +388,16 @@ function NuevaVisita() {
       {/* Sin botón para saltear: la ficha solo aparece cuando la IA tiene datos suficientes. */}
       {paso === "faltan-datos" && (
         <div className="space-y-6">
-          <div className="space-y-2 rounded-none bg-amber-500/10 p-4 text-amber-800" role="alert">
-            <p className="flex items-center gap-1.5 font-semibold">
-              <TriangleAlert className="h-4 w-4" aria-hidden /> Necesitamos un poco más de información
+          <div
+            className="space-y-2 rounded-2xl border border-manteca-oscuro bg-manteca/40 p-5 text-tinta"
+            role="alert"
+          >
+            <p className="flex items-start gap-2 font-heading text-base font-bold text-oliva-oscuro">
+              <TriangleAlert className="mt-0.5 size-5 shrink-0 text-urgencia-alta-texto" aria-hidden />
+              Necesitamos un poco más de información
             </p>
-            <p className="text-sm">{mensajeFaltante(faltan)}</p>
-            <p className="text-sm font-medium">{recomendacionGeneral(faltan)}</p>
+            <p className="text-sm leading-relaxed">{mensajeFaltante(faltan)}</p>
+            <p className="text-sm font-semibold">{recomendacionGeneral(faltan)}</p>
           </div>
 
           <Card>
@@ -391,13 +408,16 @@ function NuevaVisita() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-2">
+              <ul className="space-y-2.5">
                 {faltan.map((f) => (
-                  <li key={f.clave} className="flex items-start gap-2 text-sm">
+                  <li
+                    key={f.clave}
+                    className="flex items-start gap-3 rounded-xl bg-salvia-suave/70 px-3.5 py-3 text-sm"
+                  >
                     {f.tipo === "foto" ? (
-                      <Camera className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-label="Foto" />
+                      <Camera className="mt-0.5 size-4 shrink-0 text-oliva" aria-label="Foto" />
                     ) : (
-                      <Mic className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-label="Audio" />
+                      <Mic className="mt-0.5 size-4 shrink-0 text-oliva" aria-label="Audio" />
                     )}
                     <span>{f.sugerencia}</span>
                   </li>
@@ -436,7 +456,13 @@ function NuevaVisita() {
             </CardContent>
           </Card>
 
-          <Button type="button" size="lg" onClick={reprocesar}>
+          <Button
+            type="button"
+            variant="acento"
+            size="lg"
+            className="w-full sm:w-auto"
+            onClick={reprocesar}
+          >
             Volver a procesar con todo junto
           </Button>
         </div>
@@ -445,7 +471,7 @@ function NuevaVisita() {
       {paso === "ficha" && ficha && (
         <div className="space-y-6">
           {transcripcionFallo && (
-            <div className="rounded-none bg-red-500/10 p-3 text-sm text-red-700">
+            <div className="rounded-2xl border border-urgencia-critica/30 bg-urgencia-critica/10 p-4 text-sm text-urgencia-critica-texto">
               No se pudo transcribir el audio. La ficha se completó solo con las fotos; revisá con
               cuidado los campos de familia y salud.
             </div>
@@ -456,12 +482,12 @@ function NuevaVisita() {
                 <CardTitle>Transcripción del audio</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm whitespace-pre-wrap text-muted-foreground">{transcripcion}</p>
+                <p className="text-sm leading-relaxed whitespace-pre-wrap text-muted-foreground">{transcripcion}</p>
               </CardContent>
             </Card>
           )}
 
-          <div className="rounded-none bg-amber-500/10 p-3 text-sm text-amber-700">
+          <div className="rounded-2xl border border-manteca-oscuro bg-manteca/40 p-4 text-sm text-tinta">
             {dudosos > 0
               ? `La IA completó toda la ficha y señaló ${dudosos} campo(s) donde tiene dudas. Revisalos antes de guardar.`
               : "La IA completó toda la ficha. Revisala y guardala para que el caso entre al ranking."}
@@ -471,11 +497,11 @@ function NuevaVisita() {
             <FichaEditor key={grupo} grupo={grupo} ficha={ficha} onCampo={actualizarCampo} />
           ))}
 
-          <div className="flex gap-2">
-            <Button type="button" size="lg" onClick={guardar} disabled={guardando}>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Button type="button" variant="acento" size="lg" onClick={guardar} disabled={guardando}>
               {guardando ? "Guardando…" : "Guardar ficha"}
             </Button>
-            <Button type="button" variant="outline" onClick={() => setPaso("carga")}>
+            <Button type="button" variant="outline" size="lg" onClick={() => setPaso("carga")}>
               Volver
             </Button>
           </div>
@@ -515,25 +541,29 @@ function FichaEditor({
           return (
             <div
               key={def.clave}
-              className={`space-y-1.5 border-b pb-4 last:border-b-0 last:pb-0 ${
-                campo.dudoso ? "-mx-2 border-l-2 border-l-amber-500 bg-amber-500/5 px-2 pt-2" : ""
+              className={`space-y-2 border-b border-border/70 pb-5 last:border-b-0 last:pb-0 ${
+                campo.dudoso
+                  ? "-mx-3 rounded-r-xl border-l-4 border-l-urgencia-alta bg-urgencia-alta/5 px-3 pt-3"
+                  : ""
               }`}
             >
-              <div className="flex items-center justify-between">
-                <Label className="flex items-center gap-1.5 font-medium">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <Label className="flex items-center gap-1.5 font-semibold">
                   {campo.dudoso && (
-                    <TriangleAlert className="h-4 w-4 text-amber-600" aria-label="Campo dudoso" />
+                    <TriangleAlert className="size-4 text-urgencia-alta-texto" aria-label="Campo dudoso" />
                   )}
                   {def.etiqueta}
                 </Label>
-                <span className={`px-1.5 py-0.5 text-xs ${badge.clase}`}>{badge.texto}</span>
+                <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${badge.clase}`}>
+                  {badge.texto}
+                </span>
               </div>
 
               <select
                 value={campo.valor}
                 onChange={(e) => onCampo(def.clave, { valor: e.target.value })}
-                className={`h-8 w-full border bg-background px-2 text-sm ${
-                  campo.dudoso ? "border-amber-500" : "border-input"
+                className={`h-11 w-full rounded-xl border bg-card px-3 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 sm:text-sm ${
+                  campo.dudoso ? "border-urgencia-alta" : "border-input"
                 }`}
               >
                 {/* "Sin dato": el campo no surgió del audio/fotos. El voluntario
@@ -547,13 +577,13 @@ function FichaEditor({
               </select>
 
               {campo.dudoso && (
-                <div className="flex items-start justify-between gap-2">
-                  <p className="text-xs text-amber-700">La IA duda: {campo.motivoDuda}</p>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-sm text-urgencia-alta-texto">La IA duda: {campo.motivoDuda}</p>
                   {/* Si el valor propuesto está bien, se acepta sin cambiarlo. */}
                   <button
                     type="button"
                     onClick={() => onCampo(def.clave, {})}
-                    className="shrink-0 text-xs text-amber-700 underline"
+                    className="shrink-0 rounded-full border border-urgencia-alta/50 bg-card px-3 py-1.5 text-xs font-semibold text-urgencia-alta-texto transition-colors hover:bg-urgencia-alta/10"
                   >
                     Está bien así
                   </button>
