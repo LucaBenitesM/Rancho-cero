@@ -29,11 +29,15 @@ export const seed = mutation({
       return { creada: false, mensaje: "Ya había una campaña." };
     }
 
-    // Elegir el caso de mayor urgencia (puntajeFinal más alto).
-    const casos = await ctx.db
-      .query("casos")
-      .withIndex("por_estado", (q) => q.eq("estado", "confirmado"))
-      .collect();
+    // Elegir el caso de mayor urgencia entre los que ya están confirmados
+    // (incluye en campaña / financiados, por si se re-corre).
+    const estados = ["confirmado", "en_campana", "financiado"] as const;
+    const grupos = await Promise.all(
+      estados.map((e) =>
+        ctx.db.query("casos").withIndex("por_estado", (q) => q.eq("estado", e)).collect(),
+      ),
+    );
+    const casos = grupos.flat();
     if (casos.length === 0) {
       return { creada: false, mensaje: "No hay casos; corré casos.seed primero." };
     }
@@ -118,13 +122,11 @@ export const donar = mutation({
 });
 
 /** Reinicia la demo: vuelve el recaudado al monto inicial y reactiva la campaña.
- *  Útil para ensayar el pitch varias veces. */
+ *  Tolera que el caso ligado ya no exista (no rompe). */
 export const reiniciarDemo = mutation({
   args: {},
   handler: async (ctx) => {
-    const campana = await ctx.db
-      .query("campanas")
-      .first();
+    const campana = await ctx.db.query("campanas").first();
     if (!campana) return { ok: false, mensaje: "No hay campaña." };
 
     // Borrar donaciones registradas de esta campaña.
@@ -135,8 +137,25 @@ export const reiniciarDemo = mutation({
     for (const d of donaciones) await ctx.db.delete(d._id);
 
     await ctx.db.patch(campana._id, { recaudadoUsd: 6200, activa: true });
-    await ctx.db.patch(campana.casoId, { estado: "en_campana" });
+
+    // Solo tocar el caso si todavía existe (puede haber quedado huérfano tras recargar).
+    const caso = await ctx.db.get(campana.casoId);
+    if (caso) {
+      await ctx.db.patch(campana.casoId, { estado: "en_campana" });
+    }
 
     return { ok: true, mensaje: "Campaña reiniciada a US$ 6.200." };
+  },
+});
+
+/** Borra campaña, historias y donaciones. Deja la base lista para re-sembrar. */
+export const limpiar = mutation({
+  args: {},
+  handler: async (ctx) => {
+    for (const tabla of ["campanas", "historias", "donaciones"] as const) {
+      const docs = await ctx.db.query(tabla).collect();
+      for (const d of docs) await ctx.db.delete(d._id);
+    }
+    return { ok: true, mensaje: "Campaña, historias y donaciones borradas." };
   },
 });
