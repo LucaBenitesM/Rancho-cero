@@ -473,23 +473,22 @@ export const seed = mutation({
   },
 });
 
-/** Borra todos los casos (y las campañas/historias/donaciones que dependen de
- *  ellos, para no dejar referencias huérfanas) y vuelve a sembrar. */
+/** Borra todos los casos (y las historias que dependen de ellos) y vuelve a
+ *  sembrar. Nota: las tablas campanas/donaciones quedaron sin uso (la app es
+ *  interna; la campaña pública se sacó), por eso ya no se tocan acá. */
 export const recargar = mutation({
   args: {},
   handler: async (ctx) => {
-    // Primero lo que depende de los casos, para no dejar casoId colgando.
-    for (const tabla of ["donaciones", "campanas", "historias"] as const) {
-      const docs = await ctx.db.query(tabla).collect();
-      for (const d of docs) await ctx.db.delete(d._id);
-    }
+    // Primero las historias, que dependen de los casos (no dejar casoId colgando).
+    const historias = await ctx.db.query("historias").collect();
+    for (const d of historias) await ctx.db.delete(d._id);
     const todos = await ctx.db.query("casos").collect();
     for (const d of todos) await ctx.db.delete(d._id);
     const creados = await sembrar(ctx);
     return {
       borrados: todos.length,
       creados,
-      mensaje: `Recargadas ${creados} familias. Volvé a correr campanas:seed.`,
+      mensaje: `Recargadas ${creados} familias.`,
     };
   },
 });

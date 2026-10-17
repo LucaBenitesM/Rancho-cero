@@ -124,16 +124,20 @@ export default defineSchema({
     aprobadaEn: v.optional(v.number()), // timestamp de aprobación
   }).index("por_caso", ["casoId"]),
 
-  // ─── CAMPAÑAS (meta US$ 15.000, pagos simulados) ──────────
+  // ─── CAMPAÑAS — SIN USO ───────────────────────────────────
+  // La campaña pública y las donaciones se sacaron: la app es solo para uso
+  // interno de Cireneos (las historias se publican en la web de Cireneos, no
+  // acá). Estas tablas quedan SIN USO. No se borran todavía porque tienen datos
+  // guardados y Convex rechazaría el cambio; se eliminarán cuando se limpien.
   campanas: defineTable({
     casoId: v.id("casos"),
     historiaId: v.id("historias"),
-    metaUsd: v.number(), // 15000
-    recaudadoUsd: v.number(), // suma de donaciones simuladas
+    metaUsd: v.number(),
+    recaudadoUsd: v.number(),
     activa: v.boolean(),
   }).index("por_caso", ["casoId"]),
 
-  // ─── DONACIONES (simuladas) ───────────────────────────────
+  // ─── DONACIONES — SIN USO (ver nota en campanas) ──────────
   donaciones: defineTable({
     campanaId: v.id("campanas"),
     montoUsd: v.number(),

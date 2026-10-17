@@ -9,7 +9,6 @@
  */
 
 import type * as auth from "../auth.js";
-import type * as campanas from "../campanas.js";
 import type * as casos from "../casos.js";
 import type * as ficha from "../ficha.js";
 import type * as healthCheck from "../healthCheck.js";
@@ -26,7 +25,6 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
-  campanas: typeof campanas;
   casos: typeof casos;
   ficha: typeof ficha;
   healthCheck: typeof healthCheck;
