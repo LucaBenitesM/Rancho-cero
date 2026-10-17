@@ -2,8 +2,9 @@
 
 import { api } from "@rancho-cero/backend/convex/_generated/api";
 import type { Id } from "@rancho-cero/backend/convex/_generated/dataModel";
-import { useQuery } from "convex/react";
-import { MapPin, Sparkles, X } from "lucide-react";
+import { Authenticated, useQuery } from "convex/react";
+import { Heart, MapPin, Sparkles, X } from "lucide-react";
+import Link from "next/link";
 import { useEffect } from "react";
 
 // Agrupación de campos por bloque de la tabla de Cireneos (FICHA.md).
@@ -230,6 +231,19 @@ function Contenido({
             );
           })}
         </div>
+
+        {/* Historia para donantes (solo coordinadores con sesión) */}
+        {caso.estado !== "relevado" && (
+          <Authenticated>
+            <Link
+              href={`/historia/${caso.id}`}
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700"
+            >
+              <Heart className="h-4 w-4" />
+              Generar historia para donantes
+            </Link>
+          </Authenticated>
+        )}
 
         <p className="mt-4 text-center text-[10px] text-muted-foreground">
           Datos simulados · la fórmula vive en código (FICHA.md), no la decide la IA
