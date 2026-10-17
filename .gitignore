@@ -1,0 +1,31 @@
+# Dependencias
+node_modules/
+vendor/
+
+# Entornos virtuales
+venv/
+.venv/
+env/
+
+# Variables de entorno
+.env
+.env.local
+*.local
+
+# Logs
+*.log
+logs/
+
+# Build / salida
+dist/
+build/
+out/
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Editores / IDEs
+.vscode/
+.idea/
+*.swp
