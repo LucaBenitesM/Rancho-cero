@@ -11,10 +11,12 @@
 
 import { v } from "convex/values";
 
+import { authComponent } from "./auth";
 import { mutation, query } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
-import type { MutationCtx } from "./_generated/server";
+import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { calcularUrgencia } from "./urgencia";
+import { CAMPOS_FICHA, CLAVES_CAMPO, calcularPuntajeBase, calcularPuntajeTabla } from "./ficha";
 
 const DIA = 1000 * 60 * 60 * 24;
 
@@ -586,3 +588,166 @@ function extraerAjuste(doc: Doc<"casos">) {
     estado: doc.ajusteEstado,
   };
 }
+
+// ─────────────────────────────────────────────────────────────
+// CARGA DE VISITA — subir archivos, crear caso y guardar ficha de la IA.
+// (integra el trabajo de la rama Marti-ficha-ia). Datos sensibles: exige sesión.
+// ─────────────────────────────────────────────────────────────
+
+async function requerirUsuario(ctx: QueryCtx | MutationCtx): Promise<string> {
+  const usuario = await authComponent.safeGetAuthUser(ctx);
+  if (!usuario) {
+    throw new Error("Necesitás iniciar sesión.");
+  }
+  return usuario._id;
+}
+
+const campoValidator = v.object({
+  valor: v.string(),
+  evidencia: v.string(),
+  confianza: v.union(v.literal("alta"), v.literal("media"), v.literal("baja")),
+  aConfirmar: v.boolean(),
+});
+
+const camposValidator = v.object({
+  pared: campoValidator,
+  techo: campoValidator,
+  piso: campoValidator,
+  bano: campoValidator,
+  m2PorPersona: campoValidator,
+  ventanas: campoValidator,
+  separacionAmbientes: campoValidator,
+  riesgoDerrumbe: campoValidator,
+  inundable: campoValidator,
+  enfermedad: campoValidator,
+  menoresDe5: campoValidator,
+  menores5a12: campoValidator,
+  menores12a18: campoValidator,
+  monoparental: campoValidator,
+  vinculoOrganizacion: campoValidator,
+  impresionPrimeraVisita: campoValidator,
+  desalojo: campoValidator,
+  adicionales: campoValidator,
+});
+
+/** URL temporal para subir una foto o audio al storage de Convex. */
+export const generarUrlDeSubida = mutation({
+  args: {},
+  handler: async (ctx) => {
+    await requerirUsuario(ctx);
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
+/** Crea un caso inicial (fotos + audio + consentimiento), estado "relevado". */
+export const crearCaso = mutation({
+  args: {
+    consentimiento: v.boolean(),
+    fotos: v.array(v.id("_storage")),
+    audioStorageId: v.optional(v.id("_storage")),
+  },
+  handler: async (ctx, args) => {
+    const usuarioId = await requerirUsuario(ctx);
+    if (!args.consentimiento) {
+      throw new Error("No se puede crear un caso sin el consentimiento de la familia.");
+    }
+    if (args.fotos.length < 5 || args.fotos.length > 6) {
+      throw new Error("Hay que subir entre 5 y 6 fotos.");
+    }
+
+    const campoVacio = { valor: "", evidencia: "", confianza: "baja" as const, aConfirmar: true };
+    const camposVacios = Object.fromEntries(
+      CLAVES_CAMPO.map((clave) => [clave, campoVacio]),
+    ) as Record<string, typeof campoVacio>;
+
+    const casoId = await ctx.db.insert("casos", {
+      estado: "relevado",
+      consentimiento: args.consentimiento,
+      fotos: args.fotos,
+      audioStorageId: args.audioStorageId,
+      ...camposVacios,
+      relevadoEn: Date.now(),
+      creadoPor: usuarioId,
+    } as never);
+
+    return casoId;
+  },
+});
+
+/** Lee un caso por id (pantalla de corrección). Solo su autor. */
+export const obtenerCaso = query({
+  args: { casoId: v.id("casos") },
+  handler: async (ctx, { casoId }) => {
+    const usuarioId = await requerirUsuario(ctx);
+    const caso = await ctx.db.get(casoId);
+    if (!caso) return null;
+    if (caso.creadoPor && caso.creadoPor !== usuarioId) {
+      throw new Error("No tenés permiso para ver este caso.");
+    }
+    return caso;
+  },
+});
+
+/** Guarda la transcripción del audio en el caso. */
+export const guardarTranscripcion = mutation({
+  args: { casoId: v.id("casos"), transcripcion: v.string() },
+  handler: async (ctx, { casoId, transcripcion }) => {
+    await requerirUsuario(ctx);
+    await ctx.db.patch(casoId, { audioTranscripcion: transcripcion });
+  },
+});
+
+/** Guarda la ficha completada por la IA + calcula puntaje base. */
+export const guardarFichaIA = mutation({
+  args: {
+    casoId: v.id("casos"),
+    campos: camposValidator,
+    ajustePorcentaje: v.optional(v.number()),
+    ajusteMotivo: v.optional(v.string()),
+    ajusteEvidencia: v.optional(v.string()),
+    explicacion: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    await requerirUsuario(ctx);
+    const puntajeTabla = calcularPuntajeTabla(args.campos as never);
+    const puntajeBase = calcularPuntajeBase(args.campos as never);
+    await ctx.db.patch(args.casoId, {
+      ...args.campos,
+      puntajeTabla,
+      puntajeBase,
+      ajustePorcentaje: args.ajustePorcentaje,
+      ajusteMotivo: args.ajusteMotivo,
+      ajusteEvidencia: args.ajusteEvidencia,
+      ajusteEstado: args.ajustePorcentaje != null ? "sugerido" : undefined,
+      explicacion: args.explicacion,
+    });
+  },
+});
+
+/** Guarda correcciones del voluntario; confirma el caso si no quedan dudas. */
+export const guardarCorreccion = mutation({
+  args: { casoId: v.id("casos"), campos: camposValidator },
+  handler: async (ctx, { casoId, campos }) => {
+    const usuarioId = await requerirUsuario(ctx);
+    const caso = await ctx.db.get(casoId);
+    if (!caso) throw new Error("El caso no existe.");
+    if (caso.creadoPor && caso.creadoPor !== usuarioId) {
+      throw new Error("No tenés permiso para editar este caso.");
+    }
+
+    const quedaAlgoAConfirmar = CAMPOS_FICHA.some(
+      (def) => (campos as never as Record<string, { aConfirmar?: boolean }>)[def.clave]?.aConfirmar === true,
+    );
+    const puntajeTabla = calcularPuntajeTabla(campos as never);
+    const puntajeBase = calcularPuntajeBase(campos as never);
+
+    await ctx.db.patch(casoId, {
+      ...campos,
+      puntajeTabla,
+      puntajeBase,
+      estado: quedaAlgoAConfirmar ? "relevado" : "confirmado",
+    });
+
+    return { confirmado: !quedaAlgoAConfirmar };
+  },
+});
