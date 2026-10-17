@@ -11,9 +11,11 @@
 import type * as auth from "../auth.js";
 import type * as campanas from "../campanas.js";
 import type * as casos from "../casos.js";
+import type * as ficha from "../ficha.js";
 import type * as healthCheck from "../healthCheck.js";
 import type * as http from "../http.js";
 import type * as privateData from "../privateData.js";
+import type * as procesarVisita from "../procesarVisita.js";
 import type * as urgencia from "../urgencia.js";
 
 import type {
@@ -26,9 +28,11 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   campanas: typeof campanas;
   casos: typeof casos;
+  ficha: typeof ficha;
   healthCheck: typeof healthCheck;
   http: typeof http;
   privateData: typeof privateData;
+  procesarVisita: typeof procesarVisita;
   urgencia: typeof urgencia;
 }>;
 
