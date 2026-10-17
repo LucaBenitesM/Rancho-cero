@@ -17,6 +17,7 @@ import type * as http from "../http.js";
 import type * as procesarVisita from "../procesarVisita.js";
 import type * as roles from "../roles.js";
 import type * as urgencia from "../urgencia.js";
+import type * as usuarios from "../usuarios.js";
 
 import type {
   ApiFromModules,
@@ -34,6 +35,7 @@ declare const fullApi: ApiFromModules<{
   procesarVisita: typeof procesarVisita;
   roles: typeof roles;
   urgencia: typeof urgencia;
+  usuarios: typeof usuarios;
 }>;
 
 /**
