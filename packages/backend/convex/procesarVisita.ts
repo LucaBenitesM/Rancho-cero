@@ -3,8 +3,9 @@
 import { v } from "convex/values";
 
 import { api } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
 import { action } from "./_generated/server";
-import { CAMPOS_FICHA, type CampoFicha, type Confianza } from "./ficha";
+import { CAMPOS_FICHA, faltanDatos, type CampoFicha, type Confianza } from "./ficha";
 
 // ─────────────────────────────────────────────────────────────
 // PROCESAR VISITA — llamada principal de IA (PLAN.md, llamada 1).
@@ -94,6 +95,7 @@ Reglas estrictas:
 - Cada campo trae su evidencia: "foto N: lo que se ve" o una cita textual del audio. La evidencia es corta: máximo una frase.
 - Confianza "alta" = evidencia directa y clara. "media" = parcial o indirecta. "baja" = inferencia sin evidencia directa, o la foto y el audio se contradicen.
 - "dudoso" = true cuando la confianza es "baja". En ese caso "motivoDuda" es una frase corta (máximo 12 palabras) que explica por qué dudás, por ejemplo "El audio no menciona la superficie" o "Dice diecisiete o dieciocho años". Si no dudás, "dudoso" = false y "motivoDuda" = "".
+- Audios: puede haber más de uno ("Audio 1", "Audio 2"…). Son de la misma visita: los nuevos se grabaron para completar lo que faltaba. Usalos todos juntos; si se contradicen, vale el más nuevo.
 - Fotos: llegan sin orden ni títulos. Pueden mostrar cualquier parte de la vivienda (afuera, adentro, techo, piso, baño, entorno) o varias a la vez. Analizalas TODAS juntas y no asumas qué muestra cada una por su posición: mirá qué se ve en cada una. Para citarlas usá "foto N" con el número que la acompaña.
 - Los campos de SALUD Y FAMILIA (enfermedad, menoresDe5, menores5a12, menores12a18, monoparental) y vinculoOrganizacion, desalojo y adicionales salen SOLO del audio. Nunca se infieren de las fotos. Si el audio no los menciona, proponé el valor más plausible y marcalo dudoso.
 - Salud (campo "enfermedad"): nunca inferir. Si no se menciona, usá "nada" y marcalo dudoso. Nunca guardar el diagnóstico exacto, solo la categoría (nada/leve/media/grave).
@@ -157,7 +159,7 @@ export async function completarFicha(
     },
   ]);
 
-  const textoUsuario = `Catálogo de campos y sus valores válidos:\n${catalogoParaPrompt()}\n\nRecibiste ${fotosUrls.length} foto(s) de la vivienda, sin orden ni títulos. Analizalas todas juntas.\n\nTranscripción del audio del voluntario:\n"""\n${transcripcion || "(sin audio o transcripción vacía)"}\n"""\n\nCompletá la ficha siguiendo las reglas.`;
+  const textoUsuario = `Catálogo de campos y sus valores válidos:\n${catalogoParaPrompt()}\n\nRecibiste ${fotosUrls.length} foto(s) de la vivienda, sin orden ni títulos. Analizalas todas juntas.\n\nTranscripción de los audios del voluntario:\n"""\n${transcripcion || "(sin audio o transcripción vacía)"}\n"""\n\nCompletá la ficha siguiendo las reglas.`;
 
   const resp = await fetchConTimeout(
     "https://api.anthropic.com/v1/messages",
@@ -277,11 +279,12 @@ export function normalizarCampos(
 }
 
 // 3) Orquesta todo: transcribe, completa la ficha y la guarda en el caso.
+// Usa TODO lo que tiene el caso: sus fotos actuales y todos sus audios (el
+// primero y los que se agregaron cuando faltaban datos). Solo transcribe los
+// audios que todavía no tienen transcripción.
 export const procesarVisita = action({
   args: {
     casoId: v.id("casos"),
-    fotos: v.array(v.id("_storage")),
-    audioStorageId: v.optional(v.id("_storage")),
   },
   handler: async (
     ctx,
@@ -291,6 +294,7 @@ export const procesarVisita = action({
     transcripcion: string;
     transcripcionFallo: boolean;
     campos: Record<string, CampoFicha>;
+    faltanDatos: boolean;
     ajuste: Ajuste;
     explicacion: string;
   }> => {
@@ -300,33 +304,42 @@ export const procesarVisita = action({
       throw new Error("Necesitás iniciar sesión para procesar una visita.");
     }
 
+    const caso = await ctx.runQuery(api.casos.obtenerCaso, { casoId: args.casoId });
+    if (!caso) throw new Error("El caso no existe.");
+
     // Resuelve storage IDs a URLs servibles.
     const fotosUrls: string[] = [];
-    for (const id of args.fotos) {
-      const url = await ctx.storage.getUrl(id);
+    for (const id of caso.fotos) {
+      const url = await ctx.storage.getUrl(id as Id<"_storage">);
       if (url) fotosUrls.push(url);
     }
     if (fotosUrls.length === 0) {
       throw new Error("El caso no tiene fotos accesibles.");
     }
 
-    // Paso 1: transcripción (si hay audio). Si falla, se sigue solo con fotos.
-    let transcripcion = "";
+    // Paso 1: transcribir los audios nuevos. Si uno falla, se sigue con lo que
+    // haya (el resto de los audios y las fotos) y se reintenta la próxima vez.
+    let transcripcion = caso.audioTranscripcion ?? "";
     let transcripcionFallo = false;
-    if (args.audioStorageId) {
-      const audioUrl = await ctx.storage.getUrl(args.audioStorageId);
-      if (audioUrl) {
-        try {
-          transcripcion = await transcribirAudio(audioUrl);
-          await ctx.runMutation(api.casos.guardarTranscripcion, {
-            casoId: args.casoId,
-            transcripcion,
-          });
-        } catch (err) {
-          // Degradación: la ficha se completa igual con las fotos.
-          console.error("Transcripción falló, se sigue solo con fotos:", err);
-          transcripcionFallo = true;
-        }
+    const yaTranscriptos = new Set((caso.transcripciones ?? []).map((t) => t.audioStorageId));
+    const audios = [caso.audioStorageId, ...(caso.audiosExtra ?? [])].filter(
+      (id): id is string => !!id
+    );
+    for (const audioId of audios) {
+      if (yaTranscriptos.has(audioId)) continue;
+      const audioUrl = await ctx.storage.getUrl(audioId as Id<"_storage">);
+      if (!audioUrl) continue;
+      try {
+        const texto = await transcribirAudio(audioUrl);
+        transcripcion = await ctx.runMutation(api.casos.guardarTranscripcion, {
+          casoId: args.casoId,
+          audioStorageId: audioId,
+          transcripcion: texto,
+        });
+      } catch (err) {
+        // Degradación: la ficha se completa igual con lo que haya.
+        console.error("Transcripción falló, se sigue con lo que hay:", err);
+        transcripcionFallo = true;
       }
     }
 
@@ -349,6 +362,7 @@ export const procesarVisita = action({
       transcripcion,
       transcripcionFallo,
       campos,
+      faltanDatos: faltanDatos(campos),
       ajuste: respuesta.ajuste,
       explicacion: respuesta.explicacion,
     };

@@ -13,10 +13,17 @@ import { v } from "convex/values";
 
 import { authComponent } from "./auth";
 import { mutation, query } from "./_generated/server";
-import type { Doc } from "./_generated/dataModel";
+import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { calcularUrgencia } from "./urgencia";
-import { CLAVES_CAMPO, calcularPuntajeBase, calcularPuntajeFinal, calcularPuntajeTabla, puntosEspera } from "./ficha";
+import {
+  CLAVES_CAMPO,
+  calcularPuntajeBase,
+  calcularPuntajeFinal,
+  calcularPuntajeTabla,
+  faltanDatos,
+  puntosEspera,
+} from "./ficha";
 
 const DIA = 1000 * 60 * 60 * 24;
 
@@ -705,12 +712,69 @@ export const obtenerCaso = query({
   },
 });
 
-/** Guarda la transcripción del audio en el caso. */
+// Busca un caso y verifica que sea del voluntario que lo pide.
+async function casoDelAutor(ctx: MutationCtx, casoId: Id<"casos">) {
+  const usuarioId = await requerirUsuario(ctx);
+  const caso = await ctx.db.get(casoId);
+  if (!caso) throw new Error("El caso no existe.");
+  if (caso.creadoPor && caso.creadoPor !== usuarioId) {
+    throw new Error("No tenés permiso para editar este caso.");
+  }
+  return caso;
+}
+
+/** Une las transcripciones de todos los audios, en orden de grabación. */
+function unirTranscripciones(textos: string[]): string {
+  if (textos.length <= 1) return textos[0] ?? "";
+  return textos.map((t, i) => `Audio ${i + 1}:\n${t}`).join("\n\n");
+}
+
+/**
+ * Cuando faltan datos: el voluntario agrega un audio y/o cambia las fotos.
+ * No se borra lo anterior: el audio nuevo se suma a los que ya había.
+ */
+export const agregarDatos = mutation({
+  args: {
+    casoId: v.id("casos"),
+    fotos: v.array(v.id("_storage")), // lista completa de fotos (viejas + nuevas)
+    audioStorageId: v.optional(v.id("_storage")), // audio nuevo, si grabó uno
+  },
+  handler: async (ctx, args) => {
+    const caso = await casoDelAutor(ctx, args.casoId);
+    if (caso.estado !== "relevado") {
+      throw new Error("Este caso ya fue confirmado.");
+    }
+    if (args.fotos.length < 1 || args.fotos.length > 6) {
+      throw new Error("Hay que subir entre 1 y 6 fotos.");
+    }
+    // Las fotos que el voluntario sacó se borran del storage.
+    const quitadas = caso.fotos.filter((id) => !args.fotos.includes(id as Id<"_storage">));
+    for (const id of quitadas) {
+      await ctx.storage.delete(id as Id<"_storage">);
+    }
+    await ctx.db.patch(args.casoId, {
+      fotos: args.fotos,
+      audiosExtra: args.audioStorageId
+        ? [...(caso.audiosExtra ?? []), args.audioStorageId]
+        : caso.audiosExtra,
+    });
+  },
+});
+
+/** Guarda la transcripción de un audio del caso (se suma a las anteriores). */
 export const guardarTranscripcion = mutation({
-  args: { casoId: v.id("casos"), transcripcion: v.string() },
-  handler: async (ctx, { casoId, transcripcion }) => {
-    await requerirUsuario(ctx);
-    await ctx.db.patch(casoId, { audioTranscripcion: transcripcion });
+  args: { casoId: v.id("casos"), audioStorageId: v.string(), transcripcion: v.string() },
+  handler: async (ctx, { casoId, audioStorageId, transcripcion }) => {
+    const caso = await casoDelAutor(ctx, casoId);
+    // Ordenadas como se grabaron los audios (el primero, después los extra).
+    const orden = [caso.audioStorageId, ...(caso.audiosExtra ?? [])];
+    const transcripciones = [
+      ...(caso.transcripciones ?? []).filter((t) => t.audioStorageId !== audioStorageId),
+      { audioStorageId, texto: transcripcion },
+    ].sort((a, b) => orden.indexOf(a.audioStorageId) - orden.indexOf(b.audioStorageId));
+    const audioTranscripcion = unirTranscripciones(transcripciones.map((t) => t.texto));
+    await ctx.db.patch(casoId, { transcripciones, audioTranscripcion });
+    return audioTranscripcion;
   },
 });
 
@@ -746,6 +810,7 @@ export const guardarFichaIA = mutation({
       ajusteEvidencia: args.ajusteEvidencia,
       ajusteEstado: args.ajustePorcentaje != null ? "sugerido" : undefined,
       explicacion: args.explicacion,
+      faltanDatos: faltanDatos(args.campos as never),
     });
   },
 });
@@ -759,6 +824,10 @@ export const guardarCorreccion = mutation({
     if (!caso) throw new Error("El caso no existe.");
     if (caso.creadoPor && caso.creadoPor !== usuarioId) {
       throw new Error("No tenés permiso para editar este caso.");
+    }
+    // Con demasiados campos dudosos no se confirma: primero hay que completar datos.
+    if (caso.faltanDatos) {
+      throw new Error("Faltan datos: agregá un audio o fotos y volvé a procesar la visita.");
     }
 
     const puntajeTabla = calcularPuntajeTabla(campos as never);
