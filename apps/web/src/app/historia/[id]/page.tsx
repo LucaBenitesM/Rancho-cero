@@ -20,16 +20,19 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 // ─────────────────────────────────────────────────────────────
 // Pantalla "Aprobar historia" (coordinadores, requiere sesión).
-// La IA escribe la historia y revisa su privacidad; el coordinador la
-// edita si hace falta y la aprueba. Recién ahí se publica en la campaña.
+// La IA escribe la historia y revisa su privacidad; queda como borrador.
+// El coordinador la edita si hace falta y la aprueba: se guarda en la app y
+// aparece en /historias. No se publica en ningún lado.
+// TODO(roles): cuando esté la función de rol, mostrar esta pantalla solo a
+// coordinadores (el servidor ya chequea en requerirCoordinador).
 // ─────────────────────────────────────────────────────────────
 
-type Accion = "generar" | "revisar" | "publicar";
+type Accion = "generar" | "revisar" | "aprobar";
 
 // Errores técnicos de la API -> mensaje presentable.
 function mensajeAmigable(err: unknown): string {
@@ -69,8 +72,10 @@ function AprobarHistoria({ casoId }: { casoId: Id<"casos"> }) {
   const datos = useQuery(api.historias.obtenerParaAprobar, { casoId });
   const generar = useAction(api.historias.generar);
   const revisarPrivacidad = useAction(api.historias.revisarPrivacidad);
-  const aprobarYPublicar = useMutation(api.historias.aprobarYPublicar);
+  const aprobar = useMutation(api.historias.aprobar);
 
+  // Borrador que se está editando (cada "Generar" guarda uno nuevo).
+  const [historiaId, setHistoriaId] = useState<Id<"historias"> | null>(null);
   const [textoOriginal, setTextoOriginal] = useState("");
   const [texto, setTexto] = useState("");
   // Texto tal como se revisó por última vez (para exigir revisar tras editar).
@@ -78,12 +83,25 @@ function AprobarHistoria({ casoId }: { casoId: Id<"casos"> }) {
   const [alertas, setAlertas] = useState<AlertaPrivacidad[]>([]);
   const [confirmoAlertas, setConfirmoAlertas] = useState(false);
   const [accion, setAccion] = useState<Accion | null>(null);
-  const [publicado, setPublicado] = useState(false);
+  const [aprobado, setAprobado] = useState(false);
+
+  // Si quedó un borrador sin aprobar, se retoma al entrar.
+  const borrador = datos?.borrador;
+  useEffect(() => {
+    if (!borrador || historiaId) return;
+    setHistoriaId(borrador.historiaId);
+    setTextoOriginal(borrador.texto);
+    setTexto(borrador.texto);
+    setTextoRevisado(borrador.texto);
+    setAlertas(borrador.alertas);
+  }, [borrador, historiaId]);
 
   const hayHistoria = textoOriginal.length > 0;
   const editadoSinRevisar = texto.trim() !== textoRevisado.trim();
   const puedeAprobar =
     accion === null &&
+    historiaId !== null &&
+    !aprobado &&
     texto.trim().length > 0 &&
     !editadoSinRevisar &&
     (alertas.length === 0 || confirmoAlertas);
@@ -92,12 +110,13 @@ function AprobarHistoria({ casoId }: { casoId: Id<"casos"> }) {
     setAccion("generar");
     try {
       const r = await generar({ casoId });
+      setHistoriaId(r.historiaId);
       setTextoOriginal(r.texto);
       setTexto(r.texto);
       setTextoRevisado(r.texto);
       setAlertas(r.alertas);
       setConfirmoAlertas(false);
-      setPublicado(false);
+      setAprobado(false);
     } catch (err) {
       toast.error(mensajeAmigable(err));
     } finally {
@@ -121,11 +140,12 @@ function AprobarHistoria({ casoId }: { casoId: Id<"casos"> }) {
   }
 
   async function onAprobar() {
-    setAccion("publicar");
+    if (!historiaId) return;
+    setAccion("aprobar");
     try {
-      await aprobarYPublicar({ casoId, textoOriginal, texto, alertas });
-      setPublicado(true);
-      toast.success("Historia aprobada y campaña publicada.");
+      await aprobar({ historiaId, texto, alertas });
+      setAprobado(true);
+      toast.success("Historia aprobada y guardada.");
     } catch (err) {
       toast.error(mensajeAmigable(err));
     } finally {
@@ -165,20 +185,18 @@ function AprobarHistoria({ casoId }: { casoId: Id<"casos"> }) {
         </p>
       </header>
 
-      {datos.publicada && (
+      {datos.aprobada && (
         <div className="mb-4 rounded-2xl border border-emerald-600/20 bg-emerald-50/70 p-3.5 text-xs dark:bg-emerald-950/20">
           <div className="mb-1 flex items-center gap-1.5 font-semibold text-emerald-700 dark:text-emerald-500">
             <BadgeCheck className="h-3.5 w-3.5" />
-            Historia publicada
-            {datos.campana && (
+            Última historia aprobada
+            {datos.aprobada.aprobadaEn && (
               <span className="font-normal text-muted-foreground">
-                · campaña {datos.campana.activa ? "activa" : "inactiva"}, US${" "}
-                {datos.campana.recaudadoUsd.toLocaleString("es-UY")} de{" "}
-                {datos.campana.metaUsd.toLocaleString("es-UY")}
+                · {new Date(datos.aprobada.aprobadaEn).toLocaleDateString("es-UY")}
               </span>
             )}
           </div>
-          <p className="leading-relaxed text-foreground/80">{datos.publicada.texto}</p>
+          <p className="leading-relaxed text-foreground/80">{datos.aprobada.texto}</p>
         </div>
       )}
 
@@ -186,11 +204,11 @@ function AprobarHistoria({ casoId }: { casoId: Id<"casos"> }) {
         <div className="rounded-2xl border border-border/60 bg-card p-6 text-center">
           <p className="mb-4 text-sm text-muted-foreground">
             La IA escribe una historia anónima a partir de la ficha y revisa que no tenga datos que
-            identifiquen a la familia. Nada se publica hasta que la apruebes.
+            identifiquen a la familia. Queda como borrador hasta que la apruebes.
           </p>
           <Button onClick={onGenerar} disabled={accion !== null}>
             {accion === "generar" ? <Loader2 className="animate-spin" /> : <Sparkles />}
-            {accion === "generar" ? "Generando…" : "Generar historia para donantes"}
+            {accion === "generar" ? "Generando…" : "Generar historia"}
           </Button>
         </div>
       ) : (
@@ -203,7 +221,7 @@ function AprobarHistoria({ casoId }: { casoId: Id<"casos"> }) {
               id="historia"
               value={texto}
               onChange={(e) => setTexto(e.target.value)}
-              disabled={accion !== null}
+              disabled={accion !== null || aprobado}
               className="min-h-32 rounded-xl bg-card text-sm leading-relaxed md:text-sm"
             />
             {editadoSinRevisar && (
@@ -289,18 +307,18 @@ function AprobarHistoria({ casoId }: { casoId: Id<"casos"> }) {
               Revisar privacidad de nuevo
             </Button>
             <Button onClick={onAprobar} disabled={!puedeAprobar}>
-              {accion === "publicar" ? <Loader2 className="animate-spin" /> : <CheckCircle2 />}
-              Aprobar y publicar
+              {accion === "aprobar" ? <Loader2 className="animate-spin" /> : <CheckCircle2 />}
+              Aprobar historia
             </Button>
           </div>
 
-          {publicado && (
+          {aprobado && (
             <div className="flex items-center justify-between gap-2 rounded-xl border border-emerald-600/20 bg-emerald-50/70 px-3 py-2 text-xs dark:bg-emerald-950/20">
               <span className="text-emerald-800 dark:text-emerald-400">
-                Publicada. La campaña del caso tiene meta de US$ 15.000.
+                Aprobada y guardada. Desde Historias se puede copiar o descargar.
               </span>
-              <Link href="/campana" className="font-semibold text-emerald-700 underline dark:text-emerald-400">
-                Ver campaña
+              <Link href="/historias" className="font-semibold text-emerald-700 underline dark:text-emerald-400">
+                Ver historias
               </Link>
             </div>
           )}
