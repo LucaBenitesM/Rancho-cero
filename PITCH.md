@@ -68,7 +68,7 @@ atendidas", con la brecha marcada. Sin datos reales: curvas sin números y
 | 2 | 0:52 | Graba el audio en vivo (texto abajo, **~18 s**). | Antes de que arranque: "Ahora el voluntario cuenta lo que no se ve en las fotos." Después, **silencio**: el micrófono del presentador no puede entrar en la grabación. |
 | 3 | 1:11 | Envía. Aparece "Transcribiendo…" y después "Analizando…". | "ElevenLabs transcribe el audio y Claude lo cruza con las fotos, usando la tabla de puntajes real de Cireneos." **Si a los 10 s no hay ficha, plan B.** |
 | 4 | 1:21 | 💥 **EL BOOM.** Se abre la ficha completa: 20 campos. Pausa de 2 segundos. Después toca **Techo** para ver la evidencia. | "Este es el relevamiento entero: los 20 campos de la tabla de Cireneos. Hace un minuto eran cinco fotos y un audio. Nadie escribió nada. Y cada campo dice de dónde sale: esta foto, esta frase, y con qué confianza." |
-| 5 | 1:33 | Señala los dos campos amarillos. Elige **"Menores de 12 a 18: uno"** y **"Impresión de la 1ª visita: alta"**. La ficha pasa a **confirmado**. | "No sabíamos si el más grande tiene diecisiete o dieciocho: la IA no adivina, lo marca. Y la impresión de la visita nunca la pone la IA: siempre la elige una persona." |
+| 5 | 1:33 | Señala los campos con ⚠️ y lee el motivo de la duda. En **"Menores de 12 a 18"** elige **"uno"**: el aviso desaparece. Toca **"Guardar ficha"**: el caso pasa a **confirmado**. | "La IA completa la ficha entera, pero no esconde sus dudas. No sabía si el más grande tiene diecisiete o dieciocho: lo señala y dice por qué. El voluntario revisa, corrige y guarda. La IA propone, la persona decide." |
 | 6 | 1:44 | Cambia a **coordinador** y muestra el **ajuste +10%** con motivo y evidencia. | "La tabla no tiene un campo para 'un cable colgado sobre una chapa mojada'. La IA lo vio en la foto y lo escuchó en el audio, y sugiere subir el puntaje un 10%. Nunca más de 15%." |
 | 7 | 1:55 | Toca **Aceptar**. | "Si nadie lo acepta, no se aplica. Y queda registrado quién lo aceptó." |
 | 8 | 1:59 | Abre el **Ranking**. El caso entra en el puesto 2 o 3. | "La familia entra al ranking con el mismo criterio con el que Cireneos ya prioriza, y cualquiera puede ver por qué." |
@@ -93,19 +93,19 @@ Qué debería salir, según la tabla de [FICHA.md](FICHA.md):
 | Inundable | `inundable` | Audio |
 | Enfermedades o discapacidad | `nada` | Audio |
 | Menores de 5 · de 5 a 12 | `uno` · `dos_a_tres` | Audio |
-| Menores de 12 a 18 | ⚠️ **a confirmar**: `ninguno` o `uno` | Audio ("diecisiete o dieciocho") |
+| Menores de 12 a 18 | `uno` o `ninguno`, ⚠️ señalado como dudoso | Audio ("diecisiete o dieciocho") |
 | Familia monoparental | `solo_madre` | Audio |
 | Vínculo con la organización | `de_1_a_2_anos` | Audio |
 | Desalojo | `largo_plazo` | Audio |
-| Impresión de la 1ª visita | ⚠️ **a confirmar** siempre (la IA nunca la completa) | Voluntario |
+| Impresión de la 1ª visita | `alta` (la propone la IA, el voluntario la revisa) | Fotos + audio |
 | Ajuste | **+10%** por riesgo eléctrico grave | Foto del cable + audio |
 
 - **Las fotos cargan la vivienda:** tienen que verse claramente las paredes de chapa o madera, el techo sin cielorraso, el piso de tierra, el baño afuera, las ventanas y el **cable colgado sobre la chapa**.
-- **Solo dos campos** deberían quedar "a confirmar": menores de 12 a 18 e impresión de la 1ª visita.
-- El audio dura unos 18 s, un poco más que los 15 sugeridos, porque la tabla real pide más datos: superficie, vínculo, desalojo y composición familiar. Si alguno se omite, queda "a confirmar" y la demo se alarga.
+- **Pocos campos** deberían salir señalados con ⚠️; seguro "Menores de 12 a 18". Si salen muchos, ajustar las fotos o el audio.
+- El audio dura unos 18 s, un poco más que los 15 sugeridos, porque la tabla real pide más datos: superficie, vínculo, desalojo y composición familiar. Si alguno se omite, la IA igual propone un valor pero lo señala como dudoso, y hay más campos para revisar en vivo.
 - No decir nombres, barrio ni dirección.
 - **Ensayarlo con las fotos reales y cronometrarlo.**
-- ⚠️ **"Adicionales"** (peso 3): según FICHA.md, por ahora lo elige el coordinador y quizás se fusione con el ajuste. Si la app lo deja "a confirmar", se resuelve en el paso 6 junto con el ajuste; hay que ver cómo queda en la app.
+- ⚠️ **"Adicionales"** (peso 3): ahora lo propone la IA a partir del audio (otras vulnerabilidades que no entran en los demás campos). Puede superponerse con el ajuste del +10% por el cable: hay que confirmar con Cireneos cómo separarlos.
 
 ### Plan B
 

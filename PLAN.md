@@ -33,11 +33,11 @@ se convierte en una ficha estructurada con evidencia. Esa es la función princip
 ## Flujo
 
 1. **Consentimiento.** Casilla obligatoria: "la familia dio su consentimiento".
-2. **Carga.** El voluntario sube 5–6 fotos y un audio de **máximo 2 minutos**.
+2. **Carga.** El voluntario sube de 1 a 6 fotos, en cualquier orden, y un audio de **máximo 2 minutos**.
 3. **Transcripción.** ElevenLabs transcribe el audio.
 4. **Ficha.** Claude analiza fotos + transcripción y completa la ficha con valor,
-   evidencia y confianza por campo. Lo dudoso queda "a confirmar".
-5. **Corrección.** El voluntario resuelve los "a confirmar" eligiendo opciones.
+   evidencia y confianza por campo. Completa todos los campos. Lo dudoso queda señalado con el motivo de la duda.
+5. **Revisión.** El voluntario revisa la ficha, corrige lo que haga falta (primero los campos señalados) y la guarda.
 6. **Urgencia.** Puntaje base de la tabla de Cireneos (total / 135, en %) +
    ajuste de la IA (±15%, con motivo y evidencia, puede subir o bajar) + puntos
    por espera. El coordinador acepta o rechaza el
@@ -71,7 +71,7 @@ fotos ni el audio ya subidos. No hay campo de texto alternativo.
 
 `relevado → confirmado → en campaña → financiado → casa entregada`
 
-- Pasa a **confirmado** cuando no queda ningún campo "a confirmar".
+- Pasa a **confirmado** cuando el voluntario revisa la ficha y la guarda.
 - Pasa a **financiado** solo al llegar a US$ 15.000 y suma al panel de impacto.
 - **Casa entregada** se marca a mano, sin pantalla propia.
 
@@ -86,7 +86,7 @@ registro. La portada tiene tres botones: "Soy coordinador", "Soy voluntario" y
 | Acción | Voluntario | Coordinador | Donante |
 |---|---|---|---|
 | Cargar visita | ✅ | ✅ | ❌ |
-| Corregir "a confirmar" | ✅ (sus casos) | ✅ | ❌ |
+| Revisar y corregir la ficha | ✅ (sus casos) | ✅ | ❌ |
 | Ver ranking completo | ❌ | ✅ | ❌ |
 | Aceptar / rechazar ajuste | ❌ | ✅ | ❌ |
 | Aprobar historia, imagen y campaña | ❌ | ✅ | ❌ |
@@ -119,7 +119,7 @@ registro de usuarios, recuperación de contraseña.
 
 | Nivel | Qué entra |
 |---|---|
-| **Imprescindible** | Carga (fotos + audio + consentimiento) → transcripción → ficha con evidencia y "a confirmar" → corrección → puntaje base → ranking simple |
+| **Imprescindible** | Carga (fotos + audio + consentimiento) → transcripción → ficha completa con evidencia y campos dudosos señalados → revisión → puntaje base → ranking simple |
 | **Importante** | Ajuste de urgencia con aceptar/rechazar · historia anónima · login con 3 roles |
 | **Deseable** | Revisión de privacidad · campaña con barra y donar · panel de impacto · recorte de foto |
 
@@ -139,7 +139,7 @@ registro de usuarios, recuperación de contraseña.
 - **Persona 1 — IA:** ficha según la tabla de Cireneos, dudas pendientes con Cireneos, acciones de
   Convex (ElevenLabs → Claude), prompts y esquemas.
 - **Persona 2 — App:** proyecto con Better-T-Stack, despliegue en Vercel, carga
-  desde el celular, ficha con "a confirmar", corrección, login.
+  desde el celular, ficha con campos dudosos señalados, revisión, login.
 - **Persona 3 — Demo y pitch:** ranking, campaña, datos sembrados, casos de
   prueba, guion de la demo, diapositivas y ensayos.
 
@@ -152,7 +152,7 @@ registro de usuarios, recuperación de contraseña.
 - **Audio:** al menos uno grabado con voz humana real (con ruido, pausas y
   muletillas), no solo voz sintética.
 - **Audio en vivo:** menos de 45 segundos. El guion incluye a propósito un dato
-  ambiguo (para que aparezca "a confirmar") y un factor que la ficha no
+  ambiguo (para que aparezca un campo señalado como dudoso) y un factor que la ficha no
   contempla (para que aparezca el ajuste).
 - **Ranking sembrado:** 8–10 familias ficticias con fechas de relevamiento
   distintas. El caso en vivo entra en el puesto 2 o 3, no en el 1.
@@ -165,7 +165,7 @@ registro de usuarios, recuperación de contraseña.
 | Tiempo | Contenido |
 |---|---|
 | 0:00–0:40 | Problema: dato de Cireneos, costo de US$ 15.000 por casa |
-| 0:40–2:40 | Demo: audio en vivo y fotos → ficha con "a confirmar" → corrección → ajuste con motivo → aceptación → el caso entra al ranking |
+| 0:40–2:40 | Demo: audio en vivo y fotos → ficha con campos dudosos señalados → revisión → ajuste con motivo → aceptación → el caso entra al ranking |
 | 2:40–3:10 | Historia anónima y campaña |
 | 3:10–4:00 | Impacto, validación de Cireneos, modelo de negocio |
 
@@ -179,7 +179,7 @@ después a otras organizaciones de vivienda y a gobiernos.
 **"¿Y si la IA se equivoca?"**
 
 > La IA nunca decide a quién le toca una casa. Hace tres cosas: completa la ficha,
-> y todo lo que no puede verificar lo marca "a confirmar" para que el voluntario
+> y todo lo que no puede verificar lo señala, con el motivo de la duda, para que el voluntario
 > lo revise; calcula el puntaje con una fórmula fija cuyos pesos definió
 > Cireneos, no la IA; y puede sugerir un ajuste de como máximo 15%, para arriba o
 > para abajo, siempre con el motivo y la evidencia a la vista: esta foto, esta

@@ -24,7 +24,7 @@ const ROLES = [
     href: "/dashboard",
     icon: HandHeart,
     titulo: "Soy voluntario",
-    desc: "Cargo visitas con fotos y audio, y corrijo lo que quedó a confirmar.",
+    desc: "Cargo visitas con fotos y audio, y reviso lo que la IA marcó como dudoso.",
   },
   {
     href: "/campana",
