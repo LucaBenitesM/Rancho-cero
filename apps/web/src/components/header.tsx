@@ -21,7 +21,7 @@ export default function Header() {
         {/* Wordmark */}
         <Link href="/" className="flex items-baseline gap-1.5">
           <span className="text-base font-semibold tracking-tight text-foreground">Rancho Cero</span>
-          <span className="h-1.5 w-1.5 rounded-full bg-teal-700 dark:bg-teal-500" aria-hidden />
+          <span className="h-1.5 w-1.5 rounded-full bg-green-700 dark:bg-green-500" aria-hidden />
         </Link>
 
         {/* Navegación */}
@@ -40,7 +40,7 @@ export default function Header() {
               >
                 {label}
                 {activo && (
-                  <span className="absolute inset-x-2.5 -bottom-[1px] h-[2px] rounded-full bg-teal-700 dark:bg-teal-500 sm:inset-x-3" />
+                  <span className="absolute inset-x-2.5 -bottom-[1px] h-[2px] rounded-full bg-green-700 dark:bg-green-500 sm:inset-x-3" />
                 )}
               </Link>
             );

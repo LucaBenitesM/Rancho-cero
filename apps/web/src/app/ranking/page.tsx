@@ -20,8 +20,8 @@ const OPCIONES_ORDEN: { id: Orden; label: string }[] = [
 function tonoPuntaje(p: number): { text: string; bar: string } {
   if (p >= 90) return { text: "text-red-600 dark:text-red-400", bar: "bg-red-500" };
   if (p >= 65) return { text: "text-orange-600 dark:text-orange-400", bar: "bg-orange-500" };
-  if (p >= 40) return { text: "text-teal-800 dark:text-teal-400", bar: "bg-teal-700" };
-  return { text: "text-teal-700 dark:text-teal-500", bar: "bg-teal-500" };
+  if (p >= 40) return { text: "text-green-800 dark:text-green-400", bar: "bg-green-700" };
+  return { text: "text-green-700 dark:text-green-500", bar: "bg-green-500" };
 }
 
 export default function RankingPage() {
@@ -50,7 +50,7 @@ export default function RankingPage() {
       <div className="mx-auto w-full max-w-2xl px-6 py-12">
         {/* Encabezado */}
         <header className="mb-6">
-          <p className="text-xs font-medium uppercase tracking-[0.2em] text-teal-700 dark:text-teal-500">
+          <p className="text-xs font-medium uppercase tracking-[0.2em] text-green-700 dark:text-green-500">
             Priorización
           </p>
           <h1 className="mt-2 text-2xl font-semibold tracking-tight">Ranking de urgencia</h1>
@@ -70,7 +70,7 @@ export default function RankingPage() {
                 onClick={() => setOrden(op.id)}
                 className={`rounded px-3 py-1 text-xs font-medium transition-colors ${
                   orden === op.id
-                    ? "bg-teal-700 text-white dark:bg-teal-600"
+                    ? "bg-green-700 text-white dark:bg-green-600"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -82,7 +82,7 @@ export default function RankingPage() {
 
         {/* Nota */}
         <div className="mb-3 flex items-center gap-2 rounded-md border border-border/60 bg-muted/30 px-3 py-2 text-[11px] text-muted-foreground">
-          <Info className="h-3.5 w-3.5 shrink-0 text-teal-700 dark:text-teal-500" />
+          <Info className="h-3.5 w-3.5 shrink-0 text-green-700 dark:text-green-500" />
           <span>
             Datos simulados · puntaje calculado en código (FICHA.md). Tocá una familia para ver su
             ficha.
@@ -118,7 +118,7 @@ export default function RankingPage() {
                     key={fila.id}
                     type="button"
                     onClick={() => setAbierto(fila.id as Id<"casos">)}
-                    className="group flex w-full items-center gap-3 rounded-xl border border-border/60 bg-card p-3.5 text-left transition-all hover:border-teal-600/50 hover:shadow-sm focus-visible:ring-2 focus-visible:ring-teal-600/40 focus-visible:outline-none"
+                    className="group flex w-full items-center gap-3 rounded-xl border border-border/60 bg-card p-3.5 text-left transition-all hover:border-green-600/50 hover:shadow-sm focus-visible:ring-2 focus-visible:ring-green-600/40 focus-visible:outline-none"
                     aria-label={`Abrir ficha de ${fila.alias}, puntaje ${fila.puntajeFinal}`}
                   >
                     {/* Puesto */}
@@ -127,7 +127,7 @@ export default function RankingPage() {
                         <span
                           className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
                             puesto <= 3
-                              ? "bg-teal-700 text-white"
+                              ? "bg-green-700 text-white"
                               : "bg-muted text-muted-foreground"
                           }`}
                         >
@@ -147,7 +147,7 @@ export default function RankingPage() {
                           {fila.barrio}
                         </span>
                         {fila.ajusteAplicado !== 0 && (
-                          <span className="flex items-center gap-0.5 rounded-full bg-teal-700/10 px-1.5 py-0.5 text-[10px] font-medium text-teal-700 dark:text-teal-400">
+                          <span className="flex items-center gap-0.5 rounded-full bg-green-700/10 px-1.5 py-0.5 text-[10px] font-medium text-green-700 dark:text-green-400">
                             <TrendingUp className="h-2.5 w-2.5" />
                             {fila.ajusteAplicado > 0 ? "+" : ""}
                             {Math.round(fila.ajusteAplicado * 100)}%
@@ -173,7 +173,7 @@ export default function RankingPage() {
                         {fila.puntajeFinal}
                       </div>
                       <div className="text-[10px] text-muted-foreground">{fila.total}/135</div>
-                      <ChevronRight className="mt-0.5 h-4 w-4 text-muted-foreground/40 transition-transform group-hover:translate-x-0.5 group-hover:text-teal-700" />
+                      <ChevronRight className="mt-0.5 h-4 w-4 text-muted-foreground/40 transition-transform group-hover:translate-x-0.5 group-hover:text-green-700" />
                     </div>
                   </button>
                 );

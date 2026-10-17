@@ -19,7 +19,7 @@ function SesionIniciada() {
   return (
     <div className="mx-auto w-full max-w-md px-4 py-10">
       <div className="rounded-2xl border border-border/60 bg-card p-6 text-center shadow-sm">
-        <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-700/10 text-teal-700">
+        <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-green-700/10 text-green-700">
           <CheckCircle2 className="h-6 w-6" />
         </span>
         <h1 className="mt-3 text-lg font-semibold">Sesión iniciada</h1>
@@ -34,7 +34,7 @@ function SesionIniciada() {
         <div className="mt-5 flex flex-col gap-2">
           <Link
             href="/nueva-visita"
-            className="rounded-xl bg-teal-700 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-teal-800"
+            className="rounded-xl bg-green-700 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-green-800"
           >
             Cargar nueva visita
           </Link>
@@ -64,7 +64,7 @@ export default function DashboardPage() {
       </Authenticated>
       <Unauthenticated>
         <div className="mx-auto w-full max-w-md px-4 py-10">
-          <div className="mb-4 flex items-center justify-center gap-2 text-teal-700 dark:text-teal-400">
+          <div className="mb-4 flex items-center justify-center gap-2 text-green-700 dark:text-green-400">
             <ShieldCheck className="h-5 w-5" />
             <span className="text-sm font-medium">Acceso del equipo de Cireneos</span>
           </div>
@@ -77,7 +77,7 @@ export default function DashboardPage() {
       </Unauthenticated>
       <AuthLoading>
         <div className="mx-auto w-full max-w-md px-4 py-16 text-center">
-          <Loader2 className="mx-auto h-6 w-6 animate-spin text-teal-700" />
+          <Loader2 className="mx-auto h-6 w-6 animate-spin text-green-700" />
           <p className="mt-2 text-sm text-muted-foreground">Cargando…</p>
         </div>
       </AuthLoading>

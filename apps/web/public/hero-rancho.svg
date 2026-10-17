@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Ilustración de un rancho en el campo al atardecer">
+  <defs>
+    <linearGradient id="cielo" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1f6b4f"/>
+      <stop offset="45%" stop-color="#3d8f68"/>
+      <stop offset="100%" stop-color="#8fc9a2"/>
+    </linearGradient>
+    <linearGradient id="campo" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#6fae7d"/>
+      <stop offset="100%" stop-color="#3f7d57"/>
+    </linearGradient>
+    <linearGradient id="colina" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#579072"/>
+      <stop offset="100%" stop-color="#2f6b4c"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Cielo -->
+  <rect width="1200" height="600" fill="url(#cielo)"/>
+
+  <!-- Sol suave -->
+  <circle cx="915" cy="165" r="70" fill="#f4e7b8" opacity="0.65"/>
+  <circle cx="915" cy="165" r="110" fill="#f4e7b8" opacity="0.18"/>
+
+  <!-- Colinas de fondo -->
+  <path d="M0 360 Q 300 300 600 350 T 1200 345 L1200 600 L0 600 Z" fill="url(#colina)" opacity="0.85"/>
+
+  <!-- Campo -->
+  <path d="M0 430 Q 350 390 700 420 T 1200 410 L1200 600 L0 600 Z" fill="url(#campo)"/>
+
+  <!-- Árbol a la izquierda -->
+  <g opacity="0.9">
+    <rect x="150" y="360" width="12" height="70" rx="4" fill="#3a5a40"/>
+    <circle cx="156" cy="350" r="40" fill="#4f7a54"/>
+    <circle cx="128" cy="365" r="28" fill="#466e4c"/>
+    <circle cx="186" cy="366" r="30" fill="#466e4c"/>
+  </g>
+
+  <!-- Rancho (casa sencilla, sin rasgos identificables) -->
+  <g>
+    <!-- cuerpo -->
+    <rect x="520" y="345" width="200" height="110" fill="#d9cbb2"/>
+    <!-- techo a dos aguas -->
+    <path d="M505 348 L620 292 L735 348 Z" fill="#8a5a3c"/>
+    <!-- puerta -->
+    <rect x="600" y="400" width="40" height="55" rx="2" fill="#6b4a32"/>
+    <!-- ventana -->
+    <rect x="545" y="378" width="38" height="34" rx="2" fill="#9ec6d8"/>
+    <rect x="657" y="378" width="38" height="34" rx="2" fill="#9ec6d8"/>
+    <!-- chimenea -->
+    <rect x="675" y="300" width="18" height="34" fill="#8a5a3c"/>
+  </g>
+
+  <!-- Casa container pequeña al lado (la solución) -->
+  <g>
+    <rect x="770" y="388" width="120" height="66" fill="#3d8f68"/>
+    <rect x="770" y="388" width="120" height="10" fill="#347a59"/>
+    <rect x="800" y="410" width="26" height="26" rx="2" fill="#bfe3cb"/>
+    <rect x="845" y="410" width="22" height="44" rx="2" fill="#2f6b4c"/>
+  </g>
+
+  <!-- Velo inferior para asentar la ilustración -->
+  <rect y="500" width="1200" height="100" fill="#2f6b4c" opacity="0.25"/>
+</svg>
