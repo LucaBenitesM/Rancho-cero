@@ -65,6 +65,10 @@ export const ORDEN_GRUPOS: GrupoFicha[] = [
 // Puntaje máximo de la planilla (suma de pesos × 3).
 export const PUNTAJE_MAXIMO = 135;
 
+// Si la IA deja esta cantidad de campos dudosos (o más), la ficha no se
+// muestra: se le pide al voluntario más audio o fotos y se vuelve a procesar.
+export const MAX_DUDOSOS_PARA_MOSTRAR_FICHA = 5;
+
 // ─── 1. MATERIALIDAD (peso 12) · foto (audio complementa) ──────
 const materialidad: DefinicionCampo[] = [
   {
@@ -323,6 +327,16 @@ export const CLAVES_CAMPO = CAMPOS_FICHA.map((c) => c.clave);
 // Busca la definición de un campo por su clave.
 export function definicionDe(clave: string): DefinicionCampo | undefined {
   return CAMPOS_FICHA.find((c) => c.clave === clave);
+}
+
+// Claves de los campos que la IA dejó dudosos, en el orden de la ficha.
+export function clavesDudosas(campos: Record<string, CampoFicha>): string[] {
+  return CLAVES_CAMPO.filter((clave) => campos[clave]?.dudoso);
+}
+
+// true = faltan datos: la ficha no se muestra hasta completar audio o fotos.
+export function faltanDatos(campos: Record<string, CampoFicha>): boolean {
+  return clavesDudosas(campos).length >= MAX_DUDOSOS_PARA_MOSTRAR_FICHA;
 }
 
 // Puntuación de un valor dentro de un campo (0 si no se encuentra).

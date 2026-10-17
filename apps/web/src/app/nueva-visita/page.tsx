@@ -6,6 +6,7 @@ import {
   CAMPOS_FICHA,
   ETIQUETA_GRUPO,
   ORDEN_GRUPOS,
+  clavesDudosas,
   type CampoFicha,
   type GrupoFicha,
 } from "@rancho-cero/backend/convex/ficha";
@@ -20,12 +21,13 @@ import {
 import { Checkbox } from "@rancho-cero/ui/components/checkbox";
 import { Label } from "@rancho-cero/ui/components/label";
 import { useAction, useMutation } from "convex/react";
-import { TriangleAlert } from "lucide-react";
-import { useState } from "react";
+import { Camera, Mic, TriangleAlert } from "lucide-react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 
 import GrabadorAudio from "@/components/grabador-audio";
 import { MAX_FOTOS, ZonaFotos } from "@/components/zona-fotos";
+import { datosQueFaltan, mensajeFaltante, recomendacionGeneral } from "@/lib/pedido-datos";
 
 // Mapa clave -> campo de la ficha, para editar la ficha devuelta por la IA.
 type FichaEditable = Record<string, CampoFicha>;
@@ -72,7 +74,9 @@ function etiquetaConfianza(c: CampoFicha) {
   return { texto: "Confianza baja", clase: "bg-muted text-muted-foreground" };
 }
 
-type Paso = "carga" | "procesando" | "ficha";
+// "faltan-datos": la IA dejó demasiados campos dudosos; se piden más audio o
+// fotos y la ficha no se muestra hasta volver a procesar.
+type Paso = "carga" | "procesando" | "faltan-datos" | "ficha";
 
 // Convierte errores técnicos (p. ej. "Anthropic devolvió 400: {...}") en un
 // mensaje presentable para la demo, sin volcar el detalle de la API.
@@ -95,6 +99,7 @@ export default function NuevaVisitaPage() {
   const crearCaso = useMutation(api.casos.crearCaso);
   const procesarVisita = useAction(api.procesarVisita.procesarVisita);
   const guardarCorreccion = useMutation(api.casos.guardarCorreccion);
+  const agregarDatos = useMutation(api.casos.agregarDatos);
 
   const [paso, setPaso] = useState<Paso>("carga");
   const [consentimiento, setConsentimiento] = useState(false);
@@ -107,6 +112,18 @@ export default function NuevaVisitaPage() {
   const [ficha, setFicha] = useState<FichaEditable | null>(null);
   const [guardando, setGuardando] = useState(false);
 
+  // Cuando faltan datos: qué campos quedaron dudosos, el audio extra que se
+  // está grabando y cuántos audios ya tiene el caso.
+  const [clavesFaltantes, setClavesFaltantes] = useState<string[]>([]);
+  const [audioExtra, setAudioExtra] = useState<File | null>(null);
+  const [cantidadAudios, setCantidadAudios] = useState(0);
+  const [intento, setIntento] = useState(0); // reinicia el grabador en cada intento
+
+  // Fotos ya subidas (archivo original -> storageId), para no volver a subirlas.
+  const fotosSubidas = useRef(new WeakMap<File, Id<"_storage">>());
+  // Fotos con las que se procesó la última vez, para saber si cambiaron.
+  const fotosProcesadas = useRef<File[]>([]);
+
   // Sube un archivo al storage de Convex y devuelve su storageId tipado.
   async function subirArchivo(file: File): Promise<Id<"_storage">> {
     const url = await generarUrlDeSubida();
@@ -118,6 +135,50 @@ export default function NuevaVisitaPage() {
     if (!resp.ok) throw new Error("Falló la subida de un archivo.");
     const { storageId } = (await resp.json()) as { storageId: Id<"_storage"> };
     return storageId;
+  }
+
+  // Achica y sube solo las fotos nuevas; las ya subidas reusan su storageId.
+  async function subirFotos(lista: File[]): Promise<Id<"_storage">[]> {
+    return Promise.all(
+      lista.map(async (foto) => {
+        const previa = fotosSubidas.current.get(foto);
+        if (previa) return previa;
+        // Achica la foto antes de subirla (evita el límite de Claude).
+        const id = await subirArchivo(await comprimirImagen(foto));
+        fotosSubidas.current.set(foto, id);
+        return id;
+      })
+    );
+  }
+
+  // Llama a la IA con todo lo que tiene el caso y decide qué pantalla mostrar.
+  async function correrIA(id: Id<"casos">) {
+    const res = await procesarVisita({ casoId: id });
+    fotosProcesadas.current = fotos;
+    setTranscripcion(res.transcripcion);
+    setTranscripcionFallo(res.transcripcionFallo);
+
+    // Demasiados campos dudosos: la ficha no se muestra, se piden más datos.
+    if (res.faltanDatos) {
+      setClavesFaltantes(clavesDudosas(res.campos as Record<string, CampoFicha>));
+      setFicha(null);
+      setPaso("faltan-datos");
+      toast.warning("Faltan datos para completar la ficha.");
+      return;
+    }
+
+    // La action devuelve la ficha ya completada por la IA.
+    const inicial: FichaEditable = {};
+    for (const def of CAMPOS_FICHA) {
+      inicial[def.clave] = res.campos[def.clave] as CampoFicha;
+    }
+    setFicha(inicial);
+    setPaso("ficha");
+    if (res.transcripcionFallo) {
+      toast.warning("No se pudo transcribir el audio; la ficha se completó sin ese audio.");
+    } else {
+      toast.success("Ficha generada. Revisá los campos señalados.");
+    }
   }
 
   // Carga -> procesamiento: sube todo, crea el caso y llama a la IA.
@@ -142,9 +203,7 @@ export default function NuevaVisitaPage() {
     setPaso("procesando");
     setTranscripcionFallo(false);
     try {
-      // Achica las fotos antes de subirlas (evita el límite de Claude).
-      const fotosComprimidas = await Promise.all(fotos.map(comprimirImagen));
-      const fotosIds = await Promise.all(fotosComprimidas.map(subirArchivo));
+      const fotosIds = await subirFotos(fotos);
       const audioId = await subirArchivo(audio);
 
       const nuevoCasoId = await crearCaso({
@@ -153,31 +212,54 @@ export default function NuevaVisitaPage() {
         audioStorageId: audioId,
       });
       setCasoId(nuevoCasoId);
+      setCantidadAudios(1);
 
-      const res = await procesarVisita({
-        casoId: nuevoCasoId,
-        fotos: fotosIds,
-        audioStorageId: audioId,
-      });
-      setTranscripcion(res.transcripcion);
-      setTranscripcionFallo(res.transcripcionFallo);
-
-      // La action devuelve la ficha ya completada por la IA.
-      const inicial: FichaEditable = {};
-      for (const def of CAMPOS_FICHA) {
-        inicial[def.clave] = res.campos[def.clave] as CampoFicha;
-      }
-      setFicha(inicial);
-      setPaso("ficha");
-      if (res.transcripcionFallo) {
-        toast.warning("No se pudo transcribir el audio; la ficha se completó solo con las fotos.");
-      } else {
-        toast.success("Ficha generada. Revisá los campos señalados.");
-      }
+      await correrIA(nuevoCasoId);
     } catch (err) {
       console.error(err);
       toast.error(mensajeAmigable(err));
       setPaso("carga");
+    }
+  }
+
+  // Faltan datos -> procesamiento: suma el audio nuevo y las fotos al mismo
+  // caso (sin borrar lo anterior) y vuelve a procesar con todo junto.
+  async function reprocesar() {
+    if (!casoId) return;
+    if (fotos.length < 1 || fotos.length > MAX_FOTOS) {
+      toast.error(`Tiene que haber entre 1 y ${MAX_FOTOS} fotos.`);
+      return;
+    }
+    const fotosCambiaron =
+      fotos.length !== fotosProcesadas.current.length ||
+      fotos.some((f, i) => f !== fotosProcesadas.current[i]);
+    if (!audioExtra && !fotosCambiaron) {
+      toast.error("Grabá un audio nuevo o agregá fotos antes de volver a procesar.");
+      return;
+    }
+    if (audioExtra && audioExtra.size > MAX_AUDIO_BYTES) {
+      toast.error("El audio es muy pesado. Grabá hasta 2 minutos (máx 15 MB).");
+      return;
+    }
+
+    setPaso("procesando");
+    setTranscripcionFallo(false);
+    try {
+      const fotosIds = await subirFotos(fotos);
+      const audioId = audioExtra ? await subirArchivo(audioExtra) : undefined;
+      await agregarDatos({ casoId, fotos: fotosIds, audioStorageId: audioId });
+      // El audio ya quedó guardado en el caso: el grabador vuelve a empezar.
+      if (audioId) {
+        setCantidadAudios((n) => n + 1);
+        setAudioExtra(null);
+        setIntento((n) => n + 1);
+      }
+
+      await correrIA(casoId);
+    } catch (err) {
+      console.error(err);
+      toast.error(mensajeAmigable(err));
+      setPaso("faltan-datos");
     }
   }
 
@@ -205,6 +287,7 @@ export default function NuevaVisitaPage() {
   }
 
   const dudosos = ficha ? CAMPOS_FICHA.filter((d) => ficha[d.clave]?.dudoso).length : 0;
+  const faltan = datosQueFaltan(clavesFaltantes);
 
   return (
     <main className="container mx-auto max-w-3xl space-y-6 px-4 py-6 overflow-y-auto">
@@ -277,6 +360,76 @@ export default function NuevaVisitaPage() {
             </p>
           </CardContent>
         </Card>
+      )}
+
+      {/* Sin botón para saltear: la ficha solo aparece cuando la IA tiene datos suficientes. */}
+      {paso === "faltan-datos" && (
+        <div className="space-y-6">
+          <div className="space-y-2 rounded-none bg-amber-500/10 p-4 text-amber-800" role="alert">
+            <p className="flex items-center gap-1.5 font-semibold">
+              <TriangleAlert className="h-4 w-4" aria-hidden /> Necesitamos un poco más de información
+            </p>
+            <p className="text-sm">{mensajeFaltante(faltan)}</p>
+            <p className="text-sm font-medium">{recomendacionGeneral(faltan)}</p>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Qué conviene agregar</CardTitle>
+              <CardDescription>
+                No se borra nada de lo que ya cargaste: la IA va a usar todo junto.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2">
+                {faltan.map((f) => (
+                  <li key={f.clave} className="flex items-start gap-2 text-sm">
+                    {f.tipo === "foto" ? (
+                      <Camera className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-label="Foto" />
+                    ) : (
+                      <Mic className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-label="Audio" />
+                    )}
+                    <span>{f.sugerencia}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Audio nuevo</CardTitle>
+              <CardDescription>
+                {cantidadAudios === 1
+                  ? "El audio que grabaste antes queda guardado."
+                  : `Los ${cantidadAudios} audios que grabaste antes quedan guardados.`}{" "}
+                Grabá otro contando lo que falta.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <GrabadorAudio key={intento} onAudio={setAudioExtra} maxSegundos={120} />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                Fotos de la vivienda ({fotos.length}/{MAX_FOTOS})
+              </CardTitle>
+              <CardDescription>
+                Tus fotos quedan guardadas. Podés agregar más, o quitar alguna para cambiarla por
+                una más clara.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ZonaFotos fotos={fotos} onChange={setFotos} />
+            </CardContent>
+          </Card>
+
+          <Button type="button" size="lg" onClick={reprocesar}>
+            Volver a procesar con todo junto
+          </Button>
+        </div>
       )}
 
       {paso === "ficha" && ficha && (

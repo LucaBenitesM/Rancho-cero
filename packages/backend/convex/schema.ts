@@ -48,7 +48,14 @@ export default defineSchema({
     // Entradas originales
     fotos: v.array(v.string()), // storage IDs de Convex
     audioStorageId: v.optional(v.string()),
-    audioTranscripcion: v.optional(v.string()),
+    audiosExtra: v.optional(v.array(v.string())), // audios agregados cuando faltaban datos
+    // Transcripción de cada audio (así no se transcribe dos veces el mismo).
+    transcripciones: v.optional(
+      v.array(v.object({ audioStorageId: v.string(), texto: v.string() }))
+    ),
+    audioTranscripcion: v.optional(v.string()), // todas las transcripciones juntas
+    // true = la IA dejó demasiados campos dudosos; no se puede confirmar todavía.
+    faltanDatos: v.optional(v.boolean()),
 
     // Campos de la tabla de puntajes de Cireneos (docs/tabla_puntajes.xlsx).
     // Cada uno puntúa peso × puntuación (1..3, algunos 0..3). Máximo: 135.
