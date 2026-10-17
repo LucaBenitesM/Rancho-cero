@@ -65,8 +65,9 @@ export const ORDEN_GRUPOS: GrupoFicha[] = [
 // Puntaje máximo de la planilla (suma de pesos × 3).
 export const PUNTAJE_MAXIMO = 135;
 
-// Si la IA deja esta cantidad de campos dudosos (o más), la ficha no se
-// muestra: se le pide al voluntario más audio o fotos y se vuelve a procesar.
+// Si quedan esta cantidad de campos SIN dato (o más) tras procesar, la ficha
+// no se muestra: se le pide al voluntario otro audio o más fotos. Con menos,
+// la ficha se arma con lo que hay y el voluntario completa el resto.
 export const MAX_DUDOSOS_PARA_MOSTRAR_FICHA = 5;
 
 // ─── 1. MATERIALIDAD (peso 12) · foto (audio complementa) ──────
@@ -329,14 +330,28 @@ export function definicionDe(clave: string): DefinicionCampo | undefined {
   return CAMPOS_FICHA.find((c) => c.clave === clave);
 }
 
-// Claves de los campos que la IA dejó dudosos, en el orden de la ficha.
+// Claves de los campos que la IA dejó dudosos (para revisar), en orden.
 export function clavesDudosas(campos: Record<string, CampoFicha>): string[] {
   return CLAVES_CAMPO.filter((clave) => campos[clave]?.dudoso);
 }
 
-// true = faltan datos: la ficha no se muestra hasta completar audio o fotos.
+// Un campo está "sin dato" cuando no surgió de las fotos ni del audio:
+// la IA no inventa un valor, lo deja vacío para que lo complete una persona
+// o se consiga con otro audio.
+export function sinDato(campo?: CampoFicha): boolean {
+  return !campo || campo.valor === "";
+}
+
+// Claves de los campos sin dato (no se mencionaron ni se ven), en orden.
+export function clavesSinDato(campos: Record<string, CampoFicha>): string[] {
+  return CLAVES_CAMPO.filter((clave) => sinDato(campos[clave]));
+}
+
+// true = faltan datos: quedan demasiados campos SIN dato (no simplemente
+// dudosos). Recién ahí se pide otro audio. Si hay pocos, se completa con lo
+// que haya y el voluntario revisa el resto.
 export function faltanDatos(campos: Record<string, CampoFicha>): boolean {
-  return clavesDudosas(campos).length >= MAX_DUDOSOS_PARA_MOSTRAR_FICHA;
+  return clavesSinDato(campos).length >= MAX_DUDOSOS_PARA_MOSTRAR_FICHA;
 }
 
 // Puntuación de un valor dentro de un campo (0 si no se encuentra).

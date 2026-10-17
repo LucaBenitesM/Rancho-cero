@@ -263,13 +263,22 @@ export default function NuevaVisitaPage() {
     }
   }
 
-  // Cualquier edición del voluntario saca la señal de duda del campo.
+  // Cualquier edición del voluntario saca la señal de duda del campo, salvo
+  // que lo deje "sin dato" (valor vacío): ahí sigue señalado.
   function actualizarCampo(clave: string, cambios: Partial<CampoFicha>) {
-    setFicha((prev) =>
-      prev
-        ? { ...prev, [clave]: { ...prev[clave], ...cambios, dudoso: false, motivoDuda: "" } }
-        : prev
-    );
+    setFicha((prev) => {
+      if (!prev) return prev;
+      const combinado = { ...prev[clave], ...cambios };
+      const vacio = combinado.valor === "";
+      return {
+        ...prev,
+        [clave]: {
+          ...combinado,
+          dudoso: vacio,
+          motivoDuda: vacio ? combinado.motivoDuda || "Sin dato" : "",
+        },
+      };
+    });
   }
 
   async function guardar() {
@@ -526,6 +535,9 @@ function FichaEditor({
                   campo.dudoso ? "border-amber-500" : "border-input"
                 }`}
               >
+                {/* "Sin dato": el campo no surgió del audio/fotos. El voluntario
+                    puede elegir un valor o dejarlo sin dato (aporta 0 al puntaje). */}
+                <option value="">— Sin dato —</option>
                 {def.opciones.map((o) => (
                   <option key={o.valor} value={o.valor}>
                     {o.descripcion}
