@@ -3,6 +3,7 @@
 import { api } from "@rancho-cero/backend/convex/_generated/api";
 import { useConvexAuth, useQuery } from "convex/react";
 import { LogOut } from "lucide-react";
+import type { Route } from "next";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
@@ -10,11 +11,12 @@ import { authClient } from "@/lib/auth-client";
 
 import { ModeToggle } from "./mode-toggle";
 
-const LINKS = [
+// /historias la suma otro PR: hasta entonces no está en las rutas tipadas.
+const LINKS: { to: Route; label: string; soloCoordinador: boolean }[] = [
   { to: "/nueva-visita", label: "Nueva visita", soloCoordinador: false },
-  { to: "/historias", label: "Historias", soloCoordinador: false },
+  { to: "/historias" as Route, label: "Historias", soloCoordinador: false },
   { to: "/ranking", label: "Ranking", soloCoordinador: true },
-] as const;
+];
 
 export default function Header() {
   const pathname = usePathname();
