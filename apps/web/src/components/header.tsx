@@ -46,7 +46,7 @@ export default function Header() {
 
         {/* Navegación: en el celular pasa a una segunda fila */}
         {links.length > 0 && (
-          <nav className="order-last -mx-1 flex w-full items-center gap-1 overflow-x-auto pb-1 sm:order-none sm:mx-0 sm:w-auto sm:flex-1 sm:justify-end sm:gap-2 sm:pb-0">
+          <nav className="order-last -mx-1 flex w-full items-center gap-1 overflow-x-auto sm:order-none sm:mx-0 sm:w-auto sm:flex-1 sm:justify-end sm:gap-2 sm:overflow-x-visible">
             {links.map(({ to, label }) => {
               const activo = pathname.startsWith(to);
               return (
