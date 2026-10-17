@@ -3,6 +3,7 @@
 //
 // - seed:    carga 8 familias de ejemplo (DATOS SIMULADOS) si la tabla
 //            está vacía. Alias anónimos, sin nombres ni direcciones.
+//            A, D, E y H tienen fotos y guion de audio en demo/GUIA-DEMO.md.
 // - ranking: devuelve los casos confirmados con el puntaje y la explicación
 //            calculados en código (urgencia.ts), ordenados por puntaje.
 // - obtener: un caso con su desglose completo para la ficha.
@@ -27,7 +28,9 @@ interface SeedCaso {
   alias: string;
   barrio: string;
   diasAtras: number;
+  transcripcion?: string; // guion del audio (demo/GUIA-DEMO.md)
   campos: Record<string, string>;
+  evidencias?: Record<string, string>; // si falta, se usa EVIDENCIA
   ajuste?: {
     porcentaje: number;
     motivo: string;
@@ -38,33 +41,63 @@ interface SeedCaso {
 
 const SEED: SeedCaso[] = [
   {
+    // Muy urgente. Fotos y guion del audio: demo/familia-a-muy-urgente/ (ver demo/GUIA-DEMO.md)
     alias: "Familia A",
     barrio: "Barrio Esperanza",
-    diasAtras: 190,
+    diasAtras: 125,
+    transcripcion:
+      "Bueno, estamos acá en la casa... es todo de chapa y madera, el techo no tiene nada abajo, " +
+      "en invierno es un freezer. El piso es de tierra. Baño no tienen, usan el de una vecina. " +
+      "Viven la mamá con tres gurises, dos chiquitos de menos de cinco y uno de ocho, todo en un " +
+      "solo ambiente, no habrá más de quince metros. Uno de los chiquitos tiene problemas para " +
+      "respirar, ella dice que empeora con la humedad. Cuando llueve fuerte el agua entra por " +
+      "abajo, y la casa está pegada a la cañada, eh, el año pasado se llevó un pedazo del " +
+      "terreno. Conocemos a la familia hace como un año y medio. El dueño del terreno les dijo " +
+      "que en unos meses tienen que irse.",
     campos: {
       pared: "precaria",
       techo: "liviano_sin_aislacion",
       piso: "tierra",
       bano: "no_tiene",
       m2PorPersona: "menos_de_5",
-      ventanas: "sin_ventanas",
+      ventanas: "insuficientes",
       separacionAmbientes: "sin_separacion",
       riesgoDerrumbe: "riesgo_derrumbe",
       inundable: "inundable",
-      enfermedad: "grave",
+      enfermedad: "media",
       menoresDe5: "dos_a_tres",
-      menores5a12: "dos_a_tres",
-      menores12a18: "uno",
+      menores5a12: "uno",
+      menores12a18: "ninguno",
       monoparental: "solo_madre",
-      vinculoOrganizacion: "mas_de_2_anos",
+      vinculoOrganizacion: "de_1_a_2_anos",
       impresionPrimeraVisita: "alta",
-      desalojo: "inmediato",
-      adicionales: "graves",
+      desalojo: "mediano_plazo",
+      adicionales: "algunos",
+    },
+    evidencias: {
+      pared: "foto 1: paredes de chapa y tablas de madera",
+      techo: "foto 2: chapa sin cielorraso; audio: 'en invierno es un freezer'",
+      piso: "foto 3: piso de tierra; audio: 'el piso es de tierra'",
+      bano: "audio: 'baño no tienen, usan el de una vecina'",
+      m2PorPersona: "audio: 'no habrá más de quince metros' para 4 personas",
+      ventanas: "foto 1: una sola abertura chica tapada con nylon",
+      separacionAmbientes: "audio: 'todo en un solo ambiente'",
+      riesgoDerrumbe: "foto 2: chapas sueltas sin fijar, apoyadas con piedras",
+      inundable: "audio: 'cuando llueve fuerte el agua entra por abajo'",
+      enfermedad: "audio: 'tiene problemas para respirar, empeora con la humedad'",
+      menoresDe5: "audio: 'dos chiquitos de menos de cinco'",
+      menores5a12: "audio: 'uno de ocho'",
+      menores12a18: "audio: solo menciona tres niños, todos menores de 12",
+      monoparental: "audio: 'viven la mamá con tres gurises'",
+      vinculoOrganizacion: "audio: 'conocemos a la familia hace como un año y medio'",
+      impresionPrimeraVisita: "elegida por el voluntario",
+      desalojo: "audio: 'en unos meses tienen que irse'",
+      adicionales: "elegido por el coordinador",
     },
     ajuste: {
-      porcentaje: 12,
-      motivo: "La vivienda está al borde de una cañada que se desborda.",
-      evidencia: "audio: 'el año pasado el agua llegó hasta la puerta'",
+      porcentaje: 10,
+      motivo: "La vivienda está al borde de una cañada que ya erosionó parte del terreno.",
+      evidencia: "audio: 'la casa está pegada a la cañada, el año pasado se llevó un pedazo del terreno'",
       estado: "aceptado",
     },
   },
@@ -125,9 +158,19 @@ const SEED: SeedCaso[] = [
     },
   },
   {
+    // Intermedia (lleva tiempo esperando). Fotos y guion del audio: demo/familia-d-intermedia-espera/ (ver demo/GUIA-DEMO.md)
     alias: "Familia D",
     barrio: "Barrio Esperanza",
-    diasAtras: 60,
+    diasAtras: 215,
+    transcripcion:
+      "Es una casa de bloque, sin revocar. El techo es chapa sola, sin aislación. El piso es " +
+      "contrapiso, nada encima. El baño está afuera, en el fondo. Son mamá, papá y cuatro hijos: " +
+      "uno de tres años, dos en la escuela y una de catorce. Tienen dos piezas separadas con " +
+      "cortina, en total serán unos cuarenta metros. Hay rajaduras en la pared del fondo. Dicen " +
+      "que hay ratas, sobre todo en invierno. El papá tiene un problema en la espalda, pero " +
+      "trabaja igual. Esta familia viene a la organización hace más de tres años. El terreno es " +
+      "de ellos, así que por ese lado tranquilos. Ah, y el agua la sacan de una canilla del " +
+      "vecino con una manguera.",
     campos: {
       pared: "material_sin_revoque",
       techo: "liviano_sin_aislacion",
@@ -139,39 +182,101 @@ const SEED: SeedCaso[] = [
       riesgoDerrumbe: "rajaduras",
       inundable: "plagas",
       enfermedad: "leve",
-      menoresDe5: "dos_a_tres",
-      menores5a12: "uno",
+      menoresDe5: "uno",
+      menores5a12: "dos_a_tres",
       menores12a18: "uno",
-      monoparental: "solo_madre",
-      vinculoOrganizacion: "de_1_a_2_anos",
+      monoparental: "padre_y_madre",
+      vinculoOrganizacion: "mas_de_2_anos",
       impresionPrimeraVisita: "media",
-      desalojo: "mediano_plazo",
-      adicionales: "algunos",
+      desalojo: "largo_plazo",
+      adicionales: "ninguno",
+    },
+    evidencias: {
+      pared: "foto 1: bloque a la vista",
+      techo: "foto 2: chapa sin cielorraso",
+      piso: "foto 3: contrapiso sin revestir",
+      bano: "audio: 'el baño está afuera, en el fondo'; foto 5",
+      m2PorPersona: "audio: 'serán unos cuarenta metros' para 6 personas",
+      ventanas: "foto 4: una ventana por pieza, chica",
+      separacionAmbientes: "audio: 'dos piezas separadas con cortina'",
+      riesgoDerrumbe: "foto 4: rajadura diagonal en la pared del fondo",
+      inundable: "audio: 'dicen que hay ratas'",
+      enfermedad: "audio: 'tiene un problema en la espalda, pero trabaja igual'",
+      menoresDe5: "audio: 'uno de tres años'",
+      menores5a12: "audio: 'dos en la escuela'",
+      menores12a18: "audio: 'una de catorce'",
+      monoparental: "audio: 'son mamá, papá y cuatro hijos'",
+      vinculoOrganizacion: "audio: 'viene a la organización hace más de tres años'",
+      impresionPrimeraVisita: "elegida por el voluntario",
+      desalojo: "audio: 'el terreno es de ellos, así que por ese lado tranquilos'",
+      adicionales: "elegido por el coordinador",
+    },
+    ajuste: {
+      porcentaje: 5,
+      motivo: "No tienen agua potable propia: dependen de la canilla de un vecino.",
+      evidencia: "audio: 'el agua la sacan de una canilla del vecino con una manguera'",
+      estado: "sugerido",
     },
   },
   {
+    // Intermedia (desalojo inmediato). Fotos y guion del audio: demo/familia-e-intermedia-desalojo/ (ver demo/GUIA-DEMO.md)
     alias: "Familia E",
     barrio: "Km 14",
-    diasAtras: 45,
+    diasAtras: 35,
+    transcripcion:
+      "La casa es de madera, tiene un cielorraso de espuma que pusieron ellos. El piso es " +
+      "contrapiso. El baño está adentro pero no tiene puerta, tiene una cortina. Serán unos " +
+      "treinta y cinco metros en total. Vive un papá con dos hijos adolescentes, de trece y " +
+      "dieciséis, y una nena de diez. Tienen ventanas bien, entra luz. Dicen que cuando sube el " +
+      "arroyo el agua llega adentro, pasó dos veces este año. La abuela vive con ellos y tiene " +
+      "una enfermedad que la tiene bastante limitada. Los conocimos hace poco, unos meses. Ojo " +
+      "que tienen que dejar la casa ya, el mes que viene. La conexión de luz es medio colgada, " +
+      "pero dicen que ya pidieron que se la regularicen.",
     campos: {
-      pared: "material_sin_revoque",
+      pared: "precaria",
       techo: "liviano_con_aislacion",
       piso: "material_sin_terminacion",
       bano: "incompleto_o_exterior",
       m2PorPersona: "de_5_a_10",
-      ventanas: "insuficientes",
-      separacionAmbientes: "puertas",
-      riesgoDerrumbe: "rajaduras",
-      inundable: "normal",
+      ventanas: "suficientes",
+      separacionAmbientes: "cortinas",
+      riesgoDerrumbe: "normal",
+      inundable: "inundable",
       enfermedad: "media",
-      menoresDe5: "uno",
+      menoresDe5: "ninguno",
       menores5a12: "uno",
-      menores12a18: "uno",
-      monoparental: "padre_y_madre",
-      vinculoOrganizacion: "de_1_a_2_anos",
+      menores12a18: "dos",
+      monoparental: "solo_padre",
+      vinculoOrganizacion: "menos_de_1_ano",
       impresionPrimeraVisita: "media",
-      desalojo: "largo_plazo",
-      adicionales: "algunos",
+      desalojo: "inmediato",
+      adicionales: "ninguno",
+    },
+    evidencias: {
+      pared: "foto 1: paredes de tablas de madera",
+      techo: "foto 2: chapa con cielorraso de espuma; audio: 'cielorraso que pusieron ellos'",
+      piso: "foto 3: contrapiso",
+      bano: "audio: 'está adentro pero no tiene puerta'",
+      m2PorPersona: "audio: 'serán unos treinta y cinco metros' para 5 personas",
+      ventanas: "foto 1: dos ventanas grandes; audio: 'entra luz'",
+      separacionAmbientes: "foto 4: ambientes separados con cortinas",
+      riesgoDerrumbe: "fotos 1 y 2: sin daños estructurales visibles",
+      inundable: "audio: 'cuando sube el arroyo el agua llega adentro, pasó dos veces este año'",
+      enfermedad: "audio: 'una enfermedad que la tiene bastante limitada'",
+      menoresDe5: "audio: no hay niños menores de 5",
+      menores5a12: "audio: 'una nena de diez'",
+      menores12a18: "audio: 'dos hijos adolescentes, de trece y dieciséis'",
+      monoparental: "audio: 'vive un papá con dos hijos adolescentes'",
+      vinculoOrganizacion: "audio: 'los conocimos hace poco, unos meses'",
+      impresionPrimeraVisita: "elegida por el voluntario",
+      desalojo: "audio: 'tienen que dejar la casa ya, el mes que viene'",
+      adicionales: "elegido por el coordinador",
+    },
+    ajuste: {
+      porcentaje: 8,
+      motivo: "Conexión eléctrica irregular cerca de la chapa.",
+      evidencia: "audio: 'la conexión de luz es medio colgada'",
+      estado: "rechazado",
     },
   },
   {
@@ -225,13 +330,21 @@ const SEED: SeedCaso[] = [
     },
   },
   {
+    // Poco urgente. Fotos y guion del audio: demo/familia-h-poco-urgente/ (ver demo/GUIA-DEMO.md)
     alias: "Familia H",
     barrio: "Km 14",
-    diasAtras: 10,
+    diasAtras: 65,
+    transcripcion:
+      "Esta casa está bastante bien, eh. Es de material, revocada, con techo de losa. El piso es " +
+      "contrapiso, les falta revestir. Baño completo con puerta. Son una pareja con un hijo de " +
+      "seis años. La casa es amplia, unos cincuenta metros, tiene dos dormitorios con puerta. " +
+      "Nunca se les inundó y no tienen bichos. Nadie tiene problemas de salud. Los conocimos este " +
+      "año. Me contaron que el año pasado agregaron un dormitorio con ayuda de la familia, y que " +
+      "no tienen apuro.",
     campos: {
       pared: "material_con_revoque",
       techo: "material",
-      piso: "material_revestido",
+      piso: "material_sin_terminacion",
       bano: "completo_con_puerta",
       m2PorPersona: "mas_de_10",
       ventanas: "suficientes",
@@ -240,13 +353,39 @@ const SEED: SeedCaso[] = [
       inundable: "normal",
       enfermedad: "nada",
       menoresDe5: "ninguno",
-      menores5a12: "ninguno",
-      menores12a18: "uno",
+      menores5a12: "uno",
+      menores12a18: "ninguno",
       monoparental: "padre_y_madre",
       vinculoOrganizacion: "menos_de_1_ano",
       impresionPrimeraVisita: "baja",
       desalojo: "largo_plazo",
       adicionales: "ninguno",
+    },
+    evidencias: {
+      pared: "foto 1: bloque revocado y pintado",
+      techo: "foto 2: losa de hormigón",
+      piso: "foto 3: contrapiso sin revestir; audio: 'les falta revestir'",
+      bano: "foto 5: baño completo con puerta",
+      m2PorPersona: "audio: 'unos cincuenta metros' para 3 personas",
+      ventanas: "fotos 1 y 4: ventanas en todos los ambientes",
+      separacionAmbientes: "audio: 'dos dormitorios con puerta'",
+      riesgoDerrumbe: "fotos 1 y 2: sin daños visibles",
+      inundable: "audio: 'nunca se les inundó y no tienen bichos'",
+      enfermedad: "audio: 'nadie tiene problemas de salud'",
+      menoresDe5: "audio: un solo hijo, de seis años",
+      menores5a12: "audio: 'un hijo de seis años'",
+      menores12a18: "audio: un solo hijo, de seis años",
+      monoparental: "audio: 'son una pareja con un hijo'",
+      vinculoOrganizacion: "audio: 'los conocimos este año'",
+      impresionPrimeraVisita: "elegida por el voluntario",
+      desalojo: "audio: 'no tienen apuro'",
+      adicionales: "elegido por el coordinador",
+    },
+    ajuste: {
+      porcentaje: -10,
+      motivo: "Hubo una ampliación reciente: el estado real es mejor de lo que reflejan los campos.",
+      evidencia: "audio: 'el año pasado agregaron un dormitorio con ayuda de la familia'",
+      estado: "aceptado",
     },
   },
 ];
@@ -273,10 +412,10 @@ const EVIDENCIA: Record<string, string> = {
   adicionales: "elección del coordinador",
 };
 
-function construirCampos(campos: Record<string, string>) {
+function construirCampos(campos: Record<string, string>, evidencias?: Record<string, string>) {
   const out: Record<string, ReturnType<typeof campo>> = {};
   for (const [k, valor] of Object.entries(campos)) {
-    out[k] = campo(valor, EVIDENCIA[k] ?? "—");
+    out[k] = campo(valor, evidencias?.[k] ?? EVIDENCIA[k] ?? "—");
   }
   return out as never; // el schema valida la forma exacta
 }
@@ -287,7 +426,7 @@ async function sembrar(ctx: MutationCtx) {
   for (const s of SEED) {
     const relevadoEn = ahora - s.diasAtras * DIA;
     const resultado = calcularUrgencia(s.campos, relevadoEn, ahora, s.ajuste);
-    const campos = construirCampos(s.campos) as Record<string, ReturnType<typeof campo>>;
+    const campos = construirCampos(s.campos, s.evidencias) as Record<string, ReturnType<typeof campo>>;
 
     await ctx.db.insert("casos", {
       estado: "confirmado",
@@ -295,6 +434,7 @@ async function sembrar(ctx: MutationCtx) {
       alias: s.alias,
       barrio: s.barrio,
       fotos: [],
+      audioTranscripcion: s.transcripcion,
       ...campos,
       puntajeTabla: resultado.total,
       puntajeBase: resultado.base,
