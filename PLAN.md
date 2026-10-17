@@ -177,10 +177,12 @@ Mientras el login no esté, se trabaja con un **selector de rol** en la esquina.
 **Estado hoy:**
 - ✅ Login con Better Auth (email y contraseña). Hace falta sesión para cargar
   visitas y para generar y aprobar historias. El selector de rol no hizo falta.
-- ⏳ **Permisos por rol:** la app todavía no distingue voluntario de
-  coordinador. Cualquiera con sesión puede cargar y aprobar, y el ranking se ve
-  sin iniciar sesión. Los dos botones de la portada llevan a la misma pantalla
-  de sesión.
+- **Para la demo hay un solo tipo de cuenta del equipo** (decisión del 17/10 a
+  la noche): la app no distingue voluntario de coordinador. Cualquiera con
+  sesión puede cargar visitas, aceptar o rechazar ajustes y aprobar historias.
+  El ranking se ve sin iniciar sesión. Los botones "Soy coordinador" y "Soy
+  voluntario" de la portada llevan a la misma pantalla de sesión. La tabla de
+  arriba queda como el diseño para después del piloto.
 - ⏳ La pantalla de sesión todavía muestra la opción de **crear cuenta**, aunque
   la decisión es no tener registro.
 
@@ -218,7 +220,7 @@ registro de usuarios, recuperación de contraseña.
 **Estado hoy:**
 - **Imprescindible:** ✅ todo hecho, más el pedido de más datos y el grabador de audio.
 - **Importante:** ✅ ajuste de urgencia con aceptar/rechazar · ✅ historia anónima ·
-  ✅ login · ⏳ permisos por rol.
+  ✅ login (una sola cuenta de equipo; los permisos por rol quedan para después).
 - **Deseable:** ✅ revisión de privacidad · ✅ campaña con barra y donación
   (en pesos) · ⏳ panel de impacto (hoy son las cifras de la portada) · ⏳ recorte de foto.
 
@@ -328,5 +330,5 @@ aprobar. Decir "una segunda IA revisa y marca cualquier dato identificable".
 - [x] Botón para aceptar o rechazar el ajuste de la IA.
 - [ ] Grabar el video de toda la demo (respaldo).
 - [ ] Enlace desde el ranking a "Aprobar historia".
-- [ ] Permisos por rol y sacar la opción de crear cuenta.
+- [ ] Sacar la opción de crear cuenta.
 - [x] Corregir "20 campos" → 18 en la fila del total de [FICHA.md](FICHA.md).
