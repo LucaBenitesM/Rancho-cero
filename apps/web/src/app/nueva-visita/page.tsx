@@ -4,9 +4,11 @@ import { api } from "@rancho-cero/backend/convex/_generated/api";
 import type { Id } from "@rancho-cero/backend/convex/_generated/dataModel";
 import {
   CAMPOS_FICHA,
+  ETIQUETA_GRUPO,
+  ORDEN_GRUPOS,
   type CampoFicha,
   type Confianza,
-  type DefinicionCampo,
+  type GrupoFicha,
 } from "@rancho-cero/backend/convex/ficha";
 import { Button } from "@rancho-cero/ui/components/button";
 import {
@@ -19,13 +21,47 @@ import {
 import { Checkbox } from "@rancho-cero/ui/components/checkbox";
 import { Label } from "@rancho-cero/ui/components/label";
 import { useAction, useMutation } from "convex/react";
-import { useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 // Mapa clave -> campo de la ficha, para editar la ficha devuelta por la IA.
 type FichaEditable = Record<string, CampoFicha>;
 
 const CONFIANZAS: Confianza[] = ["alta", "media", "baja"];
+
+// Límites de carga.
+const MAX_LADO_FOTO = 1600; // px del lado mayor tras achicar
+const CALIDAD_JPEG = 0.8;
+const MAX_AUDIO_BYTES = 15 * 1024 * 1024; // 15 MB
+
+// Achica y comprime una imagen a JPEG antes de subirla, para no pasar los
+// límites de la API de Claude (hasta ~5 MB por imagen). Si algo falla,
+// devuelve el archivo original.
+async function comprimirImagen(file: File): Promise<File> {
+  if (!file.type.startsWith("image/")) return file;
+  try {
+    const bitmap = await createImageBitmap(file);
+    const escala = Math.min(1, MAX_LADO_FOTO / Math.max(bitmap.width, bitmap.height));
+    const w = Math.round(bitmap.width * escala);
+    const h = Math.round(bitmap.height * escala);
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return file;
+    ctx.drawImage(bitmap, 0, 0, w, h);
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, "image/jpeg", CALIDAD_JPEG)
+    );
+    bitmap.close();
+    if (!blob) return file;
+    return new File([blob], file.name.replace(/\.[^.]+$/, "") + ".jpg", {
+      type: "image/jpeg",
+    });
+  } catch {
+    return file;
+  }
+}
 
 // Etiqueta y color para el estado de confianza / a confirmar.
 function etiquetaConfianza(c: CampoFicha) {
@@ -36,6 +72,22 @@ function etiquetaConfianza(c: CampoFicha) {
 }
 
 type Paso = "carga" | "procesando" | "ficha";
+
+// Convierte errores técnicos (p. ej. "Anthropic devolvió 400: {...}") en un
+// mensaje presentable para la demo, sin volcar el detalle de la API.
+function mensajeAmigable(err: unknown): string {
+  const raw = err instanceof Error ? err.message : "";
+  if (/tiempo límite|timeout|abort/i.test(raw)) {
+    return "El procesamiento tardó demasiado. Probá de nuevo.";
+  }
+  if (/iniciar sesión|sesión/i.test(raw)) {
+    return "Necesitás iniciar sesión para procesar una visita.";
+  }
+  if (/anthropic|elevenlabs|\b\d{3}\b|json/i.test(raw)) {
+    return "La IA no pudo completar la ficha. Reintentá en unos segundos.";
+  }
+  return raw || "Falló el procesamiento. Reintentá.";
+}
 
 export default function NuevaVisitaPage() {
   const generarUrlDeSubida = useMutation(api.casos.generarUrlDeSubida);
@@ -50,14 +102,15 @@ export default function NuevaVisitaPage() {
 
   const [casoId, setCasoId] = useState<Id<"casos"> | null>(null);
   const [transcripcion, setTranscripcion] = useState("");
+  const [transcripcionFallo, setTranscripcionFallo] = useState(false);
   const [ficha, setFicha] = useState<FichaEditable | null>(null);
   const [guardando, setGuardando] = useState(false);
 
   const fotosInputRef = useRef<HTMLInputElement>(null);
   const audioInputRef = useRef<HTMLInputElement>(null);
 
-  // Sube un archivo al storage de Convex y devuelve su storageId.
-  async function subirArchivo(file: File): Promise<string> {
+  // Sube un archivo al storage de Convex y devuelve su storageId tipado.
+  async function subirArchivo(file: File): Promise<Id<"_storage">> {
     const url = await generarUrlDeSubida();
     const resp = await fetch(url, {
       method: "POST",
@@ -65,7 +118,7 @@ export default function NuevaVisitaPage() {
       body: file,
     });
     if (!resp.ok) throw new Error("Falló la subida de un archivo.");
-    const { storageId } = (await resp.json()) as { storageId: string };
+    const { storageId } = (await resp.json()) as { storageId: Id<"_storage"> };
     return storageId;
   }
 
@@ -92,10 +145,17 @@ export default function NuevaVisitaPage() {
       toast.error("Subí el audio de la visita.");
       return;
     }
+    if (audio.size > MAX_AUDIO_BYTES) {
+      toast.error("El audio es muy pesado. Grabá hasta 2 minutos (máx 15 MB).");
+      return;
+    }
 
     setPaso("procesando");
+    setTranscripcionFallo(false);
     try {
-      const fotosIds = await Promise.all(fotos.map(subirArchivo));
+      // Achica las fotos antes de subirlas (evita el límite de Claude).
+      const fotosComprimidas = await Promise.all(fotos.map(comprimirImagen));
+      const fotosIds = await Promise.all(fotosComprimidas.map(subirArchivo));
       const audioId = await subirArchivo(audio);
 
       const nuevoCasoId = await crearCaso({
@@ -111,6 +171,7 @@ export default function NuevaVisitaPage() {
         audioStorageId: audioId,
       });
       setTranscripcion(res.transcripcion);
+      setTranscripcionFallo(res.transcripcionFallo);
 
       // La action devuelve la ficha ya completada por la IA.
       const inicial: FichaEditable = {};
@@ -119,10 +180,14 @@ export default function NuevaVisitaPage() {
       }
       setFicha(inicial);
       setPaso("ficha");
-      toast.success("Ficha generada. Revisá los campos marcados 'a confirmar'.");
+      if (res.transcripcionFallo) {
+        toast.warning("No se pudo transcribir el audio; la ficha se completó solo con las fotos.");
+      } else {
+        toast.success("Ficha generada. Revisá los campos marcados 'a confirmar'.");
+      }
     } catch (err) {
       console.error(err);
-      toast.error(err instanceof Error ? err.message : "Falló el procesamiento.");
+      toast.error(mensajeAmigable(err));
       setPaso("carga");
     }
   }
@@ -143,7 +208,7 @@ export default function NuevaVisitaPage() {
       }
     } catch (err) {
       console.error(err);
-      toast.error(err instanceof Error ? err.message : "No se pudo guardar.");
+      toast.error(mensajeAmigable(err));
     } finally {
       setGuardando(false);
     }
@@ -152,6 +217,12 @@ export default function NuevaVisitaPage() {
   const quedanAConfirmar = ficha
     ? CAMPOS_FICHA.filter((d) => ficha[d.clave]?.aConfirmar).length
     : 0;
+
+  // Previsualizaciones de fotos: se crean una vez por archivo y se revocan.
+  const previews = useMemo(() => fotos.map((f) => URL.createObjectURL(f)), [fotos]);
+  useEffect(() => {
+    return () => previews.forEach((u) => URL.revokeObjectURL(u));
+  }, [previews]);
 
   return (
     <main className="container mx-auto max-w-3xl space-y-6 px-4 py-6 overflow-y-auto">
@@ -206,10 +277,10 @@ export default function NuevaVisitaPage() {
               </Button>
               {fotos.length > 0 && (
                 <ul className="grid grid-cols-3 gap-2">
-                  {fotos.map((f, i) => (
+                  {fotos.map((_, i) => (
                     <li key={i} className="relative">
                       <img
-                        src={URL.createObjectURL(f)}
+                        src={previews[i]}
                         alt={`foto ${i + 1}`}
                         className="h-24 w-full object-cover ring-1 ring-foreground/10"
                       />
@@ -267,6 +338,12 @@ export default function NuevaVisitaPage() {
 
       {paso === "ficha" && ficha && (
         <div className="space-y-6">
+          {transcripcionFallo && (
+            <div className="rounded-none bg-red-500/10 p-3 text-sm text-red-700">
+              No se pudo transcribir el audio. La ficha se completó solo con las fotos; revisá con
+              cuidado los campos de familia y salud.
+            </div>
+          )}
           {transcripcion && (
             <Card>
               <CardHeader>
@@ -284,16 +361,9 @@ export default function NuevaVisitaPage() {
               : "No quedan campos a confirmar. Al guardar, el caso queda confirmado."}
           </div>
 
-          <FichaEditor
-            grupo="vivienda"
-            ficha={ficha}
-            onCampo={actualizarCampo}
-          />
-          <FichaEditor
-            grupo="familia"
-            ficha={ficha}
-            onCampo={actualizarCampo}
-          />
+          {ORDEN_GRUPOS.map((grupo) => (
+            <FichaEditor key={grupo} grupo={grupo} ficha={ficha} onCampo={actualizarCampo} />
+          ))}
 
           <div className="flex gap-2">
             <Button type="button" size="lg" onClick={guardar} disabled={guardando}>
@@ -309,24 +379,25 @@ export default function NuevaVisitaPage() {
   );
 }
 
-// Editor de un grupo de campos (vivienda o familia).
+// Editor de un bloque de campos (uno de los 5 grupos de la tabla).
 function FichaEditor({
   grupo,
   ficha,
   onCampo,
 }: {
-  grupo: DefinicionCampo["grupo"];
+  grupo: GrupoFicha;
   ficha: FichaEditable;
   onCampo: (clave: string, cambios: Partial<CampoFicha>) => void;
 }) {
   const defs = CAMPOS_FICHA.filter((d) => d.grupo === grupo);
+  const esSoloAudio = defs.every((d) => d.fuente.startsWith("audio"));
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{grupo === "vivienda" ? "Vivienda" : "Familia"}</CardTitle>
+        <CardTitle>{ETIQUETA_GRUPO[grupo]}</CardTitle>
         <CardDescription>
-          {grupo === "familia"
-            ? "Estos campos salen solo del audio."
+          {esSoloAudio
+            ? "Estos campos salen del audio."
             : "Lo que se ve en las fotos y complementa el audio."}
         </CardDescription>
       </CardHeader>
