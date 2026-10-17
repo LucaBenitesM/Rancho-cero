@@ -1,0 +1,240 @@
+"use client";
+
+import { api } from "@rancho-cero/backend/convex/_generated/api";
+import type { Id } from "@rancho-cero/backend/convex/_generated/dataModel";
+import { useQuery } from "convex/react";
+import { MapPin, Sparkles, X } from "lucide-react";
+import { useEffect } from "react";
+
+// Agrupación de campos por bloque de la tabla de Cireneos (FICHA.md).
+const BLOQUES: { titulo: string; campos: string[] }[] = [
+  { titulo: "Materialidad", campos: ["pared", "techo", "piso", "bano"] },
+  { titulo: "Habitabilidad", campos: ["m2PorPersona", "ventanas", "separacionAmbientes"] },
+  { titulo: "Seguridad y salubridad", campos: ["riesgoDerrumbe", "inundable"] },
+  {
+    titulo: "Salud y familia",
+    campos: ["enfermedad", "menoresDe5", "menores5a12", "menores12a18", "monoparental"],
+  },
+  {
+    titulo: "Dimensión social",
+    campos: ["vinculoOrganizacion", "impresionPrimeraVisita", "desalojo", "adicionales"],
+  },
+];
+
+function colorPuntos(puntos: number): string {
+  if (puntos >= 3) return "bg-red-500";
+  if (puntos >= 2) return "bg-orange-400";
+  if (puntos >= 1) return "bg-emerald-500";
+  return "bg-emerald-300";
+}
+
+interface Aporte {
+  campo: string;
+  etiqueta: string;
+  textoValor: string;
+  peso: number;
+  puntos: number;
+  aporte: number;
+}
+
+/** Ficha de un caso. Carga desde Convex (api.casos.obtener). */
+export function FichaCaso({ id, onClose }: { id: Id<"casos">; onClose: () => void }) {
+  const caso = useQuery(api.casos.obtener, { id });
+
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", h);
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", h);
+      document.body.style.overflow = "";
+    };
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm duration-200 animate-in fade-in sm:items-center sm:p-4"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Ficha de la familia"
+    >
+      <div
+        className="max-h-[92svh] w-full max-w-lg overflow-y-auto rounded-t-3xl border border-border/60 bg-card shadow-2xl duration-300 animate-in slide-in-from-bottom-4 sm:rounded-3xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {caso === undefined ? (
+          <div className="p-6">
+            <div className="mb-4 h-16 animate-pulse rounded-xl bg-muted/50" />
+            <div className="space-y-2">
+              {[0, 1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-8 animate-pulse rounded-lg bg-muted/40" />
+              ))}
+            </div>
+          </div>
+        ) : caso === null ? (
+          <div className="flex items-center justify-between gap-2 p-6">
+            <p className="text-sm text-muted-foreground">No se encontró el caso.</p>
+            <CerrarBtn onClose={onClose} />
+          </div>
+        ) : (
+          <Contenido caso={caso} onClose={onClose} />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function CerrarBtn({ onClose }: { onClose: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClose}
+      aria-label="Cerrar"
+      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors hover:bg-muted-foreground/20 hover:text-foreground"
+    >
+      <X className="h-4 w-4" />
+    </button>
+  );
+}
+
+function Contenido({
+  caso,
+  onClose,
+}: {
+  caso: NonNullable<ReturnType<typeof useQuery<typeof api.casos.obtener>>>;
+  onClose: () => void;
+}) {
+  const r = caso.resultado;
+  const aportes = r.aportes as Aporte[];
+  const porCampo = new Map(aportes.map((a) => [a.campo, a]));
+
+  return (
+    <>
+      {/* Cabecera */}
+      <div className="relative overflow-hidden rounded-t-3xl bg-emerald-600 p-5 text-white">
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <h2 className="text-lg font-bold">{caso.alias}</h2>
+            <p className="flex items-center gap-1 text-xs text-white/80">
+              <MapPin className="h-3 w-3" />
+              {caso.barrio}
+            </p>
+          </div>
+          <CerrarBtn onClose={onClose} />
+        </div>
+
+        <div className="mt-4 flex items-end gap-4">
+          <div>
+            <div className="text-4xl font-bold leading-none tabular-nums">{r.puntajeFinal}</div>
+            <div className="mt-1 text-[10px] uppercase tracking-wide text-white/70">
+              puntaje final
+            </div>
+          </div>
+          <div className="mb-0.5 flex flex-1 flex-wrap gap-1.5 text-[11px]">
+            <span className="rounded-full bg-white/20 px-2 py-0.5">Tabla: {r.total}/135</span>
+            <span className="rounded-full bg-white/20 px-2 py-0.5">Base: {r.base}</span>
+            <span className="rounded-full bg-white/20 px-2 py-0.5">
+              Espera: +{r.espera} ({r.mesesEspera} {r.mesesEspera === 1 ? "mes" : "meses"})
+            </span>
+            <span className="rounded-full bg-white/20 px-2 py-0.5">
+              Ajuste:{" "}
+              {r.ajusteAplicado === 0
+                ? "—"
+                : `${r.ajusteAplicado > 0 ? "+" : ""}${Math.round(r.ajusteAplicado * 100)}%`}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-5">
+        {/* Explicación */}
+        <div className="mb-4 flex gap-2.5 rounded-2xl border border-emerald-600/20 bg-emerald-50/70 p-3.5 dark:bg-emerald-950/20">
+          <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+          <div>
+            <div className="mb-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-500">
+              Explicación
+            </div>
+            <p className="text-xs leading-relaxed text-foreground/80">{r.explicacion}</p>
+          </div>
+        </div>
+
+        {/* Ajuste de la IA */}
+        {caso.ajuste && (
+          <div className="mb-4 rounded-2xl border border-dashed border-border p-3.5 text-xs">
+            <div className="mb-1.5 flex items-center justify-between">
+              <span className="font-semibold">
+                Ajuste sugerido por IA {caso.ajuste.porcentaje > 0 ? "+" : ""}
+                {caso.ajuste.porcentaje}%
+              </span>
+              <span
+                className={`rounded-full px-2 py-0.5 text-[10px] font-medium capitalize ${
+                  caso.ajuste.estado === "aceptado"
+                    ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+                    : caso.ajuste.estado === "rechazado"
+                      ? "bg-red-500/10 text-red-700 dark:text-red-400"
+                      : "bg-amber-500/10 text-amber-700 dark:text-amber-500"
+                }`}
+              >
+                {caso.ajuste.estado}
+              </span>
+            </div>
+            <p className="text-muted-foreground">{caso.ajuste.motivo}</p>
+            <p className="mt-1 italic text-muted-foreground/80">{caso.ajuste.evidencia}</p>
+          </div>
+        )}
+
+        {/* Bloques de la tabla */}
+        <div className="space-y-4">
+          {BLOQUES.map((bloque) => {
+            const filas = bloque.campos
+              .map((c) => porCampo.get(c))
+              .filter((a): a is Aporte => a !== undefined);
+            if (filas.length === 0) return null;
+            const subtotal = filas.reduce((acc, a) => acc + a.aporte, 0);
+            return (
+              <div key={bloque.titulo}>
+                <div className="mb-1.5 flex items-center justify-between">
+                  <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    {bloque.titulo}
+                  </span>
+                  <span className="text-[10px] font-medium text-muted-foreground">
+                    {subtotal} pts
+                  </span>
+                </div>
+                <div className="overflow-hidden rounded-xl border border-border/60">
+                  {filas.map((a, idx) => (
+                    <div
+                      key={a.campo}
+                      className={`flex items-center gap-2.5 px-3 py-2 text-xs ${
+                        idx % 2 === 1 ? "bg-muted/30" : ""
+                      }`}
+                    >
+                      <div className={`h-2 w-2 shrink-0 rounded-full ${colorPuntos(a.puntos)}`} />
+                      <div className="flex-1">
+                        <span className="font-medium">{a.etiqueta}</span>
+                        <span className="text-muted-foreground"> · {a.textoValor}</span>
+                      </div>
+                      <div className="shrink-0 text-[10px] text-muted-foreground tabular-nums">
+                        peso {a.peso} × {a.puntos}
+                      </div>
+                      <div className="w-8 shrink-0 text-right font-semibold tabular-nums">
+                        {a.aporte}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <p className="mt-4 text-center text-[10px] text-muted-foreground">
+          Datos simulados · la fórmula vive en código (FICHA.md), no la decide la IA
+        </p>
+      </div>
+    </>
+  );
+}

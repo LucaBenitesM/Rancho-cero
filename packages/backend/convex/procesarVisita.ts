@@ -152,7 +152,7 @@ async function completarFicha(
   if (!apiKey) {
     throw new Error("Falta la variable de entorno ANTHROPIC_API_KEY en Convex.");
   }
-  const modelo = process.env.ANTHROPIC_MODEL ?? "claude-sonnet-4-5";
+  const modelo = process.env.ANTHROPIC_MODEL ?? "claude-sonnet-5-5";
 
   const bloquesImagen = await Promise.all(
     fotosUrls.map(async (url, i) => {
