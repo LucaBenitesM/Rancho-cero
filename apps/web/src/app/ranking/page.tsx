@@ -7,6 +7,7 @@ import { ChevronRight, Info, MapPin, TrendingUp } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { FichaCaso } from "@/components/ficha-caso";
+import Protegida from "@/components/protegida";
 
 type Orden = "prioridad" | "cercania" | "alfabetico";
 
@@ -24,7 +25,7 @@ function tonoPuntaje(p: number): { text: string; bar: string } {
   return { text: "text-green-700 dark:text-green-500", bar: "bg-green-500" };
 }
 
-export default function RankingPage() {
+function Ranking() {
   const filas = useQuery(api.casos.ranking);
   const [abierto, setAbierto] = useState<Id<"casos"> | null>(null);
   const [orden, setOrden] = useState<Orden>("prioridad");
@@ -188,5 +189,13 @@ export default function RankingPage() {
 
       {abierto && <FichaCaso id={abierto} onClose={() => setAbierto(null)} />}
     </div>
+  );
+}
+
+export default function RankingPage() {
+  return (
+    <Protegida soloCoordinador>
+      <Ranking />
+    </Protegida>
   );
 }

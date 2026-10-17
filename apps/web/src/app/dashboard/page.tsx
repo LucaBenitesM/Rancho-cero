@@ -14,6 +14,7 @@ import UserMenu from "@/components/user-menu";
 // mano (ver PLAN.md).
 function SesionIniciada() {
   const user = useQuery(api.auth.getCurrentUser);
+  const rol = useQuery(api.roles.miRol);
 
   return (
     <div className="mx-auto w-full max-w-md px-4 py-10">
@@ -37,12 +38,14 @@ function SesionIniciada() {
           >
             Cargar nueva visita
           </Link>
-          <Link
-            href="/ranking"
-            className="rounded-xl border border-border px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
-          >
-            Ver ranking
-          </Link>
+          {rol === "coordinador" && (
+            <Link
+              href="/ranking"
+              className="rounded-xl border border-border px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
+            >
+              Ver ranking
+            </Link>
+          )}
         </div>
 
         <div className="mt-5 border-t border-border/60 pt-4">

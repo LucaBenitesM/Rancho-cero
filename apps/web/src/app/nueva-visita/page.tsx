@@ -28,6 +28,7 @@ import { toast } from "sonner";
 import GrabadorAudio from "@/components/grabador-audio";
 import { MAX_FOTOS, ZonaFotos } from "@/components/zona-fotos";
 import { datosQueFaltan, mensajeFaltante, recomendacionGeneral } from "@/lib/pedido-datos";
+import Protegida from "@/components/protegida";
 
 // Mapa clave -> campo de la ficha, para editar la ficha devuelta por la IA.
 type FichaEditable = Record<string, CampoFicha>;
@@ -94,7 +95,7 @@ function mensajeAmigable(err: unknown): string {
   return raw || "Falló el procesamiento. Reintentá.";
 }
 
-export default function NuevaVisitaPage() {
+function NuevaVisita() {
   const generarUrlDeSubida = useMutation(api.casos.generarUrlDeSubida);
   const crearCaso = useMutation(api.casos.crearCaso);
   const procesarVisita = useAction(api.procesarVisita.procesarVisita);
@@ -567,5 +568,13 @@ function FichaEditor({
         })}
       </CardContent>
     </Card>
+  );
+}
+
+export default function NuevaVisitaPage() {
+  return (
+    <Protegida>
+      <NuevaVisita />
+    </Protegida>
   );
 }

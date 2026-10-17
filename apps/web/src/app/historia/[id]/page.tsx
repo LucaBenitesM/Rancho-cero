@@ -7,7 +7,7 @@ import { Button } from "@rancho-cero/ui/components/button";
 import { Checkbox } from "@rancho-cero/ui/components/checkbox";
 import { Label } from "@rancho-cero/ui/components/label";
 import { Textarea } from "@rancho-cero/ui/components/textarea";
-import { Authenticated, AuthLoading, Unauthenticated, useAction, useMutation, useQuery } from "convex/react";
+import { useAction, useMutation, useQuery } from "convex/react";
 import {
   ArrowLeft,
   BadgeCheck,
@@ -22,6 +22,8 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Fragment, useEffect, useState } from "react";
 import { toast } from "sonner";
+
+import Protegida from "@/components/protegida";
 
 // ─────────────────────────────────────────────────────────────
 // Pantalla "Aprobar historia" (coordinadores, requiere sesión).
@@ -345,24 +347,9 @@ export default function AprobarHistoriaPage() {
           <ArrowLeft className="h-3.5 w-3.5" />
           Volver al ranking
         </Link>
-        <Authenticated>
+        <Protegida soloCoordinador>
           <AprobarHistoria casoId={id as Id<"casos">} />
-        </Authenticated>
-        <Unauthenticated>
-          <div className="rounded-2xl border border-border/60 bg-card p-6 text-center text-sm text-muted-foreground">
-            Esta pantalla es para coordinadores.
-            <br />
-            <Link href="/dashboard" className="font-semibold text-emerald-700 underline dark:text-emerald-400">
-              Iniciá sesión
-            </Link>{" "}
-            para aprobar historias.
-          </div>
-        </Unauthenticated>
-        <AuthLoading>
-          <div className="py-16 text-center">
-            <Loader2 className="mx-auto h-6 w-6 animate-spin text-emerald-600" />
-          </div>
-        </AuthLoading>
+        </Protegida>
       </div>
     </div>
   );

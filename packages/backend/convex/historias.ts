@@ -30,6 +30,7 @@ import {
 } from "./_generated/server";
 import { authComponent } from "./auth";
 import { extraerAjuste, extraerCampos, requerirUsuario } from "./casos";
+import { requerirCoordinador } from "./roles";
 import { CLAVES_CAMPO, definicionDe } from "./ficha";
 import { calcularUrgencia } from "./urgencia";
 
@@ -44,13 +45,8 @@ const alertaValidator = v.object({
 const MAX_LARGO_HISTORIA = 2000;
 
 // Solo coordinadores generan, editan y aprueban historias; los voluntarios
-// solo las ven y las copian.
-// TODO(roles): cuando esté la función de rol (la está haciendo Cami), chequear
-// acá que el usuario sea coordinador. Por ahora alcanza con tener sesión
-// (PLAN.md: para la demo hay una sola cuenta de equipo).
-async function requerirCoordinador(ctx: QueryCtx | MutationCtx): Promise<string> {
-  return await requerirUsuario(ctx);
-}
+// solo las ven y las copian. La verificación de rol vive en ./roles
+// (requerirCoordinador), que se importa arriba.
 
 // ─── Llamada a Claude ────────────────────────────────────────
 
@@ -237,9 +233,7 @@ export const generar = action({
     ctx,
     { casoId }
   ): Promise<{ historiaId: Id<"historias">; texto: string; alertas: AlertaPrivacidad[] }> => {
-    // TODO(roles): solo coordinadores (guardarBorrador también pasa por requerirCoordinador).
-    const identidad = await ctx.auth.getUserIdentity();
-    if (!identidad) throw new Error("Necesitás iniciar sesión.");
+    await requerirCoordinador(ctx, "Solo los coordinadores pueden generar historias.");
 
     const datos = await ctx.runQuery(internal.historias.datosParaHistoria, { casoId });
     if (!datos) throw new Error("El caso no existe.");
@@ -268,9 +262,7 @@ export const generar = action({
 export const revisarPrivacidad = action({
   args: { texto: v.string() },
   handler: async (ctx, { texto }): Promise<{ alertas: AlertaPrivacidad[] }> => {
-    // TODO(roles): solo coordinadores (es parte de editar la historia).
-    const identidad = await ctx.auth.getUserIdentity();
-    if (!identidad) throw new Error("Necesitás iniciar sesión.");
+    await requerirCoordinador(ctx, "Solo los coordinadores pueden editar historias.");
     const limpio = texto.trim();
     if (!limpio) throw new Error("La historia está vacía.");
     if (limpio.length > MAX_LARGO_HISTORIA) throw new Error("La historia es demasiado larga.");
@@ -283,7 +275,7 @@ export const revisarPrivacidad = action({
 export const obtenerParaAprobar = query({
   args: { casoId: v.id("casos") },
   handler: async (ctx, { casoId }) => {
-    await requerirCoordinador(ctx);
+    await requerirCoordinador(ctx, "Solo los coordinadores pueden aprobar historias.");
     const caso = await ctx.db.get(casoId);
     if (!caso) return null;
 
@@ -326,7 +318,8 @@ export const aprobar = mutation({
     alertas: v.array(alertaValidator), // alertas vistas al aprobar
   },
   handler: async (ctx, args) => {
-    const usuarioId = await requerirCoordinador(ctx);
+    await requerirCoordinador(ctx, "Solo los coordinadores pueden aprobar historias.");
+    const usuarioId = await requerirUsuario(ctx);
     const historia = await ctx.db.get(args.historiaId);
     if (!historia) throw new Error("La historia no existe.");
     const caso = await ctx.db.get(historia.casoId);
