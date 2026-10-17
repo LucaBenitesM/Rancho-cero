@@ -118,6 +118,8 @@ export default defineSchema({
     textoRevisado: v.optional(v.string()), // tras revisión de privacidad
     aprobada: v.boolean(), // el coordinador la aprobó
     imagenStorageId: v.optional(v.string()),
+    aprobadaPor: v.optional(v.string()), // id del coordinador que la aprobó
+    aprobadaEn: v.optional(v.number()), // timestamp de aprobación
   }).index("por_caso", ["casoId"]),
 
   // ─── CAMPAÑAS (meta US$ 15.000, pagos simulados) ──────────
