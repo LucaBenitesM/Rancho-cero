@@ -97,8 +97,8 @@ se convierte en una ficha estructurada con evidencia. Esa es la función princip
      volver a revisarlo antes de aprobar. "Aprobar y publicar" guarda quién
      aprobó y cuándo. A Claude solo le llegan los valores de la ficha, nunca el
      alias, el barrio ni el audio.
-   - ⏳ La pantalla "Aprobar historia" (`/historia/[id]`) se abre por dirección;
-     todavía no hay un enlace desde el ranking.
+   - ✅ Se llega desde la ficha de la familia en el ranking, con el botón
+     "Escribir y aprobar historia".
 10. ⏳ **Imagen.** La IA elige una foto y propone un recorte sin rasgos
    identificables; el coordinador lo aprueba. Si no, ilustración genérica.
    Sin empezar.
@@ -125,7 +125,7 @@ salud. Si falla al volver a procesar, se queda en la pantalla de "faltan datos".
 | Sesión | `/dashboard` | Iniciar sesión y accesos a "Nueva visita" y "Ranking" | ✅ |
 | Nueva visita | `/nueva-visita` | Consentimiento → fotos → audio → procesar → (faltan datos) → ficha para revisar y guardar | ✅ |
 | Ranking | `/ranking` | Familias confirmadas por puntaje, con la ficha y el desglose de cada una; en la ficha se acepta o rechaza el ajuste | ✅ |
-| Aprobar historia | `/historia/[id]` | Generar historia, revisar privacidad, editar, aprobar y publicar | ✅ (sin enlace desde el ranking) |
+| Aprobar historia | `/historia/[id]` | Generar historia, revisar privacidad, editar, aprobar y publicar | ✅ (se abre desde la ficha de la familia) |
 | Campaña | `/campana` | Historia aprobada, barra hacia la meta en pesos y donación simulada | ✅ |
 
 Estilo: paleta verde sobria, institucional, con una foto de un rancho de
@@ -331,7 +331,7 @@ aprobar. Decir "una segunda IA revisa y marca cualquier dato identificable".
 - [x] Donación en pesos con formulario de pago de demo.
 - [x] Botón para aceptar o rechazar el ajuste de la IA.
 - [ ] Grabar el video de toda la demo (respaldo).
-- [ ] Enlace desde el ranking a "Aprobar historia".
+- [x] Enlace desde el ranking a "Aprobar historia".
 - [x] Sacar la opción de crear cuenta de la pantalla de sesión.
 - [ ] Crear las cuentas del equipo para la demo.
 - [x] Corregir "20 campos" → 18 en la fila del total de [FICHA.md](FICHA.md).

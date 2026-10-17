@@ -3,7 +3,8 @@
 import { api } from "@rancho-cero/backend/convex/_generated/api";
 import type { Id } from "@rancho-cero/backend/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
-import { MapPin, Sparkles, X } from "lucide-react";
+import { MapPin, PenLine, Sparkles, X } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -225,6 +226,17 @@ function Contenido({
               </div>
             )}
           </div>
+        )}
+
+        {/* Historia para donantes: la escribe la IA y la aprueba el coordinador. */}
+        {caso.estado !== "relevado" && (
+          <Link
+            href={`/historia/${caso.id}`}
+            className="mb-4 flex items-center justify-center gap-1.5 rounded-xl border border-border px-4 py-2 text-xs font-medium transition-colors hover:bg-muted"
+          >
+            <PenLine className="h-3.5 w-3.5" />
+            Escribir y aprobar historia
+          </Link>
         )}
 
         {/* Bloques de la tabla */}
