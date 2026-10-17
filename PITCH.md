@@ -11,9 +11,8 @@ pantalla). En la demo, el operador hace de voluntario.
 > - Reemplazar `[DATO REAL]` por un número que respalde la brecha: cuántos ranchos aparecen por año contra cuántas familias releva y atiende Cireneos (pendiente en PLAN.md). **Si no lo conseguimos:** se borra `[DATO REAL]`, el gráfico lleva **"ILUSTRATIVO"** bien grande y se habla sin números.
 > - Confirmar el permiso para nombrar a Cireneos y a Rancho Cero. Si no llega, decir "una organización uruguaya de vivienda".
 > - Si tenemos la cita o el video de Cireneos, va en la sección 4.
-> - **Faltan en la app dos cosas que la demo usa** (pendientes en PLAN.md): el botón
->   **Aceptar** del ajuste (paso 9) y el **botón oculto** del plan B. Si no están
->   para el domingo, ver las alternativas en cada paso y en el plan B.
+> - **Falta en la app el botón oculto del plan B** (pendiente en PLAN.md). Si no
+>   está para el domingo, ver la alternativa en el plan B.
 
 ---
 
@@ -86,10 +85,10 @@ recién aparece cuando una persona trajo los datos.
 | 11 | 2:12 | **Fijo, no se salta.** Abre la **campaña**: historia anónima, barra hacia la meta y botón "Donar". | "Y con la aprobación del coordinador, el caso ya es una campaña anónima, lista para que alguien done su casa." |
 | — | 2:20 | *Margen de 5 s para demoras.* | |
 
-- **Paso 9, si el botón Aceptar todavía no existe:** se muestra el ajuste con su
-  estado **"sugerido"** y se dice "Si el coordinador no lo acepta, no se aplica".
-  Ojo: sin aceptar, el ajuste no suma, así que hay que **ensayar en qué puesto
-  queda el caso** con y sin ajuste.
+- **Paso 9:** "Aceptar" aparece en la ficha de la familia mientras el ajuste
+  está "sugerido". Al tocarlo, el puntaje se recalcula y el caso puede subir en
+  el ranking: **ensayar en qué puesto queda** con el ajuste aceptado. Cada caso se
+  acepta una sola vez, así que para ensayar de nuevo hay que cargar otra visita.
 - **Paso 11:** la meta se ve en pesos (**$ 600.000**, unos US$ 15.000). El
   presentador sigue diciendo "15.000 dólares" en la sección 4.
 

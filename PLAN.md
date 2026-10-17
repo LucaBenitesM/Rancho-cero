@@ -50,9 +50,6 @@ se convierte en una ficha estructurada con evidencia. Esa es la función princip
      Las fotos ya subidas no se vuelven a subir.
    - ✅ **Galería o cámara del sistema:** "Agregar fotos" abre el selector del
      celular, que deja elegir de la galería o sacar la foto en el momento.
-   - ⏳ **Botón de cámara propio** que abra directo la cámara trasera. No está en
-     `main` ni en un PR abierto. El componente de fotos (`zona-fotos.tsx`) está
-     preparado para cambiarlo sin tocar la pantalla.
    - ✅ **Audio:** grabador en el navegador, como una nota de voz: hasta 2
      minutos (se corta solo), se puede escuchar y volver a grabar antes de
      enviar. Funciona en compu, Android y iPhone. Si no hay micrófono, no hay
@@ -86,9 +83,11 @@ se convierte en una ficha estructurada con evidencia. Esa es la función princip
    - ✅ Puntaje base, puntos por espera (+1 por mes, tope +12) y explicación.
      El puntaje final se guarda en el caso.
    - ✅ La IA sugiere el ajuste con motivo y evidencia, y queda como **"sugerido"**.
-   - ⏳ **Botón para aceptar o rechazar el ajuste.** Todavía no hay pantalla
-     para decidirlo, así que hoy el ajuste de un caso nuevo se ve pero **no se
-     suma** al puntaje (solo los casos sembrados traen ajustes ya aceptados).
+   - ✅ **Aceptar o rechazar el ajuste:** en la ficha de la familia (desde el
+     ranking) hay botones "Aceptar" y "Rechazar" mientras el ajuste está
+     "sugerido" y el caso ya fue confirmado. Al decidir, se recalcula el puntaje
+     y queda registrado quién decidió y cuándo. Hace falta sesión. Mientras nadie
+     decide, el ajuste se ve pero **no suma**.
 8. ✅ **Ranking.** Solo casos confirmados, ordenados por puntaje.
    Con filtro de orden y scroll. Al tocar una familia se abre su ficha: puntaje
    por bloque de la tabla, espera, ajuste con su estado y explicación.
@@ -127,8 +126,8 @@ salud. Si falla al volver a procesar, se queda en la pantalla de "faltan datos".
 |---|---|---|---|
 | Portada | `/` | Foto de un rancho de fondo, cifras del problema y tres botones: "Soy coordinador", "Soy voluntario", "Quiero donar" | ✅ |
 | Sesión | `/dashboard` | Iniciar sesión y accesos a "Nueva visita" y "Ranking" | ✅ |
-| Nueva visita | `/nueva-visita` | Consentimiento → fotos → audio → procesar → (faltan datos) → ficha para revisar y guardar | ✅ (falta el botón de cámara propio) |
-| Ranking | `/ranking` | Familias confirmadas por puntaje, con la ficha y el desglose de cada una | ✅ (falta aceptar/rechazar el ajuste) |
+| Nueva visita | `/nueva-visita` | Consentimiento → fotos → audio → procesar → (faltan datos) → ficha para revisar y guardar | ✅ |
+| Ranking | `/ranking` | Familias confirmadas por puntaje, con la ficha y el desglose de cada una; en la ficha se acepta o rechaza el ajuste | ✅ |
 | Aprobar historia | `/historia/[id]` | Generar historia, revisar privacidad, editar, aprobar y publicar | ✅ (sin enlace desde el ranking) |
 | Campaña | `/campana` | Historia aprobada, barra hacia la meta en pesos y donación simulada | ✅ |
 
@@ -221,8 +220,8 @@ registro de usuarios, recuperación de contraseña.
 
 **Estado hoy:**
 - **Imprescindible:** ✅ todo hecho, más el pedido de más datos y el grabador de audio.
-- **Importante:** ✅ ajuste sugerido por la IA · ✅ historia anónima · ✅ login ·
-  ⏳ botón aceptar/rechazar el ajuste · ⏳ permisos por rol.
+- **Importante:** ✅ ajuste de urgencia con aceptar/rechazar · ✅ historia anónima ·
+  ✅ login · ⏳ permisos por rol.
 - **Deseable:** ✅ revisión de privacidad · ✅ campaña con barra y donación
   (en pesos) · ⏳ panel de impacto (hoy son las cifras de la portada) · ⏳ recorte de foto.
 
@@ -328,9 +327,8 @@ aprobar. Decir "una segunda IA revisa y marca cualquier dato identificable".
 - [x] Pedido de más datos cuando la IA deja 5 campos dudosos o más.
 - [x] Historia anónima con revisión de privacidad y aprobación.
 - [x] Donación en pesos con formulario de pago de demo.
-- [ ] Botón para aceptar o rechazar el ajuste de la IA (la demo lo usa).
+- [x] Botón para aceptar o rechazar el ajuste de la IA.
 - [ ] Botón oculto del plan B en la demo.
-- [ ] Botón de cámara propio (cámara trasera directa).
 - [ ] Enlace desde el ranking a "Aprobar historia".
 - [ ] Permisos por rol y sacar la opción de crear cuenta.
 - [ ] Corregir "20 campos" → 18 en la fila del total de [FICHA.md](FICHA.md).

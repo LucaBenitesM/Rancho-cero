@@ -2,9 +2,10 @@
 
 import { api } from "@rancho-cero/backend/convex/_generated/api";
 import type { Id } from "@rancho-cero/backend/convex/_generated/dataModel";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { MapPin, Sparkles, X } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 // Agrupación de campos por bloque de la tabla de Cireneos (FICHA.md).
 const BLOQUES: { titulo: string; campos: string[] }[] = [
@@ -110,6 +111,26 @@ function Contenido({
   const r = caso.resultado;
   const aportes = r.aportes as Aporte[];
   const porCampo = new Map(aportes.map((a) => [a.campo, a]));
+  const decidirAjuste = useMutation(api.casos.decidirAjuste);
+  const [decidiendo, setDecidiendo] = useState(false);
+
+  // El coordinador acepta o rechaza el ajuste sugerido por la IA.
+  async function decidir(decision: "aceptado" | "rechazado") {
+    setDecidiendo(true);
+    try {
+      await decidirAjuste({ casoId: caso.id, decision });
+      toast.success(decision === "aceptado" ? "Ajuste aceptado." : "Ajuste rechazado.");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "";
+      toast.error(
+        /sesión/i.test(msg)
+          ? "Necesitás iniciar sesión para decidir el ajuste."
+          : "No se pudo guardar la decisión."
+      );
+    } finally {
+      setDecidiendo(false);
+    }
+  }
 
   return (
     <>
@@ -183,6 +204,26 @@ function Contenido({
             </div>
             <p className="text-muted-foreground">{caso.ajuste.motivo}</p>
             <p className="mt-1 italic text-muted-foreground/80">{caso.ajuste.evidencia}</p>
+            {caso.ajuste.estado === "sugerido" && caso.estado !== "relevado" && (
+              <div className="mt-3 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => decidir("aceptado")}
+                  disabled={decidiendo}
+                  className="rounded-full bg-green-700 px-3 py-1 text-[11px] font-medium text-white hover:bg-green-800 disabled:opacity-50"
+                >
+                  Aceptar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => decidir("rechazado")}
+                  disabled={decidiendo}
+                  className="rounded-full border border-border px-3 py-1 text-[11px] font-medium hover:bg-muted disabled:opacity-50"
+                >
+                  Rechazar
+                </button>
+              </div>
+            )}
           </div>
         )}
 

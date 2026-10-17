@@ -848,3 +848,38 @@ export const guardarCorreccion = mutation({
     return { confirmado: true };
   },
 });
+
+/** Acepta o rechaza el ajuste sugerido por la IA y recalcula el puntaje.
+ *  La IA propone, una persona decide: queda registrado quién y cuándo. */
+export const decidirAjuste = mutation({
+  args: {
+    casoId: v.id("casos"),
+    decision: v.union(v.literal("aceptado"), v.literal("rechazado")),
+  },
+  handler: async (ctx, { casoId, decision }) => {
+    const usuarioId = await requerirUsuario(ctx);
+    const caso = await ctx.db.get(casoId);
+    if (!caso) throw new Error("El caso no existe.");
+    if (caso.estado === "relevado") {
+      throw new Error("Primero hay que revisar y guardar la ficha del caso.");
+    }
+    const ajuste = extraerAjuste(caso);
+    if (!ajuste) throw new Error("Este caso no tiene un ajuste sugerido.");
+    if (ajuste.estado !== "sugerido") {
+      throw new Error(`El ajuste ya fue ${ajuste.estado}.`);
+    }
+
+    const r = calcularUrgencia(extraerCampos(caso), caso.relevadoEn, Date.now(), {
+      ...ajuste,
+      estado: decision,
+    });
+    await ctx.db.patch(casoId, {
+      ajusteEstado: decision,
+      ajusteDecididoPor: usuarioId,
+      ajusteDecididoEn: Date.now(),
+      puntajeFinal: r.puntajeFinal,
+    });
+
+    return { estado: decision, puntajeFinal: r.puntajeFinal };
+  },
+});
