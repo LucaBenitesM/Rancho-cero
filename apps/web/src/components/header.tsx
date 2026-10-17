@@ -1,54 +1,51 @@
 "use client";
 
-import { Home as HomeIcon, Heart, ListOrdered, Upload } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { ModeToggle } from "./mode-toggle";
 
 const LINKS = [
-  { to: "/", label: "Inicio", icon: HomeIcon },
-  { to: "/nueva-visita", label: "Nueva visita", icon: Upload },
-  { to: "/ranking", label: "Ranking", icon: ListOrdered },
-  { to: "/campana", label: "Campaña", icon: Heart },
+  { to: "/", label: "Inicio" },
+  { to: "/nueva-visita", label: "Nueva visita" },
+  { to: "/ranking", label: "Ranking" },
+  { to: "/campana", label: "Campaña" },
 ] as const;
 
 export default function Header() {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-md">
-      <div className="mx-auto flex h-14 max-w-3xl items-center justify-between gap-2 px-4">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white">
-            <HomeIcon className="h-4 w-4" />
-          </span>
-          <span className="text-sm font-semibold tracking-tight">
-            Rancho <span className="text-emerald-700 dark:text-emerald-500">Cero</span>
-          </span>
+    <header className="sticky top-0 z-40 border-b border-border/70 bg-background/85 backdrop-blur-md">
+      <div className="mx-auto flex h-16 max-w-5xl items-center justify-between gap-4 px-6">
+        {/* Wordmark */}
+        <Link href="/" className="flex items-baseline gap-1.5">
+          <span className="text-base font-semibold tracking-tight text-foreground">Rancho Cero</span>
+          <span className="h-1.5 w-1.5 rounded-full bg-teal-700 dark:bg-teal-500" aria-hidden />
         </Link>
 
         {/* Navegación */}
-        <nav className="flex items-center gap-1">
-          {LINKS.map(({ to, label, icon: Icon }) => {
+        <nav className="flex items-center gap-1 sm:gap-2">
+          {LINKS.map(({ to, label }) => {
             const activo = to === "/" ? pathname === "/" : pathname.startsWith(to);
             return (
               <Link
                 key={to}
                 href={to}
-                className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                className={`relative px-2.5 py-1.5 text-[13px] font-medium transition-colors sm:px-3 ${
                   activo
-                    ? "bg-emerald-600/10 text-emerald-700 dark:text-emerald-400"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <Icon className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">{label}</span>
+                {label}
+                {activo && (
+                  <span className="absolute inset-x-2.5 -bottom-[1px] h-[2px] rounded-full bg-teal-700 dark:bg-teal-500 sm:inset-x-3" />
+                )}
               </Link>
             );
           })}
-          <div className="ml-1">
+          <div className="ml-1 sm:ml-2">
             <ModeToggle />
           </div>
         </nav>

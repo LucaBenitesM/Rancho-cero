@@ -38,7 +38,8 @@ export const BLOQUES: { titulo: string; campos: string[] }[] = [
 ];
 
 export const PUNTAJE_TABLA_MAX = PUNTAJE_MAXIMO;
-export const META_CASA_USD = 15000;
+// Costo de una casa container, en pesos uruguayos (demo). Equivale a ~US$15.000.
+export const META_CASA = 600000;
 
 export interface AporteCampo {
   campo: string;

@@ -11,7 +11,7 @@
 import { v } from "convex/values";
 
 import { mutation, query } from "./_generated/server";
-import { META_CASA_USD } from "./urgencia";
+import { META_CASA } from "./urgencia";
 
 const HISTORIA_TEXTO =
   "Son siete personas bajo un techo de nylon que se llueve con cada tormenta. " +
@@ -54,8 +54,8 @@ export const seed = mutation({
     await ctx.db.insert("campanas", {
       casoId: caso._id,
       historiaId,
-      metaUsd: META_CASA_USD,
-      recaudadoUsd: 6200, // monto inicial simulado
+      metaUsd: META_CASA, // valor en pesos uruguayos (ver urgencia.ts)
+      recaudadoUsd: 248000, // monto inicial simulado, en pesos
       activa: true,
     });
 
@@ -136,7 +136,7 @@ export const reiniciarDemo = mutation({
       .collect();
     for (const d of donaciones) await ctx.db.delete(d._id);
 
-    await ctx.db.patch(campana._id, { recaudadoUsd: 6200, activa: true });
+    await ctx.db.patch(campana._id, { recaudadoUsd: 248000, activa: true });
 
     // Solo tocar el caso si todavía existe (puede haber quedado huérfano tras recargar).
     const caso = await ctx.db.get(campana.casoId);
@@ -144,7 +144,7 @@ export const reiniciarDemo = mutation({
       await ctx.db.patch(campana.casoId, { estado: "en_campana" });
     }
 
-    return { ok: true, mensaje: "Campaña reiniciada a US$ 6.200." };
+    return { ok: true, mensaje: "Campaña reiniciada a $ 248.000." };
   },
 });
 
