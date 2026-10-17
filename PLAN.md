@@ -258,16 +258,17 @@ registro de usuarios, recuperación de contraseña.
   contempla (para que aparezca el ajuste).
 - **Ranking sembrado:** 8–10 familias ficticias con fechas de relevamiento
   distintas. El caso en vivo entra en el puesto 2 o 3, no en el 1.
-- **Respaldo:** si el procesamiento tarda más de 30 segundos o falla, botón oculto
-  que pasa al mismo caso ya procesado. Además, video grabado de toda la demo.
+- **Respaldo:** si el procesamiento tarda más de 30 segundos o falla, ~~botón oculto
+  que pasa al mismo caso ya procesado~~. Además, video grabado de toda la demo.
+  *(17/10 a la noche: se descartó el botón oculto. El respaldo es el video
+  grabado, desde el paso que falló.)*
 - Todos los datos de la demo son ficticios y se dice así.
 
 **Estado hoy:**
 - ✅ Material de 4 familias en [demo/](demo/GUIA-DEMO.md) (fotos y audio de la Familia A ya cargados).
 - ✅ Ranking y campaña sembrados. Se cargan y se reinician desde la terminal
   (`npx convex run casos:seed`, `campanas:seed`, `campanas:reiniciarDemo`); no hay botones en la app.
-- ⏳ **Botón oculto del plan B** (pasar al caso ya procesado): todavía no está en la app.
-- ⏳ Video grabado de toda la demo.
+- ⏳ Video grabado de toda la demo (es el único respaldo).
 - La demo ahora incluye el **pedido de más datos**: el primer audio va cortado a
   propósito y la IA pide completarlo (guion en [PITCH.md](PITCH.md)).
 
@@ -328,7 +329,7 @@ aprobar. Decir "una segunda IA revisa y marca cualquier dato identificable".
 - [x] Historia anónima con revisión de privacidad y aprobación.
 - [x] Donación en pesos con formulario de pago de demo.
 - [x] Botón para aceptar o rechazar el ajuste de la IA.
-- [ ] Botón oculto del plan B en la demo.
+- [ ] Grabar el video de toda la demo (respaldo).
 - [ ] Enlace desde el ranking a "Aprobar historia".
 - [ ] Permisos por rol y sacar la opción de crear cuenta.
 - [ ] Corregir "20 campos" → 18 en la fila del total de [FICHA.md](FICHA.md).

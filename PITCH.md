@@ -11,8 +11,7 @@ pantalla). En la demo, el operador hace de voluntario.
 > - Reemplazar `[DATO REAL]` por un número que respalde la brecha: cuántos ranchos aparecen por año contra cuántas familias releva y atiende Cireneos (pendiente en PLAN.md). **Si no lo conseguimos:** se borra `[DATO REAL]`, el gráfico lleva **"ILUSTRATIVO"** bien grande y se habla sin números.
 > - Confirmar el permiso para nombrar a Cireneos y a Rancho Cero. Si no llega, decir "una organización uruguaya de vivienda".
 > - Si tenemos la cita o el video de Cireneos, va en la sección 4.
-> - **Falta en la app el botón oculto del plan B** (pendiente en PLAN.md). Si no
->   está para el domingo, ver la alternativa en el plan B.
+> - Tener grabado el **video de toda la demo** (es el único respaldo si la IA tarda o falla).
 
 ---
 
@@ -136,8 +135,7 @@ Qué debería salir, según la tabla de [FICHA.md](FICHA.md):
 
 ### Plan B
 
-- **"Analizando…" dura más de 10 s, o da error:** el operador toca el **botón oculto** que carga el mismo caso ya procesado. El presentador sigue sin comentarlo.
-  ⏳ El botón oculto todavía no está en la app. Si no llega, se pasa al **video grabado** desde ese paso.
+- **El procesamiento dura más de 10 s, o da error:** se pasa al **video grabado** de la demo desde ese paso. El presentador sigue sin comentarlo.
 - **Con el audio 1 la IA no pide más datos** (deja menos de 5 dudosos): aparece la ficha directo. Se saltean los pasos 4 a 6, se dice "y lo que no sabe, lo señala" y se sigue desde el paso 7. Sobran unos 30 s.
 - **Falla la grabación del audio:** se sube el audio pregrabado del mismo caso con "Subir archivo de audio" (hay que tener en el celular los dos audios, el cortado y el completo).
 - **Falla la red o la app entera:** se pasa al **video grabado** de la demo desde el paso en el que se cayó.
