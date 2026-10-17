@@ -611,7 +611,7 @@ function extraerAjuste(doc: Doc<"casos">) {
 // (integra el trabajo de la rama Marti-ficha-ia). Datos sensibles: exige sesión.
 // ─────────────────────────────────────────────────────────────
 
-async function requerirUsuario(ctx: QueryCtx | MutationCtx): Promise<string> {
+export async function requerirUsuario(ctx: QueryCtx | MutationCtx): Promise<string> {
   const usuario = await authComponent.safeGetAuthUser(ctx);
   if (!usuario) {
     throw new Error("Necesitás iniciar sesión.");
