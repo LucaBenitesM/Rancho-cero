@@ -28,10 +28,10 @@ const OPCIONES_FILTRO: { id: Filtro; label: string }[] = [
 
 // Nivel de urgencia según el puntaje final (mismos cortes que los colores del ranking).
 function nivelUrgencia(p: number): { label: string; clase: string } {
-  if (p >= 90) return { label: "Urgencia muy alta", clase: "bg-red-500/10 text-red-700 dark:text-red-400" };
-  if (p >= 65) return { label: "Urgencia alta", clase: "bg-orange-500/10 text-orange-700 dark:text-orange-400" };
-  if (p >= 40) return { label: "Urgencia media", clase: "bg-green-700/10 text-green-800 dark:text-green-400" };
-  return { label: "Urgencia baja", clase: "bg-green-500/10 text-green-700 dark:text-green-500" };
+  if (p >= 90) return { label: "Urgencia muy alta", clase: "bg-urgencia-critica/12 text-urgencia-critica-texto" };
+  if (p >= 65) return { label: "Urgencia alta", clase: "bg-urgencia-alta/15 text-urgencia-alta-texto" };
+  if (p >= 40) return { label: "Urgencia media", clase: "bg-urgencia-media/20 text-urgencia-media-texto" };
+  return { label: "Urgencia baja", clase: "bg-salvia-suave text-urgencia-baja-texto" };
 }
 
 function fecha(ms: number): string {
@@ -78,7 +78,7 @@ function ListaHistorias() {
     return (
       <div className="space-y-2">
         {[0, 1, 2].map((i) => (
-          <div key={i} className="h-28 animate-pulse rounded-xl border border-border/60 bg-muted/40" />
+          <div key={i} className="h-32 animate-pulse rounded-2xl border border-border/60 bg-muted/60" />
         ))}
       </div>
     );
@@ -96,32 +96,32 @@ function ListaHistorias() {
 
   return (
     <>
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <div className="inline-flex rounded-md border border-border/70 bg-card p-0.5">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="inline-flex rounded-full border border-border bg-card p-1 shadow-sm">
           {OPCIONES_FILTRO.map((op) => (
             <button
               key={op.id}
               type="button"
               onClick={() => setFiltro(op.id)}
               aria-pressed={filtro === op.id}
-              className={`rounded px-2.5 py-1 text-xs font-medium transition-colors ${
+              className={`rounded-full px-4 py-2 text-xs font-semibold transition-colors ${
                 filtro === op.id
-                  ? "bg-green-700 text-white"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-oliva text-white"
+                  : "text-muted-foreground hover:text-oliva-oscuro"
               }`}
             >
               {op.label}
             </button>
           ))}
         </div>
-        <Button size="sm" variant="outline" onClick={() => descargarAprobadas(familias)} disabled={!hayAprobadas}>
+        <Button variant="outline" onClick={() => descargarAprobadas(familias)} disabled={!hayAprobadas}>
           <Download />
           Descargar historias aprobadas
         </Button>
       </div>
 
       {visibles.length === 0 ? (
-        <div className="rounded-xl border border-border/60 bg-card p-6 text-center text-sm text-muted-foreground">
+        <div className="rounded-2xl border border-border/80 bg-card p-8 text-center text-sm text-muted-foreground shadow-sm">
           {familias.length === 0
             ? "Todavía no hay historias. Se escriben desde la ficha de cada familia en el ranking."
             : filtro === "aprobadas"
@@ -129,39 +129,42 @@ function ListaHistorias() {
               : "No hay borradores."}
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {visibles.map((f) => {
             const nivel = nivelUrgencia(f.puntajeFinal);
             return (
-              <section key={f.casoId} className="rounded-xl border border-border/60 bg-card p-4">
-                <header className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-sm font-semibold">{f.alias}</h2>
-                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${nivel.clase}`}>
+              <section
+                key={f.casoId}
+                className="rounded-2xl border border-border/80 bg-card p-5 shadow-[0_1px_2px_rgb(31_31_26/0.04),0_4px_16px_-6px_rgb(84_86_55/0.12)]"
+              >
+                <header className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="text-base font-bold text-oliva-oscuro">{f.alias}</h2>
+                    <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${nivel.clase}`}>
                       {nivel.label} · {f.puntajeFinal}
                     </span>
                   </div>
                   {/* TODO(roles): mostrar este enlace solo a coordinadores. */}
                   <Link
                     href={`/historia/${f.casoId}`}
-                    className="inline-flex items-center gap-1 text-xs font-medium text-green-700 hover:underline dark:text-green-400"
+                    className="inline-flex items-center gap-1.5 rounded-full px-2 py-1.5 text-xs font-semibold text-oliva underline decoration-manteca decoration-2 underline-offset-4 hover:text-oliva-oscuro"
                   >
-                    <PenLine className="h-3.5 w-3.5" />
+                    <PenLine className="size-3.5" />
                     Escribir y aprobar
                   </Link>
                 </header>
 
-                <ul className="space-y-2.5">
+                <ul className="space-y-3">
                   {f.historias.map((h) => (
-                    <li key={h.id} className="rounded-lg border border-border/50 bg-background/60 p-3">
-                      <div className="mb-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
+                    <li key={h.id} className="rounded-xl border border-border/60 bg-crema p-4">
+                      <div className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
                         {h.aprobada ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-green-700/10 px-1.5 py-0.5 font-medium text-green-700 dark:text-green-400">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-salvia-suave px-2 py-0.5 font-semibold text-oliva-oscuro">
                             <BadgeCheck className="h-3 w-3" />
                             Aprobada
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-1.5 py-0.5 font-medium text-amber-800 dark:text-amber-400">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-manteca/60 px-2 py-0.5 font-semibold text-urgencia-media-texto">
                             <FilePen className="h-3 w-3" />
                             Borrador
                           </span>
@@ -169,10 +172,10 @@ function ListaHistorias() {
                         <span>{fecha(h.fecha)}</span>
                         {h.aprobadaPor && <span>· aprobó {h.aprobadaPor}</span>}
                       </div>
-                      <p className="text-sm leading-relaxed whitespace-pre-line">{h.texto}</p>
+                      <p className="text-[15px] leading-relaxed whitespace-pre-line">{h.texto}</p>
                       {h.aprobada && (
-                        <div className="mt-2 flex justify-end">
-                          <Button size="xs" variant="outline" onClick={() => copiar(h.texto)}>
+                        <div className="mt-3 flex justify-end">
+                          <Button size="sm" variant="outline" onClick={() => copiar(h.texto)}>
                             <Copy />
                             Copiar texto
                           </Button>
@@ -193,13 +196,13 @@ function ListaHistorias() {
 export default function HistoriasPage() {
   return (
     <div className="min-h-full bg-background">
-      <div className="mx-auto w-full max-w-2xl px-6 py-12">
+      <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
         <header className="mb-6">
-          <p className="text-xs font-medium uppercase tracking-[0.2em] text-green-700 dark:text-green-500">
-            Uso interno
+          <p className="font-heading text-xs font-semibold tracking-[0.2em] text-oliva uppercase">
+            Contá su historia
           </p>
-          <h1 className="mt-2 text-2xl font-semibold tracking-tight">Historias</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <h1 className="mt-1 text-3xl font-bold text-oliva-oscuro">Historias</h1>
+          <p className="mt-2 text-base leading-relaxed text-muted-foreground">
             Historias anónimas de cada familia, de la más urgente a la menos urgente. Las aprobadas
             se pueden copiar o descargar para la web de Cireneos.
           </p>
@@ -208,8 +211,8 @@ export default function HistoriasPage() {
           <ListaHistorias />
         </Authenticated>
         <Unauthenticated>
-          <div className="rounded-xl border border-border/60 bg-card p-6 text-center text-sm text-muted-foreground">
-            <Link href="/dashboard" className="font-semibold text-green-700 underline dark:text-green-400">
+          <div className="rounded-2xl border border-border/80 bg-card p-8 text-center text-sm text-muted-foreground shadow-sm">
+            <Link href="/dashboard" className="font-semibold text-oliva underline decoration-manteca decoration-2 underline-offset-4">
               Iniciá sesión
             </Link>{" "}
             para ver las historias.
@@ -217,7 +220,7 @@ export default function HistoriasPage() {
         </Unauthenticated>
         <AuthLoading>
           <div className="py-16 text-center">
-            <Loader2 className="mx-auto h-6 w-6 animate-spin text-green-700" />
+            <Loader2 className="mx-auto size-8 animate-spin text-salvia" />
           </div>
         </AuthLoading>
       </div>

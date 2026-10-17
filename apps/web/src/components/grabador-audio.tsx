@@ -221,35 +221,41 @@ export default function GrabadorAudio({ onAudio, maxSegundos = 120 }: Props) {
       )}
 
       {(estado === "grabando" || estado === "grabado") && (
-        <div className="flex items-center gap-3" aria-live="polite">
+        <div
+          className="flex flex-wrap items-center gap-3 rounded-2xl bg-salvia-suave/70 px-4 py-3"
+          aria-live="polite"
+        >
           {estado === "grabando" && (
-            <span className="size-3 shrink-0 animate-pulse rounded-full bg-red-600" aria-hidden />
+            <span className="size-3.5 shrink-0 animate-pulse rounded-full bg-urgencia-critica" aria-hidden />
           )}
-          <span className="font-mono text-2xl tabular-nums">
+          <span className="font-heading text-3xl font-bold text-oliva-oscuro tabular-nums">
             {formatoTiempo(segundos)}
-            <span className="text-base text-muted-foreground"> / {formatoTiempo(maxSegundos)}</span>
+            <span className="text-base font-medium text-muted-foreground"> / {formatoTiempo(maxSegundos)}</span>
           </span>
           {estado === "grabando" && restante <= 15 && (
-            <span className="text-sm text-muted-foreground">Quedan {restante} s</span>
+            <span className="text-sm font-semibold text-urgencia-critica-texto">Quedan {restante} s</span>
           )}
         </div>
       )}
 
       {error && (
-        <p className="text-sm text-destructive" role="alert">
+        <p
+          className="rounded-xl border border-destructive/25 bg-destructive/5 px-3.5 py-2.5 text-sm text-destructive"
+          role="alert"
+        >
           {error}
         </p>
       )}
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-3">
         {(estado === "inicial" || estado === "sin-permiso") && (
-          <Button type="button" size="lg" className="h-11 px-4 text-sm" onClick={grabar}>
+          <Button type="button" size="lg" onClick={grabar}>
             <Mic /> {estado === "sin-permiso" ? "Probar de nuevo" : "Grabar"}
           </Button>
         )}
 
         {estado === "pidiendo-permiso" && (
-          <Button type="button" size="lg" className="h-11 px-4 text-sm" disabled>
+          <Button type="button" size="lg" disabled>
             <Mic /> Grabar
           </Button>
         )}
@@ -258,8 +264,7 @@ export default function GrabadorAudio({ onAudio, maxSegundos = 120 }: Props) {
           <Button
             type="button"
             size="lg"
-            variant="destructive"
-            className="h-11 px-4 text-sm"
+            className="bg-urgencia-critica text-white hover:bg-urgencia-critica-texto"
             onClick={detener}
           >
             <Square /> Detener
@@ -268,16 +273,10 @@ export default function GrabadorAudio({ onAudio, maxSegundos = 120 }: Props) {
 
         {estado === "grabado" && (
           <>
-            <Button type="button" size="lg" className="h-11 px-4 text-sm" onClick={escuchar}>
+            <Button type="button" size="lg" onClick={escuchar}>
               {reproduciendo ? <Pause /> : <Play />} {reproduciendo ? "Pausar" : "Escuchar"}
             </Button>
-            <Button
-              type="button"
-              size="lg"
-              variant="outline"
-              className="h-11 px-4 text-sm"
-              onClick={volverAGrabar}
-            >
+            <Button type="button" size="lg" variant="outline" onClick={volverAGrabar}>
               <RotateCcw /> Volver a grabar
             </Button>
           </>
@@ -292,13 +291,7 @@ export default function GrabadorAudio({ onAudio, maxSegundos = 120 }: Props) {
               className="hidden"
               onChange={(e) => elegirArchivo(e.target.files?.[0] ?? null)}
             />
-            <Button
-              type="button"
-              size="lg"
-              variant="outline"
-              className="h-11 px-4 text-sm"
-              onClick={() => inputRef.current?.click()}
-            >
+            <Button type="button" size="lg" variant="outline" onClick={() => inputRef.current?.click()}>
               {estado === "no-disponible" ? <MicOff /> : <Upload />}
               {archivoSubido ? "Cambiar archivo" : "Subir archivo de audio"}
             </Button>

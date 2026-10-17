@@ -59,7 +59,7 @@ function TextoResaltado({ texto, alertas }: { texto: string; alertas: AlertaPriv
     <>
       {partes.map((p, i) =>
         i % 2 === 1 ? (
-          <mark key={i} className="rounded bg-amber-200 px-0.5 text-amber-950 dark:bg-amber-500/40 dark:text-amber-50">
+          <mark key={i} className="rounded bg-manteca px-0.5 text-tinta">
             {p}
           </mark>
         ) : (
@@ -163,7 +163,7 @@ function AprobarHistoria({ casoId }: { casoId: Id<"casos"> }) {
   if (datos === undefined) {
     return (
       <div className="py-16 text-center">
-        <Loader2 className="mx-auto h-6 w-6 animate-spin text-emerald-600" />
+        <Loader2 className="mx-auto size-8 animate-spin text-salvia" />
       </div>
     );
   }
@@ -180,17 +180,20 @@ function AprobarHistoria({ casoId }: { casoId: Id<"casos"> }) {
 
   return (
     <>
-      <header className="mb-4">
-        <h1 className="text-lg font-semibold tracking-tight">Aprobar historia</h1>
-        <p className="text-xs text-muted-foreground">
+      <header className="mb-5">
+        <p className="font-heading text-xs font-semibold tracking-[0.2em] text-oliva uppercase">
+          Contá su historia
+        </p>
+        <h1 className="mt-1 text-3xl font-bold text-oliva-oscuro">Aprobar historia</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           {datos.alias} · {datos.barrio} · solo lo ve el equipo
         </p>
       </header>
 
       {datos.aprobada && (
-        <div className="mb-4 rounded-2xl border border-emerald-600/20 bg-emerald-50/70 p-3.5 text-xs dark:bg-emerald-950/20">
-          <div className="mb-1 flex items-center gap-1.5 font-semibold text-emerald-700 dark:text-emerald-500">
-            <BadgeCheck className="h-3.5 w-3.5" />
+        <div className="mb-5 rounded-2xl border border-salvia/30 bg-salvia-suave/70 p-4 text-sm">
+          <div className="mb-1.5 flex flex-wrap items-center gap-1.5 font-semibold text-oliva-oscuro">
+            <BadgeCheck className="size-4" />
             Última historia aprobada
             {datos.aprobada.aprobadaEn && (
               <span className="font-normal text-muted-foreground">
@@ -203,20 +206,20 @@ function AprobarHistoria({ casoId }: { casoId: Id<"casos"> }) {
       )}
 
       {!hayHistoria ? (
-        <div className="rounded-2xl border border-border/60 bg-card p-6 text-center">
-          <p className="mb-4 text-sm text-muted-foreground">
+        <div className="rounded-2xl border border-border/80 bg-card p-7 text-center shadow-[0_1px_2px_rgb(31_31_26/0.04),0_4px_16px_-6px_rgb(84_86_55/0.12)]">
+          <p className="mb-5 text-base leading-relaxed text-muted-foreground">
             La IA escribe una historia anónima a partir de la ficha y revisa que no tenga datos que
             identifiquen a la familia. Queda como borrador hasta que la apruebes.
           </p>
-          <Button onClick={onGenerar} disabled={accion !== null}>
+          <Button variant="acento" size="lg" onClick={onGenerar} disabled={accion !== null}>
             {accion === "generar" ? <Loader2 className="animate-spin" /> : <Sparkles />}
             {accion === "generar" ? "Generando…" : "Generar historia"}
           </Button>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-5">
           <div>
-            <Label htmlFor="historia" className="mb-1.5 block text-xs font-semibold">
+            <Label htmlFor="historia" className="mb-2 block text-sm font-semibold">
               Historia (podés editarla)
             </Label>
             <Textarea
@@ -224,10 +227,10 @@ function AprobarHistoria({ casoId }: { casoId: Id<"casos"> }) {
               value={texto}
               onChange={(e) => setTexto(e.target.value)}
               disabled={accion !== null || aprobado}
-              className="min-h-32 rounded-xl bg-card text-sm leading-relaxed md:text-sm"
+              className="min-h-40 rounded-2xl bg-card p-4 text-base leading-relaxed shadow-sm md:text-[15px]"
             />
             {editadoSinRevisar && (
-              <p className="mt-1 text-[11px] text-amber-700 dark:text-amber-500">
+              <p className="mt-1.5 text-xs font-medium text-urgencia-alta-texto">
                 Editaste la historia: revisá la privacidad de nuevo antes de aprobar.
               </p>
             )}
@@ -235,32 +238,32 @@ function AprobarHistoria({ casoId }: { casoId: Id<"casos"> }) {
 
           {/* Alertas de privacidad */}
           {alertas.length === 0 ? (
-            <div className="flex items-center gap-2 rounded-xl border border-emerald-600/20 bg-emerald-50/70 px-3 py-2 text-xs text-emerald-800 dark:bg-emerald-950/20 dark:text-emerald-400">
+            <div className="flex items-center gap-2 rounded-2xl border border-salvia/30 bg-salvia-suave/70 px-4 py-3 text-sm text-oliva-oscuro">
               <ShieldCheck className="h-4 w-4 shrink-0" />
               Sin alertas de privacidad{editadoSinRevisar ? " (en la última revisión)" : ""}.
             </div>
           ) : (
-            <div className="rounded-xl border border-amber-500/40 bg-amber-50/60 p-3.5 dark:bg-amber-950/20">
-              <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-amber-800 dark:text-amber-400">
+            <div className="rounded-2xl border border-manteca-oscuro bg-manteca/35 p-4">
+              <div className="mb-3 flex items-center gap-1.5 font-heading text-sm font-bold text-oliva-oscuro">
                 <ShieldAlert className="h-4 w-4" />
                 {alertas.length} {alertas.length === 1 ? "alerta" : "alertas"} de privacidad
               </div>
               {!editadoSinRevisar && (
-                <p className="mb-3 rounded-lg bg-card p-2.5 text-xs leading-relaxed text-foreground/80">
+                <p className="mb-3 rounded-xl bg-card p-3 text-sm leading-relaxed text-foreground/85">
                   <TextoResaltado texto={texto} alertas={alertas} />
                 </p>
               )}
               <ul className="space-y-2">
                 {alertas.map((a, i) => (
-                  <li key={i} className="rounded-lg bg-card p-2.5 text-xs">
+                  <li key={i} className="rounded-xl bg-card p-3 text-sm">
                     <div>
-                      <mark className="rounded bg-amber-200 px-0.5 text-amber-950 dark:bg-amber-500/40 dark:text-amber-50">
+                      <mark className="rounded bg-manteca px-0.5 text-tinta">
                         {a.texto}
                       </mark>{" "}
                       <span className="text-muted-foreground">· {a.motivo}</span>
                     </div>
                     {a.sugerencia && (
-                      <div className="mt-1 flex items-center justify-between gap-2">
+                      <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
                         <span className="text-muted-foreground">
                           Sugerencia: <span className="text-foreground">“{a.sugerencia}”</span>
                         </span>
@@ -280,13 +283,13 @@ function AprobarHistoria({ casoId }: { casoId: Id<"casos"> }) {
                 ))}
               </ul>
               {!editadoSinRevisar && (
-                <div className="mt-3 flex items-start gap-2">
+                <div className="mt-4 flex items-start gap-2.5">
                   <Checkbox
                     id="confirmo"
                     checked={confirmoAlertas}
                     onCheckedChange={(c) => setConfirmoAlertas(c === true)}
                   />
-                  <Label htmlFor="confirmo" className="text-xs leading-snug font-normal">
+                  <Label htmlFor="confirmo" className="text-sm leading-snug font-normal">
                     Revisé las alertas y la historia no permite identificar a la familia.
                   </Label>
                 </div>
@@ -295,7 +298,7 @@ function AprobarHistoria({ casoId }: { casoId: Id<"casos"> }) {
           )}
 
           {/* Acciones */}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <Button variant="outline" onClick={onGenerar} disabled={accion !== null}>
               {accion === "generar" ? <Loader2 className="animate-spin" /> : <RefreshCw />}
               Regenerar
@@ -308,18 +311,18 @@ function AprobarHistoria({ casoId }: { casoId: Id<"casos"> }) {
               {accion === "revisar" ? <Loader2 className="animate-spin" /> : <ShieldCheck />}
               Revisar privacidad de nuevo
             </Button>
-            <Button onClick={onAprobar} disabled={!puedeAprobar}>
+            <Button variant="acento" onClick={onAprobar} disabled={!puedeAprobar}>
               {accion === "aprobar" ? <Loader2 className="animate-spin" /> : <CheckCircle2 />}
               Aprobar historia
             </Button>
           </div>
 
           {aprobado && (
-            <div className="flex items-center justify-between gap-2 rounded-xl border border-emerald-600/20 bg-emerald-50/70 px-3 py-2 text-xs dark:bg-emerald-950/20">
-              <span className="text-emerald-800 dark:text-emerald-400">
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-salvia/30 bg-salvia-suave/70 px-4 py-3 text-sm">
+              <span className="text-oliva-oscuro">
                 Aprobada y guardada. Desde Historias se puede copiar o descargar.
               </span>
-              <Link href="/historias" className="font-semibold text-emerald-700 underline dark:text-emerald-400">
+              <Link href="/historias" className="font-semibold text-oliva underline decoration-manteca decoration-2 underline-offset-4">
                 Ver historias
               </Link>
             </div>
@@ -327,7 +330,7 @@ function AprobarHistoria({ casoId }: { casoId: Id<"casos"> }) {
         </div>
       )}
 
-      <p className="mt-6 text-center text-[10px] text-muted-foreground">
+      <p className="mt-8 text-center text-xs text-muted-foreground">
         La IA propone, el coordinador decide · nunca nombres, direcciones, caras ni diagnósticos
       </p>
     </>
@@ -338,13 +341,13 @@ export default function AprobarHistoriaPage() {
   const { id } = useParams<{ id: string }>();
 
   return (
-    <div className="min-h-full bg-emerald-50/30 dark:bg-transparent">
-      <div className="mx-auto w-full max-w-xl px-4 py-6">
+    <div className="min-h-full bg-background">
+      <div className="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6 sm:py-12">
         <Link
           href="/ranking"
-          className="mb-4 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+          className="mb-5 inline-flex items-center gap-1.5 rounded-full py-1.5 text-sm font-semibold text-oliva hover:text-oliva-oscuro"
         >
-          <ArrowLeft className="h-3.5 w-3.5" />
+          <ArrowLeft className="size-4" />
           Volver al ranking
         </Link>
         <Protegida soloCoordinador>

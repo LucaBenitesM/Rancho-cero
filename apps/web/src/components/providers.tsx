@@ -22,11 +22,12 @@ export default function Providers({
   initialToken?: string | null;
 }) {
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+    // Solo modo claro: la paleta de Cireneos está pensada sobre fondo crema.
+    <ThemeProvider attribute="class" forcedTheme="light" disableTransitionOnChange>
       <ConvexBetterAuthProvider client={convex} authClient={authClient} initialToken={initialToken}>
         {children}
       </ConvexBetterAuthProvider>
-      <Toaster richColors />
+      <Toaster richColors theme="light" position="top-center" />
     </ThemeProvider>
   );
 }

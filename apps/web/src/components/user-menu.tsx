@@ -23,7 +23,7 @@ export default function UserMenu() {
       <DropdownMenuTrigger render={<Button variant="outline" />}>{user?.name}</DropdownMenuTrigger>
       <DropdownMenuContent className="bg-card">
         <DropdownMenuGroup>
-          <DropdownMenuLabel>My Account</DropdownMenuLabel>
+          <DropdownMenuLabel>Mi cuenta</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem>{user?.email}</DropdownMenuItem>
           <DropdownMenuItem
@@ -38,7 +38,7 @@ export default function UserMenu() {
               });
             }}
           >
-            Sign Out
+            Cerrar sesión
           </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>

@@ -2,6 +2,7 @@
 
 import { api } from "@rancho-cero/backend/convex/_generated/api";
 import { useConvexAuth, useQuery } from "convex/react";
+import { buttonVariants } from "@rancho-cero/ui/components/button";
 import { Loader2, ShieldAlert } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -32,15 +33,15 @@ export default function Protegida({
   if (soloCoordinador && rol !== "coordinador") {
     return (
       <div className="mx-auto w-full max-w-md px-4 py-16">
-        <div className="rounded-2xl border border-border/60 bg-card p-6 text-center shadow-sm">
-          <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-600">
-            <ShieldAlert className="h-6 w-6" />
+        <div className="rounded-3xl border border-border/80 bg-card p-7 text-center shadow-[0_4px_24px_-8px_rgb(84_86_55/0.18)]">
+          <span className="mx-auto flex size-14 items-center justify-center rounded-full bg-manteca/50 text-urgencia-media-texto">
+            <ShieldAlert className="size-7" />
           </span>
-          <h1 className="mt-3 text-lg font-semibold">No tenés permiso para ver esta página</h1>
+          <h1 className="mt-4 text-lg font-bold text-oliva-oscuro">No tenés permiso para ver esta página</h1>
           <p className="mt-1 text-sm text-muted-foreground">Es solo para coordinadores.</p>
           <Link
             href="/nueva-visita"
-            className="mt-5 inline-block rounded-xl bg-green-700 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-green-800"
+            className={`mt-6 ${buttonVariants({ variant: "acento", size: "lg" })}`}
           >
             Ir a Nueva visita
           </Link>
@@ -54,8 +55,8 @@ export default function Protegida({
 
 export function Cargando() {
   return (
-    <div className="mx-auto w-full max-w-md px-4 py-16 text-center">
-      <Loader2 className="mx-auto h-6 w-6 animate-spin text-green-700" />
+    <div className="mx-auto w-full max-w-md px-4 py-20 text-center">
+      <Loader2 className="mx-auto size-8 animate-spin text-salvia" />
       <p className="mt-2 text-sm text-muted-foreground">Cargando…</p>
     </div>
   );
