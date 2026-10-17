@@ -2,14 +2,14 @@
 
 import { api } from "@rancho-cero/backend/convex/_generated/api";
 import { useConvexAuth, useQuery } from "convex/react";
-import { LogOut } from "lucide-react";
+import { LogOut, Menu, X } from "lucide-react";
 import type { Route } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 import { authClient } from "@/lib/auth-client";
-
-import { ModeToggle } from "./mode-toggle";
 
 // /historias la suma otro PR: hasta entonces no está en las rutas tipadas.
 const LINKS: { to: Route; label: string; soloCoordinador: boolean }[] = [
@@ -23,9 +23,16 @@ export default function Header() {
   const router = useRouter();
   const { isAuthenticated } = useConvexAuth();
   const rol = useQuery(api.roles.miRol, isAuthenticated ? {} : "skip");
+  const [menuAbierto, setMenuAbierto] = useState(false);
+
+  // Al navegar se cierra el menú del celular.
+  useEffect(() => {
+    setMenuAbierto(false);
+  }, [pathname]);
 
   // Hasta saber el rol no se muestran links (sin parpadeo del menú equivocado).
   const links = rol ? LINKS.filter((l) => !l.soloCoordinador || rol === "coordinador") : [];
+  const etiquetaRol = rol === "coordinador" ? "Coordinador" : "Voluntario";
 
   function cerrarSesion() {
     authClient.signOut({
@@ -36,58 +43,123 @@ export default function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border/70 bg-background/85 backdrop-blur-md">
-      <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-4 px-4 sm:h-16 sm:flex-nowrap sm:px-6">
-        {/* Wordmark */}
-        <Link href="/" className="flex h-14 items-center gap-1.5 sm:h-auto">
-          <span className="text-base font-semibold tracking-tight text-foreground">Rancho Cero</span>
-          <span className="h-1.5 w-1.5 rounded-full bg-green-700 dark:bg-green-500" aria-hidden />
+    <header className="sticky top-0 z-40 bg-oliva text-white shadow-[0_2px_12px_rgb(31_31_26/0.18)]">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:h-[72px] sm:px-6">
+        {/* Logo */}
+        <Link href="/" className="flex shrink-0 items-center gap-3" aria-label="Rancho Cero, inicio">
+          <Image
+            src="/imagenes/logo-cireneos.png"
+            alt="Logo de Cireneos"
+            width={48}
+            height={48}
+            priority
+            className="size-11 rounded-full sm:size-12"
+          />
+          <span className="flex flex-col leading-none">
+            <span className="font-heading text-[15px] font-bold tracking-wide uppercase">Rancho Cero</span>
+            <span className="mt-1 text-[10px] font-semibold tracking-[0.2em] text-white/70 uppercase">
+              Cireneos
+            </span>
+          </span>
         </Link>
 
-        {/* Navegación: en el celular pasa a una segunda fila */}
+        {/* Navegación (compu) */}
         {links.length > 0 && (
-          <nav className="order-last -mx-1 flex w-full items-center gap-1 overflow-x-auto sm:order-none sm:mx-0 sm:w-auto sm:flex-1 sm:justify-end sm:gap-2 sm:overflow-x-visible">
+          <nav className="hidden flex-1 items-center justify-end gap-1 md:flex" aria-label="Principal">
             {links.map(({ to, label }) => {
               const activo = pathname.startsWith(to);
               return (
                 <Link
                   key={to}
                   href={to}
-                  className={`relative shrink-0 px-2.5 py-1.5 text-[13px] font-medium transition-colors sm:px-3 ${
-                    activo ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                  aria-current={activo ? "page" : undefined}
+                  className={`relative px-3 py-2 font-heading text-xs font-semibold tracking-[0.12em] uppercase transition-colors ${
+                    activo ? "text-white" : "text-white/80 hover:text-white"
                   }`}
                 >
                   {label}
-                  {activo && (
-                    <span className="absolute inset-x-2.5 -bottom-[1px] h-[2px] rounded-full bg-green-700 dark:bg-green-500 sm:inset-x-3" />
-                  )}
+                  <span
+                    className={`absolute inset-x-3 -bottom-0.5 h-[3px] rounded-full bg-manteca transition-opacity ${
+                      activo ? "opacity-100" : "opacity-0"
+                    }`}
+                    aria-hidden
+                  />
                 </Link>
               );
             })}
           </nav>
         )}
 
-        {/* Rol, cerrar sesión y tema */}
-        <div className="flex items-center gap-1.5 sm:gap-2">
-          {rol && (
-            <>
-              <span className="rounded-full bg-green-700/10 px-2.5 py-1 text-[11px] font-medium text-green-800 dark:text-green-400">
-                {rol === "coordinador" ? "Coordinador" : "Voluntario"}
-              </span>
-              <button
-                type="button"
-                onClick={cerrarSesion}
-                className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                aria-label="Cerrar sesión"
-              >
-                <LogOut className="h-4 w-4" />
-                <span className="hidden sm:inline">Cerrar sesión</span>
-              </button>
-            </>
-          )}
-          <ModeToggle />
-        </div>
+        {/* Rol y cerrar sesión (compu) */}
+        {rol && (
+          <div className="hidden shrink-0 items-center gap-2 md:flex">
+            <span className="rounded-full border border-white/25 bg-white/10 px-3 py-1 text-[11px] font-semibold tracking-wide">
+              {etiquetaRol}
+            </span>
+            <button
+              type="button"
+              onClick={cerrarSesion}
+              className="flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold text-white/85 transition-colors hover:bg-white/10 hover:text-white"
+            >
+              <LogOut className="size-4" aria-hidden />
+              Cerrar sesión
+            </button>
+          </div>
+        )}
+
+        {/* Hamburguesa (celular) */}
+        {rol && (
+          <button
+            type="button"
+            onClick={() => setMenuAbierto((v) => !v)}
+            className="flex size-11 items-center justify-center rounded-full text-white transition-colors hover:bg-white/10 md:hidden"
+            aria-label={menuAbierto ? "Cerrar menú" : "Abrir menú"}
+            aria-expanded={menuAbierto}
+            aria-controls="menu-celular"
+          >
+            {menuAbierto ? <X className="size-6" /> : <Menu className="size-6" />}
+          </button>
+        )}
       </div>
+
+      {/* Menú desplegable (celular) */}
+      {rol && menuAbierto && (
+        <div
+          id="menu-celular"
+          className="border-t border-white/15 bg-oliva duration-200 animate-in fade-in slide-in-from-top-2 md:hidden"
+        >
+          <nav className="flex flex-col px-4 py-2" aria-label="Principal">
+            {links.map(({ to, label }) => {
+              const activo = pathname.startsWith(to);
+              return (
+                <Link
+                  key={to}
+                  href={to}
+                  aria-current={activo ? "page" : undefined}
+                  className={`flex items-center gap-3 border-l-4 py-3.5 pl-3 font-heading text-sm font-semibold tracking-[0.12em] uppercase ${
+                    activo ? "border-manteca text-white" : "border-transparent text-white/80"
+                  }`}
+                >
+                  {label}
+                </Link>
+              );
+            })}
+          </nav>
+          <div className="flex items-center justify-between gap-3 border-t border-white/15 px-4 py-3">
+            <span className="rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-semibold">
+              {etiquetaRol}
+            </span>
+            <button
+              type="button"
+              onClick={cerrarSesion}
+              className="flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold text-white hover:bg-white/10"
+            >
+              <LogOut className="size-4" aria-hidden />
+              Cerrar sesión
+            </button>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

@@ -34,25 +34,25 @@ function nivelDe(puntos: number, pesoMax: number): {
   if (puntos >= 3)
     return {
       texto: "Crítico",
-      punto: "bg-red-500",
-      chip: "bg-red-500/10 text-red-700 dark:text-red-400",
+      punto: "bg-urgencia-critica",
+      chip: "bg-urgencia-critica/12 text-urgencia-critica-texto",
     };
   if (puntos === 2)
     return {
       texto: "Alto",
-      punto: "bg-orange-500",
-      chip: "bg-orange-500/10 text-orange-700 dark:text-orange-400",
+      punto: "bg-urgencia-alta",
+      chip: "bg-urgencia-alta/15 text-urgencia-alta-texto",
     };
   if (puntos === 1)
     return {
       texto: "Medio",
-      punto: "bg-yellow-500",
-      chip: "bg-yellow-500/10 text-yellow-700 dark:text-yellow-500",
+      punto: "bg-urgencia-media",
+      chip: "bg-urgencia-media/20 text-urgencia-media-texto",
     };
   return {
     texto: "Sin carencia",
-    punto: "bg-green-600",
-    chip: "bg-green-600/10 text-green-700 dark:text-green-400",
+    punto: "bg-urgencia-baja",
+    chip: "bg-salvia-suave text-urgencia-baja-texto",
   };
 }
 
@@ -90,7 +90,7 @@ export function FichaCaso({ id, onClose }: { id: Id<"casos">; onClose: () => voi
       aria-label="Ficha de la familia"
     >
       <div
-        className="max-h-[92svh] w-full max-w-lg overflow-y-auto rounded-t-3xl border border-border/60 bg-card shadow-2xl duration-300 animate-in slide-in-from-bottom-4 sm:rounded-3xl"
+        className="max-h-[92svh] w-full max-w-lg overflow-y-auto rounded-t-3xl border border-border/60 bg-crema shadow-2xl duration-300 animate-in slide-in-from-bottom-4 sm:rounded-3xl"
         onClick={(e) => e.stopPropagation()}
       >
         {caso === undefined ? (
@@ -121,7 +121,7 @@ function CerrarBtn({ onClose }: { onClose: () => void }) {
       type="button"
       onClick={onClose}
       aria-label="Cerrar"
-      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors hover:bg-muted-foreground/20 hover:text-foreground"
+      className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white/90 text-oliva-oscuro shadow-sm transition-colors hover:bg-manteca"
     >
       <X className="h-4 w-4" />
     </button>
@@ -162,12 +162,12 @@ function Contenido({
   return (
     <>
       {/* Cabecera */}
-      <div className="relative overflow-hidden rounded-t-3xl bg-green-800 p-5 text-white">
+      <div className="relative overflow-hidden rounded-t-3xl bg-oliva p-5 text-white sm:p-6">
         <div className="flex items-start justify-between gap-2">
           <div>
-            <h2 className="text-lg font-bold">{caso.alias}</h2>
-            <p className="flex items-center gap-1 text-xs text-white/80">
-              <MapPin className="h-3 w-3" />
+            <h2 className="text-xl font-bold">{caso.alias}</h2>
+            <p className="mt-0.5 flex items-center gap-1 text-sm text-white/85">
+              <MapPin className="size-3.5" />
               {caso.barrio}
             </p>
           </div>
@@ -176,18 +176,20 @@ function Contenido({
 
         <div className="mt-4 flex items-end gap-4">
           <div>
-            <div className="text-4xl font-bold leading-none tabular-nums">{r.puntajeFinal}</div>
-            <div className="mt-1 text-[10px] uppercase tracking-wide text-white/70">
+            <div className="font-heading text-5xl leading-none font-extrabold text-manteca tabular-nums">
+              {r.puntajeFinal}
+            </div>
+            <div className="mt-1.5 text-[10px] font-semibold tracking-[0.15em] text-white/80 uppercase">
               puntaje final
             </div>
           </div>
-          <div className="mb-0.5 flex flex-1 flex-wrap gap-1.5 text-[11px]">
-            <span className="rounded-full bg-white/20 px-2 py-0.5">Tabla: {r.total}/135</span>
-            <span className="rounded-full bg-white/20 px-2 py-0.5">Base: {r.base}</span>
-            <span className="rounded-full bg-white/20 px-2 py-0.5">
+          <div className="mb-0.5 flex flex-1 flex-wrap gap-1.5 text-[11px] font-medium">
+            <span className="rounded-full bg-white/15 px-2.5 py-1">Tabla: {r.total}/135</span>
+            <span className="rounded-full bg-white/15 px-2.5 py-1">Base: {r.base}</span>
+            <span className="rounded-full bg-white/15 px-2.5 py-1">
               Espera: +{r.espera} ({r.mesesEspera} {r.mesesEspera === 1 ? "mes" : "meses"})
             </span>
-            <span className="rounded-full bg-white/20 px-2 py-0.5">
+            <span className="rounded-full bg-white/15 px-2.5 py-1">
               Ajuste:{" "}
               {r.ajusteAplicado === 0
                 ? "—"
@@ -197,33 +199,33 @@ function Contenido({
         </div>
       </div>
 
-      <div className="p-5">
+      <div className="p-5 sm:p-6">
         {/* Explicación */}
-        <div className="mb-4 flex gap-2.5 rounded-2xl border border-green-700/20 bg-green-50/70 p-3.5 dark:bg-green-950/20">
-          <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-green-700" />
+        <div className="mb-4 flex gap-3 rounded-2xl border border-salvia/30 bg-salvia-suave/70 p-4">
+          <Sparkles className="mt-0.5 size-4 shrink-0 text-oliva" />
           <div>
-            <div className="mb-0.5 text-[10px] font-semibold uppercase tracking-wide text-green-700 dark:text-green-400">
+            <div className="mb-1 font-heading text-[11px] font-bold tracking-[0.12em] text-oliva uppercase">
               Explicación
             </div>
-            <p className="text-xs leading-relaxed text-foreground/80">{r.explicacion}</p>
+            <p className="text-sm leading-relaxed text-foreground/85">{r.explicacion}</p>
           </div>
         </div>
 
         {/* Ajuste de la IA */}
         {caso.ajuste && (
-          <div className="mb-4 rounded-2xl border border-border bg-muted/30 p-3.5 text-xs">
+          <div className="mb-4 rounded-2xl border border-border bg-card p-4 text-sm shadow-sm">
             <div className="mb-1.5 flex items-center justify-between">
               <span className="font-semibold">
                 Ajuste sugerido por IA {caso.ajuste.porcentaje > 0 ? "+" : ""}
                 {caso.ajuste.porcentaje}%
               </span>
               <span
-                className={`rounded-full px-2 py-0.5 text-[10px] font-medium capitalize ${
+                className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold capitalize ${
                   caso.ajuste.estado === "aceptado"
-                    ? "bg-green-700/10 text-green-800 dark:text-green-300"
+                    ? "bg-salvia-suave text-oliva-oscuro"
                     : caso.ajuste.estado === "rechazado"
-                      ? "bg-red-500/10 text-red-700 dark:text-red-400"
-                      : "bg-amber-500/10 text-amber-700 dark:text-amber-500"
+                      ? "bg-urgencia-critica/12 text-urgencia-critica-texto"
+                      : "bg-manteca/60 text-urgencia-media-texto"
                 }`}
               >
                 {caso.ajuste.estado}
@@ -237,7 +239,7 @@ function Contenido({
                   type="button"
                   onClick={() => decidir("aceptado")}
                   disabled={decidiendo}
-                  className="rounded-full bg-green-700 px-3 py-1 text-[11px] font-medium text-white hover:bg-green-800 disabled:opacity-50"
+                  className="rounded-full bg-oliva px-4 py-2 text-xs font-semibold text-white hover:bg-oliva-oscuro disabled:opacity-50"
                 >
                   Aceptar
                 </button>
@@ -245,7 +247,7 @@ function Contenido({
                   type="button"
                   onClick={() => decidir("rechazado")}
                   disabled={decidiendo}
-                  className="rounded-full border border-border px-3 py-1 text-[11px] font-medium hover:bg-muted disabled:opacity-50"
+                  className="rounded-full border border-salvia/60 bg-card px-4 py-2 text-xs font-semibold text-oliva-oscuro hover:bg-salvia-suave disabled:opacity-50"
                 >
                   Rechazar
                 </button>
@@ -258,9 +260,9 @@ function Contenido({
         {caso.estado !== "relevado" && (
           <Link
             href={`/historia/${caso.id}`}
-            className="mb-4 flex items-center justify-center gap-1.5 rounded-xl border border-border px-4 py-2 text-xs font-medium transition-colors hover:bg-muted"
+            className="mb-5 flex h-12 items-center justify-center gap-2 rounded-full bg-manteca px-5 text-sm font-bold tracking-wide text-tinta uppercase shadow-sm transition-colors hover:bg-manteca-oscuro"
           >
-            <PenLine className="h-3.5 w-3.5" />
+            <PenLine className="size-4" />
             Escribir y aprobar historia
           </Link>
         )}
@@ -268,8 +270,8 @@ function Contenido({
         {/* Desglose por bloque de la tabla de Cireneos */}
         <div className="space-y-5">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold">Desglose de la evaluación</h3>
-            <span className="text-[11px] text-muted-foreground">
+            <h3 className="text-base font-bold text-oliva-oscuro">Desglose de la evaluación</h3>
+            <span className="text-xs text-muted-foreground">
               Total: <span className="font-semibold text-foreground">{r.total}</span> / 135
             </span>
           </div>
@@ -282,11 +284,14 @@ function Contenido({
             const subtotal = filas.reduce((acc, a) => acc + a.aporte, 0);
             const maxBloque = filas.reduce((acc, a) => acc + a.peso * 3, 0);
             return (
-              <div key={bloque.titulo} className="overflow-hidden rounded-xl border border-border/70">
+              <div
+                key={bloque.titulo}
+                className="overflow-hidden rounded-2xl border border-border/80 bg-card shadow-sm"
+              >
                 {/* Encabezado del bloque */}
-                <div className="flex items-center justify-between border-b border-border/70 bg-muted/40 px-3.5 py-2">
-                  <span className="text-xs font-semibold">{bloque.titulo}</span>
-                  <span className="text-[11px] font-medium text-muted-foreground">
+                <div className="flex items-center justify-between border-b border-border/70 bg-salvia-suave/70 px-4 py-2.5">
+                  <span className="font-heading text-xs font-bold text-oliva-oscuro">{bloque.titulo}</span>
+                  <span className="text-[11px] font-semibold text-oliva">
                     {subtotal} / {maxBloque} pts
                   </span>
                 </div>
@@ -296,13 +301,13 @@ function Contenido({
                   {filas.map((a) => {
                     const nivel = nivelDe(a.puntos, a.peso * 3);
                     return (
-                      <div key={a.campo} className="flex items-center gap-3 px-3.5 py-2.5">
+                      <div key={a.campo} className="flex items-center gap-3 px-4 py-3">
                         {/* Identidad del campo */}
                         <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium">{a.etiqueta}</span>
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                            <span className="text-sm font-semibold">{a.etiqueta}</span>
                             <span
-                              className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${nivel.chip}`}
+                              className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${nivel.chip}`}
                             >
                               <span className={`h-1.5 w-1.5 rounded-full ${nivel.punto}`} />
                               {nivel.texto}
@@ -330,12 +335,12 @@ function Contenido({
         </div>
 
         {/* Leyenda de niveles */}
-        <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-muted-foreground">
+        <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
           <span className="font-medium">Nivel de carencia:</span>
-          <span className="inline-flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-green-600" /> Sin carencia</span>
-          <span className="inline-flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-yellow-500" /> Medio</span>
-          <span className="inline-flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-orange-500" /> Alto</span>
-          <span className="inline-flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-red-500" /> Crítico</span>
+          <span className="inline-flex items-center gap-1"><span className="size-2 rounded-full bg-urgencia-baja" /> Sin carencia</span>
+          <span className="inline-flex items-center gap-1"><span className="size-2 rounded-full bg-urgencia-media" /> Medio</span>
+          <span className="inline-flex items-center gap-1"><span className="size-2 rounded-full bg-urgencia-alta" /> Alto</span>
+          <span className="inline-flex items-center gap-1"><span className="size-2 rounded-full bg-urgencia-critica" /> Crítico</span>
         </div>
 
         <p className="mt-3 text-center text-[10px] text-muted-foreground">

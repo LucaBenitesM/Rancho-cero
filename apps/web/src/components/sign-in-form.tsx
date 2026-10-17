@@ -25,7 +25,7 @@ export default function SignInForm() {
         {
           onSuccess: () => {
             router.push("/dashboard");
-            toast.success("Sign in successful");
+            toast.success("¡Hola! Sesión iniciada.");
           },
           onError: (error) => {
             toast.error(error.error.message || error.error.statusText);
@@ -35,39 +35,38 @@ export default function SignInForm() {
     },
     validators: {
       onSubmit: z.object({
-        email: z.email("Invalid email address"),
-        password: z.string().min(8, "Password must be at least 8 characters"),
+        email: z.email("Ingresá un correo válido"),
+        password: z.string().min(8, "La contraseña tiene al menos 8 caracteres"),
       }),
     },
   });
 
   return (
-    <div className="mx-auto w-full mt-10 max-w-md p-6">
-      <h1 className="mb-6 text-center text-3xl font-bold">Welcome Back</h1>
-
+    <div className="mt-8 w-full">
       <form
         onSubmit={(e) => {
           e.preventDefault();
           e.stopPropagation();
           form.handleSubmit();
         }}
-        className="space-y-4"
+        className="space-y-5"
       >
         <div>
           <form.Field name="email">
             {(field) => (
               <div className="space-y-2">
-                <Label htmlFor={field.name}>Email</Label>
+                <Label htmlFor={field.name} className="font-semibold">Correo electrónico</Label>
                 <Input
                   id={field.name}
                   name={field.name}
                   type="email"
+                  autoComplete="email"
                   value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
                 />
                 {field.state.meta.errors.map((error) => (
-                  <p key={error?.message} className="text-red-500">
+                  <p key={error?.message} className="text-sm text-destructive">
                     {error?.message}
                   </p>
                 ))}
@@ -80,17 +79,18 @@ export default function SignInForm() {
           <form.Field name="password">
             {(field) => (
               <div className="space-y-2">
-                <Label htmlFor={field.name}>Password</Label>
+                <Label htmlFor={field.name} className="font-semibold">Contraseña</Label>
                 <Input
                   id={field.name}
                   name={field.name}
                   type="password"
+                  autoComplete="current-password"
                   value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
                 />
                 {field.state.meta.errors.map((error) => (
-                  <p key={error?.message} className="text-red-500">
+                  <p key={error?.message} className="text-sm text-destructive">
                     {error?.message}
                   </p>
                 ))}
@@ -103,8 +103,14 @@ export default function SignInForm() {
           selector={(state) => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}
         >
           {({ canSubmit, isSubmitting }) => (
-            <Button type="submit" className="w-full" disabled={!canSubmit || isSubmitting}>
-              {isSubmitting ? "Submitting..." : "Sign In"}
+            <Button
+              type="submit"
+              variant="acento"
+              size="lg"
+              className="w-full"
+              disabled={!canSubmit || isSubmitting}
+            >
+              {isSubmitting ? "Ingresando…" : "Ingresar"}
             </Button>
           )}
         </form.Subscribe>
