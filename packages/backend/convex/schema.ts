@@ -6,7 +6,7 @@ import { v } from "convex/values";
 //
 // Principio: la IA propone, las personas deciden.
 // Cada campo que detecta la IA trae: valor + evidencia + confianza.
-// Lo dudoso queda "a_confirmar" y lo resuelve una persona.
+// La IA completa todo; lo dudoso queda señalado y el voluntario lo revisa.
 // ─────────────────────────────────────────────────────────────
 
 // Confianza de cada campo (señal de revisión, NO probabilidad).
@@ -21,13 +21,15 @@ const campo = v.object({
   valor: v.string(), // uno de la lista cerrada de FICHA.md
   evidencia: v.string(), // "foto 2: ..." o cita del audio
   confianza,
-  aConfirmar: v.boolean(), // true = una persona debe resolverlo
+  dudoso: v.optional(v.boolean()), // true = la IA tiene confianza baja
+  motivoDuda: v.optional(v.string()), // por qué duda la IA
+  aConfirmar: v.optional(v.boolean()), // legado: casos viejos, ya no se usa
 });
 
 // Estados de un caso (PLAN.md).
 const estadoCaso = v.union(
   v.literal("relevado"), // recién generado por la IA
-  v.literal("confirmado"), // sin campos a_confirmar; entra al ranking
+  v.literal("confirmado"), // revisado y guardado por el voluntario; entra al ranking
   v.literal("en_campana"), // tiene campaña publicada
   v.literal("financiado"), // llegó a US$ 15.000
   v.literal("casa_entregada") // marcado a mano
@@ -75,7 +77,7 @@ export default defineSchema({
 
     // --- 5. Dimensión social ---
     vinculoOrganizacion: campo,
-    impresionPrimeraVisita: campo, // la elige una persona, nunca la IA
+    impresionPrimeraVisita: campo, // la propone la IA, la revisa el voluntario
     desalojo: campo,
     adicionales: campo,
 

@@ -4,7 +4,7 @@ import { v } from "convex/values";
 
 import { api } from "./_generated/api";
 import { action } from "./_generated/server";
-import { CAMPOS_FICHA, type Confianza } from "./ficha";
+import { CAMPOS_FICHA, type CampoFicha, type Confianza } from "./ficha";
 
 // ─────────────────────────────────────────────────────────────
 // PROCESAR VISITA — llamada principal de IA (PLAN.md, llamada 1).
@@ -16,13 +16,6 @@ import { CAMPOS_FICHA, type Confianza } from "./ficha";
 //   ELEVENLABS_API_KEY, ANTHROPIC_API_KEY
 // (opcionales: ANTHROPIC_MODEL, ELEVENLABS_STT_MODEL)
 // ─────────────────────────────────────────────────────────────
-
-type CampoIA = {
-  valor: string;
-  evidencia: string;
-  confianza: Confianza;
-  aConfirmar: boolean;
-};
 
 type Ajuste = { porcentaje: number; motivo: string; evidencia: string } | null;
 
@@ -51,7 +44,7 @@ async function fetchConTimeout(
 }
 
 // 1) Transcribe el audio con ElevenLabs Scribe. Timeout de 60s.
-async function transcribirAudio(audioUrl: string): Promise<string> {
+export async function transcribirAudio(audioUrl: string): Promise<string> {
   const apiKey = process.env.ELEVENLABS_API_KEY;
   if (!apiKey) {
     throw new Error("Falta la variable de entorno ELEVENLABS_API_KEY en Convex.");
@@ -89,30 +82,29 @@ function catalogoParaPrompt(): string {
     const opciones = def.opciones
       .map((o) => `    - "${o.valor}": ${o.descripcion}`)
       .join("\n");
-    return `• ${def.clave} (${def.etiqueta}, grupo ${def.grupo}, fuente: ${def.fuente})\n${opciones}`;
+    const criterio = def.criterio ? `\n    criterio: ${def.criterio}` : "";
+    return `• ${def.clave} (${def.etiqueta}, grupo ${def.grupo}, fuente: ${def.fuente})${criterio}\n${opciones}`;
   }).join("\n");
 }
-
-const CLAVES_SOLO_PERSONA = CAMPOS_FICHA.filter((c) => c.soloPersona).map((c) => c.clave);
 
 const PROMPT_SISTEMA = `Sos un asistente que arma fichas de relevamiento de viviendas precarias para la ONG Rancho Cero (Cireneos, Uruguay). La IA propone, las personas deciden. La ficha sigue la tabla de puntajes real de Cireneos.
 
 Reglas estrictas:
-- Para cada campo elegís UN valor de su lista cerrada. Nunca inventás valores.
+- Completás TODOS los campos. Para cada uno elegís UN valor de su lista cerrada: siempre tu mejor propuesta. Nunca inventás valores fuera de la lista ni dejás un campo sin valor.
 - Cada campo trae su evidencia: "foto N: lo que se ve" o una cita textual del audio. La evidencia es corta: máximo una frase.
-- Confianza "alta" = evidencia directa y clara. "media" = parcial o indirecta. "baja" = inferencia sin evidencia.
-- "aConfirmar" = true cuando la confianza es baja, no hay evidencia, o la foto y el audio se contradicen.
-- Los campos de SALUD Y FAMILIA (enfermedad, menoresDe5, menores5a12, menores12a18, monoparental) y los de DIMENSIÓN SOCIAL que dependen del relato (vinculoOrganizacion, desalojo) salen SOLO del audio. Nunca se infieren de las fotos. Si el audio no los menciona, aConfirmar=true.
-- Salud (campo "enfermedad"): nunca inferir. Si no se menciona, usá "nada" con aConfirmar=true. Nunca guardar el diagnóstico exacto, solo la categoría (nada/leve/media/grave).
-- NUNCA completes estos campos, los elige una persona: ${CLAVES_SOLO_PERSONA.join(", ")}. Para ellos poné el primer valor de la lista, confianza "baja" y aConfirmar=true SIEMPRE.
-- Si no hay información para un campo, igual elegí el valor más plausible pero marcá aConfirmar=true y confianza "baja".
+- Confianza "alta" = evidencia directa y clara. "media" = parcial o indirecta. "baja" = inferencia sin evidencia directa, o la foto y el audio se contradicen.
+- "dudoso" = true cuando la confianza es "baja". En ese caso "motivoDuda" es una frase corta (máximo 12 palabras) que explica por qué dudás, por ejemplo "El audio no menciona la superficie" o "Dice diecisiete o dieciocho años". Si no dudás, "dudoso" = false y "motivoDuda" = "".
+- Fotos: llegan sin orden ni títulos. Pueden mostrar cualquier parte de la vivienda (afuera, adentro, techo, piso, baño, entorno) o varias a la vez. Analizalas TODAS juntas y no asumas qué muestra cada una por su posición: mirá qué se ve en cada una. Para citarlas usá "foto N" con el número que la acompaña.
+- Los campos de SALUD Y FAMILIA (enfermedad, menoresDe5, menores5a12, menores12a18, monoparental) y vinculoOrganizacion, desalojo y adicionales salen SOLO del audio. Nunca se infieren de las fotos. Si el audio no los menciona, proponé el valor más plausible y marcalo dudoso.
+- Salud (campo "enfermedad"): nunca inferir. Si no se menciona, usá "nada" y marcalo dudoso. Nunca guardar el diagnóstico exacto, solo la categoría (nada/leve/media/grave).
+- impresionPrimeraVisita y adicionales: la tabla no trae un criterio cerrado; seguí el "criterio" del catálogo y proponé tu mejor valor. Si la evidencia es poca, marcalo dudoso.
 - El "ajuste" (opcional) refleja factores que la tabla NO contempla (violencia o riesgo en el hogar, vivienda al borde de un talud o cañada, riesgo eléctrico grave, sin acceso a agua potable, persona postrada, embarazo → suben; solución habitacional en curso, estado mejor que lo relevado → bajan). El porcentaje va entre -15 y +15. Si no hay factores, ajuste = null. Ojo: inundación y desalojo YA son campos de la tabla, no van como ajuste.
 - "explicacion": texto breve en español simple sobre qué campos pesaron más y por qué.
 
 Respondé SOLO con un objeto JSON válido, sin texto adicional ni markdown, con esta forma exacta:
 {
   "campos": {
-    "<clave>": { "valor": "...", "evidencia": "...", "confianza": "alta|media|baja", "aConfirmar": true|false }
+    "<clave>": { "valor": "...", "evidencia": "...", "confianza": "alta|media|baja", "dudoso": true|false, "motivoDuda": "..." }
   },
   "ajuste": { "porcentaje": number, "motivo": "...", "evidencia": "..." } | null,
   "explicacion": "..."
@@ -120,7 +112,7 @@ Respondé SOLO con un objeto JSON válido, sin texto adicional ni markdown, con 
 Tenés que incluir TODAS estas claves de campo: ${CAMPOS_FICHA.map((c) => c.clave).join(", ")}.`;
 
 type RespuestaClaude = {
-  campos: Record<string, CampoIA>;
+  campos: Record<string, Partial<CampoFicha>>;
   ajuste: Ajuste;
   explicacion: string;
 };
@@ -144,7 +136,7 @@ async function descargarImagen(
 }
 
 // 2) Llama a Claude con fotos (base64) + transcripción y pide la ficha.
-async function completarFicha(
+export async function completarFicha(
   fotosUrls: string[],
   transcripcion: string
 ): Promise<RespuestaClaude> {
@@ -154,17 +146,18 @@ async function completarFicha(
   }
   const modelo = process.env.ANTHROPIC_MODEL ?? "claude-sonnet-5-5";
 
-  const bloquesImagen = await Promise.all(
-    fotosUrls.map(async (url, i) => {
-      const { base64, mediaType } = await descargarImagen(url, i);
-      return {
-        type: "image" as const,
-        source: { type: "base64" as const, media_type: mediaType, data: base64 },
-      };
-    })
-  );
+  // Cada foto va precedida de su número, solo para poder citarla ("foto N").
+  // El número no dice nada de lo que muestra: las fotos llegan sin orden.
+  const imagenes = await Promise.all(fotosUrls.map((url, i) => descargarImagen(url, i)));
+  const bloquesImagen = imagenes.flatMap(({ base64, mediaType }, i) => [
+    { type: "text" as const, text: `foto ${i + 1}:` },
+    {
+      type: "image" as const,
+      source: { type: "base64" as const, media_type: mediaType, data: base64 },
+    },
+  ]);
 
-  const textoUsuario = `Catálogo de campos y sus valores válidos:\n${catalogoParaPrompt()}\n\nLas fotos están numeradas en orden (foto 1, foto 2, ...).\n\nTranscripción del audio del voluntario:\n"""\n${transcripcion || "(sin audio o transcripción vacía)"}\n"""\n\nCompletá la ficha siguiendo las reglas.`;
+  const textoUsuario = `Catálogo de campos y sus valores válidos:\n${catalogoParaPrompt()}\n\nRecibiste ${fotosUrls.length} foto(s) de la vivienda, sin orden ni títulos. Analizalas todas juntas.\n\nTranscripción del audio del voluntario:\n"""\n${transcripcion || "(sin audio o transcripción vacía)"}\n"""\n\nCompletá la ficha siguiendo las reglas.`;
 
   const resp = await fetchConTimeout(
     "https://api.anthropic.com/v1/messages",
@@ -209,7 +202,7 @@ async function completarFicha(
   const texto = data.content.find((b) => b.type === "text")?.text ?? "";
   const json = extraerJson(texto) as Partial<RespuestaClaude>;
   return {
-    campos: (json.campos ?? {}) as Record<string, CampoIA>,
+    campos: (json.campos ?? {}) as Record<string, Partial<CampoFicha>>,
     ajuste: normalizarAjuste(json.ajuste),
     explicacion: typeof json.explicacion === "string" ? json.explicacion : "",
   };
@@ -244,31 +237,40 @@ function normalizarAjuste(ajuste: unknown): Ajuste {
   };
 }
 
-// Normaliza la respuesta de la IA al shape exacto del schema.
-function normalizarCampos(campos: Record<string, CampoIA>): Record<string, CampoIA> {
-  const salida: Record<string, CampoIA> = {};
+// Normaliza la respuesta de la IA al shape exacto del schema. Todos los
+// campos quedan completos; los dudosos llevan siempre un motivo.
+export function normalizarCampos(
+  campos: Record<string, Partial<CampoFicha>>
+): Record<string, CampoFicha> {
+  const salida: Record<string, CampoFicha> = {};
   for (const def of CAMPOS_FICHA) {
-    // Los campos que elige una persona nunca llevan el valor de la IA.
-    if (def.soloPersona) {
+    const c = campos?.[def.clave] ?? {};
+    const valorValido = def.opciones.some((o) => o.valor === c.valor);
+    if (!valorValido) {
       salida[def.clave] = {
         valor: def.opciones[0].valor,
         evidencia: "",
         confianza: "baja",
-        aConfirmar: true,
+        dudoso: true,
+        motivoDuda: "La IA no devolvió un valor válido para este campo.",
       };
       continue;
     }
 
-    const c = campos?.[def.clave];
-    const valorValido = def.opciones.some((o) => o.valor === c?.valor);
+    const confianza: Confianza = (["alta", "media", "baja"] as const).includes(
+      c.confianza as Confianza
+    )
+      ? (c.confianza as Confianza)
+      : "baja";
+    // La confianza baja siempre queda señalada, aunque la IA no la haya marcado.
+    const dudoso = c.dudoso === true || confianza === "baja";
+    const motivo = typeof c.motivoDuda === "string" ? c.motivoDuda.trim() : "";
     salida[def.clave] = {
-      valor: valorValido ? c!.valor : def.opciones[0].valor,
-      evidencia: valorValido && typeof c?.evidencia === "string" ? c.evidencia : "",
-      confianza: (["alta", "media", "baja"] as const).includes(c?.confianza as Confianza)
-        ? (c!.confianza as Confianza)
-        : "baja",
-      // Si el valor no era válido o faltaba, se marca a confirmar.
-      aConfirmar: valorValido ? Boolean(c?.aConfirmar) : true,
+      valor: c.valor as string,
+      evidencia: typeof c.evidencia === "string" ? c.evidencia : "",
+      confianza,
+      dudoso,
+      motivoDuda: dudoso ? motivo || "La IA no encontró evidencia clara." : "",
     };
   }
   return salida;
@@ -288,7 +290,7 @@ export const procesarVisita = action({
     ok: boolean;
     transcripcion: string;
     transcripcionFallo: boolean;
-    campos: Record<string, CampoIA>;
+    campos: Record<string, CampoFicha>;
     ajuste: Ajuste;
     explicacion: string;
   }> => {
@@ -298,7 +300,7 @@ export const procesarVisita = action({
       throw new Error("Necesitás iniciar sesión para procesar una visita.");
     }
 
-    // Resuelve storage IDs a URLs servibles (en orden).
+    // Resuelve storage IDs a URLs servibles.
     const fotosUrls: string[] = [];
     for (const id of args.fotos) {
       const url = await ctx.storage.getUrl(id);
