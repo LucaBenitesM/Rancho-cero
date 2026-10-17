@@ -7,7 +7,6 @@ import {
   ETIQUETA_GRUPO,
   ORDEN_GRUPOS,
   type CampoFicha,
-  type Confianza,
   type GrupoFicha,
 } from "@rancho-cero/backend/convex/ficha";
 import { Button } from "@rancho-cero/ui/components/button";
@@ -21,13 +20,14 @@ import {
 import { Checkbox } from "@rancho-cero/ui/components/checkbox";
 import { Label } from "@rancho-cero/ui/components/label";
 import { useAction, useMutation } from "convex/react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { TriangleAlert } from "lucide-react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
+
+import { MAX_FOTOS, ZonaFotos } from "@/components/zona-fotos";
 
 // Mapa clave -> campo de la ficha, para editar la ficha devuelta por la IA.
 type FichaEditable = Record<string, CampoFicha>;
-
-const CONFIANZAS: Confianza[] = ["alta", "media", "baja"];
 
 // Límites de carga.
 const MAX_LADO_FOTO = 1600; // px del lado mayor tras achicar
@@ -63,9 +63,9 @@ async function comprimirImagen(file: File): Promise<File> {
   }
 }
 
-// Etiqueta y color para el estado de confianza / a confirmar.
+// Etiqueta y color para la confianza de un campo (los dudosos van en ámbar).
 function etiquetaConfianza(c: CampoFicha) {
-  if (c.aConfirmar) return { texto: "A confirmar", clase: "bg-amber-500/15 text-amber-600" };
+  if (c.dudoso) return { texto: "Revisar", clase: "bg-amber-500/15 text-amber-700" };
   if (c.confianza === "alta") return { texto: "Confianza alta", clase: "bg-green-500/15 text-green-600" };
   if (c.confianza === "media") return { texto: "Confianza media", clase: "bg-blue-500/15 text-blue-600" };
   return { texto: "Confianza baja", clase: "bg-muted text-muted-foreground" };
@@ -106,7 +106,6 @@ export default function NuevaVisitaPage() {
   const [ficha, setFicha] = useState<FichaEditable | null>(null);
   const [guardando, setGuardando] = useState(false);
 
-  const fotosInputRef = useRef<HTMLInputElement>(null);
   const audioInputRef = useRef<HTMLInputElement>(null);
 
   // Sube un archivo al storage de Convex y devuelve su storageId tipado.
@@ -122,23 +121,14 @@ export default function NuevaVisitaPage() {
     return storageId;
   }
 
-  function onElegirFotos(e: React.ChangeEvent<HTMLInputElement>) {
-    const nuevos = Array.from(e.target.files ?? []);
-    setFotos((prev) => [...prev, ...nuevos].slice(0, 6));
-  }
-
-  function quitarFoto(i: number) {
-    setFotos((prev) => prev.filter((_, idx) => idx !== i));
-  }
-
   // Carga -> procesamiento: sube todo, crea el caso y llama a la IA.
   async function procesar() {
     if (!consentimiento) {
       toast.error("Falta marcar el consentimiento de la familia.");
       return;
     }
-    if (fotos.length < 5 || fotos.length > 6) {
-      toast.error("Subí entre 5 y 6 fotos.");
+    if (fotos.length < 1 || fotos.length > MAX_FOTOS) {
+      toast.error(`Subí entre 1 y ${MAX_FOTOS} fotos.`);
       return;
     }
     if (!audio) {
@@ -183,7 +173,7 @@ export default function NuevaVisitaPage() {
       if (res.transcripcionFallo) {
         toast.warning("No se pudo transcribir el audio; la ficha se completó solo con las fotos.");
       } else {
-        toast.success("Ficha generada. Revisá los campos marcados 'a confirmar'.");
+        toast.success("Ficha generada. Revisá los campos señalados.");
       }
     } catch (err) {
       console.error(err);
@@ -192,20 +182,21 @@ export default function NuevaVisitaPage() {
     }
   }
 
+  // Cualquier edición del voluntario saca la señal de duda del campo.
   function actualizarCampo(clave: string, cambios: Partial<CampoFicha>) {
-    setFicha((prev) => (prev ? { ...prev, [clave]: { ...prev[clave], ...cambios } } : prev));
+    setFicha((prev) =>
+      prev
+        ? { ...prev, [clave]: { ...prev[clave], ...cambios, dudoso: false, motivoDuda: "" } }
+        : prev
+    );
   }
 
   async function guardar() {
     if (!casoId || !ficha) return;
     setGuardando(true);
     try {
-      const res = await guardarCorreccion({ casoId, campos: ficha as any });
-      if (res.confirmado) {
-        toast.success("Caso confirmado: no quedan campos a confirmar. Entra al ranking.");
-      } else {
-        toast.success("Ficha guardada. Todavía quedan campos a confirmar.");
-      }
+      await guardarCorreccion({ casoId, campos: ficha as any });
+      toast.success("Ficha guardada. El caso entra al ranking.");
     } catch (err) {
       console.error(err);
       toast.error(mensajeAmigable(err));
@@ -214,22 +205,14 @@ export default function NuevaVisitaPage() {
     }
   }
 
-  const quedanAConfirmar = ficha
-    ? CAMPOS_FICHA.filter((d) => ficha[d.clave]?.aConfirmar).length
-    : 0;
-
-  // Previsualizaciones de fotos: se crean una vez por archivo y se revocan.
-  const previews = useMemo(() => fotos.map((f) => URL.createObjectURL(f)), [fotos]);
-  useEffect(() => {
-    return () => previews.forEach((u) => URL.revokeObjectURL(u));
-  }, [previews]);
+  const dudosos = ficha ? CAMPOS_FICHA.filter((d) => ficha[d.clave]?.dudoso).length : 0;
 
   return (
     <main className="container mx-auto max-w-3xl space-y-6 px-4 py-6 overflow-y-auto">
       <header>
         <h1 className="text-xl font-semibold">Nueva visita</h1>
         <p className="text-sm text-muted-foreground">
-          Subí 5–6 fotos y un audio. La IA transcribe el audio y completa la ficha; vos la revisás.
+          Subí de 1 a 6 fotos y un audio. La IA transcribe el audio y completa la ficha; vos la revisás.
         </p>
       </header>
 
@@ -255,46 +238,15 @@ export default function NuevaVisitaPage() {
           {/* Fotos */}
           <Card>
             <CardHeader>
-              <CardTitle>Fotos de la vivienda ({fotos.length}/6)</CardTitle>
-              <CardDescription>Entre 5 y 6 fotos. Sin personas ni datos identificables.</CardDescription>
+              <CardTitle>
+                Fotos de la vivienda ({fotos.length}/{MAX_FOTOS})
+              </CardTitle>
+              <CardDescription>
+                De 1 a {MAX_FOTOS} fotos, en cualquier orden. Sin personas ni datos identificables.
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <input
-                ref={fotosInputRef}
-                type="file"
-                accept="image/*"
-                multiple
-                className="hidden"
-                onChange={onElegirFotos}
-              />
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => fotosInputRef.current?.click()}
-                disabled={fotos.length >= 6}
-              >
-                Agregar fotos
-              </Button>
-              {fotos.length > 0 && (
-                <ul className="grid grid-cols-3 gap-2">
-                  {fotos.map((_, i) => (
-                    <li key={i} className="relative">
-                      <img
-                        src={previews[i]}
-                        alt={`foto ${i + 1}`}
-                        className="h-24 w-full object-cover ring-1 ring-foreground/10"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => quitarFoto(i)}
-                        className="absolute right-1 top-1 bg-background/80 px-1 text-xs"
-                      >
-                        ✕
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
+            <CardContent>
+              <ZonaFotos fotos={fotos} onChange={setFotos} />
             </CardContent>
           </Card>
 
@@ -356,9 +308,9 @@ export default function NuevaVisitaPage() {
           )}
 
           <div className="rounded-none bg-amber-500/10 p-3 text-sm text-amber-700">
-            {quedanAConfirmar > 0
-              ? `Hay ${quedanAConfirmar} campo(s) a confirmar. Resolvelos para que el caso entre al ranking.`
-              : "No quedan campos a confirmar. Al guardar, el caso queda confirmado."}
+            {dudosos > 0
+              ? `La IA completó toda la ficha y señaló ${dudosos} campo(s) donde tiene dudas. Revisalos antes de guardar.`
+              : "La IA completó toda la ficha. Revisala y guardala para que el caso entre al ranking."}
           </div>
 
           {ORDEN_GRUPOS.map((grupo) => (
@@ -407,16 +359,28 @@ function FichaEditor({
           if (!campo) return null;
           const badge = etiquetaConfianza(campo);
           return (
-            <div key={def.clave} className="space-y-1.5 border-b pb-4 last:border-b-0 last:pb-0">
+            <div
+              key={def.clave}
+              className={`space-y-1.5 border-b pb-4 last:border-b-0 last:pb-0 ${
+                campo.dudoso ? "-mx-2 border-l-2 border-l-amber-500 bg-amber-500/5 px-2 pt-2" : ""
+              }`}
+            >
               <div className="flex items-center justify-between">
-                <Label className="font-medium">{def.etiqueta}</Label>
+                <Label className="flex items-center gap-1.5 font-medium">
+                  {campo.dudoso && (
+                    <TriangleAlert className="h-4 w-4 text-amber-600" aria-label="Campo dudoso" />
+                  )}
+                  {def.etiqueta}
+                </Label>
                 <span className={`px-1.5 py-0.5 text-xs ${badge.clase}`}>{badge.texto}</span>
               </div>
 
               <select
                 value={campo.valor}
                 onChange={(e) => onCampo(def.clave, { valor: e.target.value })}
-                className="h-8 w-full border border-input bg-background px-2 text-sm"
+                className={`h-8 w-full border bg-background px-2 text-sm ${
+                  campo.dudoso ? "border-amber-500" : "border-input"
+                }`}
               >
                 {def.opciones.map((o) => (
                   <option key={o.valor} value={o.valor}>
@@ -425,33 +389,23 @@ function FichaEditor({
                 ))}
               </select>
 
+              {campo.dudoso && (
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-xs text-amber-700">La IA duda: {campo.motivoDuda}</p>
+                  {/* Si el valor propuesto está bien, se acepta sin cambiarlo. */}
+                  <button
+                    type="button"
+                    onClick={() => onCampo(def.clave, {})}
+                    className="shrink-0 text-xs text-amber-700 underline"
+                  >
+                    Está bien así
+                  </button>
+                </div>
+              )}
+
               {campo.evidencia && (
                 <p className="text-xs text-muted-foreground">Evidencia: {campo.evidencia}</p>
               )}
-
-              <div className="flex items-center gap-4 pt-1">
-                <label className="flex items-center gap-2 text-xs">
-                  <Checkbox
-                    checked={campo.aConfirmar}
-                    onCheckedChange={(v) => onCampo(def.clave, { aConfirmar: Boolean(v) })}
-                  />
-                  <span>A confirmar</span>
-                </label>
-                <label className="flex items-center gap-1 text-xs">
-                  <span className="text-muted-foreground">Confianza:</span>
-                  <select
-                    value={campo.confianza}
-                    onChange={(e) => onCampo(def.clave, { confianza: e.target.value as Confianza })}
-                    className="h-6 border border-input bg-background px-1 text-xs"
-                  >
-                    {CONFIANZAS.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
             </div>
           );
         })}

@@ -13,11 +13,14 @@
 
 export type Confianza = "alta" | "media" | "baja";
 
+// La IA completa todos los campos. Si duda, lo señala (dudoso + motivo) para
+// que el voluntario lo revise; si el voluntario lo edita, deja de ser dudoso.
 export type CampoFicha = {
   valor: string;
   evidencia: string;
   confianza: Confianza;
-  aConfirmar: boolean;
+  dudoso: boolean;
+  motivoDuda: string; // frase corta: por qué duda la IA ("" si no duda)
 };
 
 export type OpcionValor = {
@@ -38,8 +41,8 @@ export type DefinicionCampo = {
   etiqueta: string; // nombre legible
   grupo: GrupoFicha;
   peso: number; // 1..3
-  fuente: string; // de dónde sale (foto / audio / ambos / persona)
-  soloPersona?: boolean; // la IA nunca lo completa (queda a confirmar)
+  fuente: string; // de dónde sale (foto / audio / ambos)
+  criterio?: string; // cómo elegir el valor cuando la tabla no lo define
   opciones: OpcionValor[];
 };
 
@@ -269,8 +272,9 @@ const dimensionSocial: DefinicionCampo[] = [
     etiqueta: "Impresión de la 1ª visita",
     grupo: "dimension_social",
     peso: 3,
-    fuente: "la elige una persona",
-    soloPersona: true, // la IA nunca la completa: siempre queda a confirmar
+    fuente: "fotos + audio (impresión de conjunto)",
+    criterio:
+      "urgencia percibida mirando TODO junto (estado de la vivienda, familia, salud, riesgos)",
     opciones: [
       { valor: "baja", puntos: 1, descripcion: "Baja urgencia percibida" },
       { valor: "media", puntos: 2, descripcion: "Media urgencia percibida" },
@@ -294,8 +298,9 @@ const dimensionSocial: DefinicionCampo[] = [
     etiqueta: "Adicionales",
     grupo: "dimension_social",
     peso: 3,
-    fuente: "la elige una persona",
-    soloPersona: true, // criterio no definido: lo elige el coordinador
+    fuente: "audio",
+    criterio:
+      "otras vulnerabilidades de la familia que no entran en los demás campos (ej. sin trabajo, sin agua potable, violencia, embarazo, persona postrada)",
     opciones: [
       { valor: "ninguno", puntos: 1, descripcion: "Ninguno" },
       { valor: "algunos", puntos: 2, descripcion: "Algunos" },

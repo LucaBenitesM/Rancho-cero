@@ -16,14 +16,14 @@ import { mutation, query } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { calcularUrgencia } from "./urgencia";
-import { CAMPOS_FICHA, CLAVES_CAMPO, calcularPuntajeBase, calcularPuntajeTabla } from "./ficha";
+import { CLAVES_CAMPO, calcularPuntajeBase, calcularPuntajeTabla } from "./ficha";
 
 const DIA = 1000 * 60 * 60 * 24;
 
 // Un campo de la ficha: valor + evidencia + confianza. Los de ejemplo vienen
-// con confianza alta y sin "a confirmar" (ya corregidos por el voluntario).
+// con confianza alta y sin dudas (ya revisados por el voluntario).
 function campo(valor: string, evidencia: string) {
-  return { valor, evidencia, confianza: "alta" as const, aConfirmar: false };
+  return { valor, evidencia, confianza: "alta" as const, dudoso: false, motivoDuda: "" };
 }
 
 interface SeedCaso {
@@ -606,7 +606,8 @@ const campoValidator = v.object({
   valor: v.string(),
   evidencia: v.string(),
   confianza: v.union(v.literal("alta"), v.literal("media"), v.literal("baja")),
-  aConfirmar: v.boolean(),
+  dudoso: v.boolean(),
+  motivoDuda: v.string(),
 });
 
 const camposValidator = v.object({
@@ -651,11 +652,17 @@ export const crearCaso = mutation({
     if (!args.consentimiento) {
       throw new Error("No se puede crear un caso sin el consentimiento de la familia.");
     }
-    if (args.fotos.length < 5 || args.fotos.length > 6) {
-      throw new Error("Hay que subir entre 5 y 6 fotos.");
+    if (args.fotos.length < 1 || args.fotos.length > 6) {
+      throw new Error("Hay que subir entre 1 y 6 fotos.");
     }
 
-    const campoVacio = { valor: "", evidencia: "", confianza: "baja" as const, aConfirmar: true };
+    const campoVacio = {
+      valor: "",
+      evidencia: "",
+      confianza: "baja" as const,
+      dudoso: true,
+      motivoDuda: "Todavía no lo completó la IA.",
+    };
     const camposVacios = Object.fromEntries(
       CLAVES_CAMPO.map((clave) => [clave, campoVacio]),
     ) as Record<string, typeof campoVacio>;
@@ -724,7 +731,7 @@ export const guardarFichaIA = mutation({
   },
 });
 
-/** Guarda correcciones del voluntario; confirma el caso si no quedan dudas. */
+/** Guarda la ficha revisada por el voluntario y confirma el caso (entra al ranking). */
 export const guardarCorreccion = mutation({
   args: { casoId: v.id("casos"), campos: camposValidator },
   handler: async (ctx, { casoId, campos }) => {
@@ -735,9 +742,6 @@ export const guardarCorreccion = mutation({
       throw new Error("No tenés permiso para editar este caso.");
     }
 
-    const quedaAlgoAConfirmar = CAMPOS_FICHA.some(
-      (def) => (campos as never as Record<string, { aConfirmar?: boolean }>)[def.clave]?.aConfirmar === true,
-    );
     const puntajeTabla = calcularPuntajeTabla(campos as never);
     const puntajeBase = calcularPuntajeBase(campos as never);
 
@@ -745,9 +749,9 @@ export const guardarCorreccion = mutation({
       ...campos,
       puntajeTabla,
       puntajeBase,
-      estado: quedaAlgoAConfirmar ? "relevado" : "confirmado",
+      estado: "confirmado",
     });
 
-    return { confirmado: !quedaAlgoAConfirmar };
+    return { confirmado: true };
   },
 });

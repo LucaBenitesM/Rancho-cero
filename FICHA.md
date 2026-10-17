@@ -19,10 +19,12 @@ a las tres personas antes de tocar el código.
 | **Confianza alta** | Evidencia directa y clara: se ve sin dudas en una foto o el voluntario lo dice explícitamente. |
 | **Confianza media** | Evidencia parcial o indirecta: se ve una parte, o se deduce de algo que se dijo. |
 | **Confianza baja** | Inferencia sin evidencia directa. |
-| **"A confirmar"** | Confianza baja, sin evidencia, o foto y audio se contradicen. El voluntario lo resuelve eligiendo una opción (sin escribir). |
+| **Ficha completa** | La IA completa **todos** los campos con su mejor propuesta. Ninguno queda vacío. |
+| **Campo dudoso** | Confianza baja, sin evidencia, o foto y audio se contradicen. Queda **señalado** (⚠️) con una frase corta de por qué duda la IA. Si el voluntario lo edita o lo acepta, deja de estar señalado. |
+| **Fotos** | De 1 a 6, en cualquier orden y sin títulos. La IA las analiza todas juntas sin asumir qué muestra cada una. |
 | **Datos de personas** | Los campos de salud y familia salen **solo del audio**. Nunca se infieren de las fotos (las fotos no muestran personas). |
-| **Salud** | Enfermedad y discapacidad nunca se infieren. Si no se mencionan, quedan "a confirmar". Nunca se guarda el diagnóstico exacto en la versión pública. |
-| **Ranking** | Solo entran casos en estado `confirmado`, es decir, sin ningún campo "a confirmar". |
+| **Salud** | Enfermedad y discapacidad nunca se infieren. Si no se mencionan, la IA propone "nada" y lo señala como dudoso. Nunca se guarda el diagnóstico exacto en la versión pública. |
+| **Ranking** | Solo entran casos en estado `confirmado`: el voluntario revisó la ficha y la guardó. |
 
 ---
 
@@ -91,7 +93,7 @@ máximo posible es **45 × 3 = 135**.
 
 ⚠️ Hace falta la superficie de la vivienda y la cantidad de integrantes. Las fotos
 no alcanzan para medir m²: el voluntario tiene que decirlo en el audio. Si falta
-alguno de los dos datos, queda "a confirmar".
+alguno de los dos datos, la IA propone un valor y lo señala como dudoso.
 
 ### Ventanas — peso 2 · fuente: foto
 
@@ -210,8 +212,8 @@ Se guarda la categoría, **nunca el diagnóstico exacto**.
 | `alta` | 3 |
 
 ⚠️ La tabla no trae criterio. Proponemos que el voluntario la elija (baja / media /
-alta urgencia percibida). **La IA nunca la completa**: siempre queda "a confirmar"
-hasta que la elija una persona.
+alta urgencia percibida). La IA la propone mirando todo junto (vivienda, familia,
+salud, riesgos) y el voluntario la revisa; si tiene poca evidencia, queda señalada.
 
 ### Desalojo / reinserción familiar — peso 2
 
@@ -233,7 +235,8 @@ hasta que la elija una persona.
 
 ⚠️ La tabla no trae criterio. ¿Es lo mismo que el **ajuste** de la IA (factores que
 la ficha no contempla)? Si es así, conviene que el ajuste viva acá y no como un
-porcentaje aparte. Mientras tanto lo elige el coordinador.
+porcentaje aparte. Mientras tanto la IA lo propone a partir del audio (otras
+vulnerabilidades que no entran en los demás campos) y el voluntario lo revisa.
 
 ---
 
