@@ -9,7 +9,7 @@ const ROLES = [
   {
     href: "/dashboard",
     titulo: "Soy coordinador",
-    desc: "Reviso el ranking, acepto ajustes y apruebo historias y campañas.",
+    desc: "Reviso el ranking, acepto ajustes y apruebo historias.",
   },
   {
     href: "/dashboard",
@@ -17,15 +17,15 @@ const ROLES = [
     desc: "Cargo visitas con fotos y audio, y reviso lo que la IA marcó como dudoso.",
   },
   {
-    href: "/campana",
-    titulo: "Quiero donar",
-    desc: "Conocé las campañas, el impacto y colaborá. No necesitás iniciar sesión.",
+    href: "/ranking",
+    titulo: "Ver el ranking",
+    desc: "Las familias relevadas, priorizadas por urgencia según la tabla de Cireneos.",
   },
 ] as const;
 
 const IMPACTO = [
   { valor: "1 de 2", detalle: "niños crecen en hogares con precariedad habitacional" },
-  { valor: "US$ 15.000", detalle: "cuesta reemplazar una vivienda por una casa digna" },
+  { valor: "18 campos", detalle: "evalúa la ficha para priorizar cada vivienda" },
   { valor: "100", detalle: "hogares como meta del programa Rancho Cero" },
 ] as const;
 
@@ -64,10 +64,10 @@ export default function Home() {
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Link
-              href="/campana"
+              href="/dashboard"
               className="inline-flex items-center gap-2 rounded-md bg-green-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-green-500"
             >
-              Quiero colaborar
+              Ingresar al equipo
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
