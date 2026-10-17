@@ -8,7 +8,14 @@ import z from "zod";
 
 import { authClient } from "@/lib/auth-client";
 
-export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () => void }) {
+export default function SignUpForm({
+  onSwitchToSignIn,
+  destino = "/dashboard",
+}: {
+  onSwitchToSignIn: () => void;
+  // A dónde ir después de entrar (por ejemplo, volver a Nueva visita).
+  destino?: string;
+}) {
   const router = useRouter();
 
   const form = useForm({
@@ -26,7 +33,7 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
         },
         {
           onSuccess: () => {
-            router.push("/dashboard");
+            router.push(destino);
             toast.success("Sign up successful");
           },
           onError: (error) => {

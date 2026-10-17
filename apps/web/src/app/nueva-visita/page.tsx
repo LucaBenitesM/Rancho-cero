@@ -19,8 +19,9 @@ import {
 } from "@rancho-cero/ui/components/card";
 import { Checkbox } from "@rancho-cero/ui/components/checkbox";
 import { Label } from "@rancho-cero/ui/components/label";
-import { useAction, useMutation } from "convex/react";
-import { TriangleAlert } from "lucide-react";
+import { Authenticated, AuthLoading, Unauthenticated, useAction, useMutation } from "convex/react";
+import { Loader2, LogIn, TriangleAlert } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -90,7 +91,44 @@ function mensajeAmigable(err: unknown): string {
   return raw || "Falló el procesamiento. Reintentá.";
 }
 
+// Sin sesión no se puede procesar la visita: se pide login antes de mostrar
+// el formulario, y al entrar se vuelve a esta pantalla.
 export default function NuevaVisitaPage() {
+  return (
+    <>
+      <AuthLoading>
+        <div className="mx-auto w-full max-w-md px-4 py-16 text-center">
+          <Loader2 className="mx-auto h-6 w-6 animate-spin text-emerald-600" />
+          <p className="mt-2 text-sm text-muted-foreground">Cargando...</p>
+        </div>
+      </AuthLoading>
+      <Unauthenticated>
+        <div className="mx-auto w-full max-w-md px-4 py-10">
+          <div className="rounded-2xl border border-border/60 bg-card p-6 text-center shadow-sm">
+            <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-600/10 text-emerald-600">
+              <LogIn className="h-6 w-6" />
+            </span>
+            <h1 className="mt-3 text-lg font-semibold">Iniciá sesión para cargar una visita</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Las visitas tienen datos de las familias: solo las carga el equipo de Cireneos.
+            </p>
+            <Link
+              href="/dashboard?volver=/nueva-visita"
+              className="mt-5 inline-flex w-full items-center justify-center rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700"
+            >
+              Iniciar sesión
+            </Link>
+          </div>
+        </div>
+      </Unauthenticated>
+      <Authenticated>
+        <FormularioNuevaVisita />
+      </Authenticated>
+    </>
+  );
+}
+
+function FormularioNuevaVisita() {
   const generarUrlDeSubida = useMutation(api.casos.generarUrlDeSubida);
   const crearCaso = useMutation(api.casos.crearCaso);
   const procesarVisita = useAction(api.procesarVisita.procesarVisita);

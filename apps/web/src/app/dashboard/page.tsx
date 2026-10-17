@@ -4,7 +4,8 @@ import { api } from "@rancho-cero/backend/convex/_generated/api";
 import { Authenticated, AuthLoading, Unauthenticated, useQuery } from "convex/react";
 import { CheckCircle2, Loader2, ShieldCheck } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 
 import SignInForm from "@/components/sign-in-form";
 import SignUpForm from "@/components/sign-up-form";
@@ -54,8 +55,25 @@ function SesionIniciada() {
   );
 }
 
+// Ruta interna a la que volver después de entrar (?volver=/nueva-visita).
+// Solo se aceptan rutas propias, para no redirigir a otro sitio.
+function destinoSeguro(volver: string | null): string {
+  if (volver && /^\/(?![/\\])/.test(volver)) return volver;
+  return "/dashboard";
+}
+
 export default function DashboardPage() {
+  // useSearchParams necesita un Suspense alrededor.
+  return (
+    <Suspense>
+      <Sesion />
+    </Suspense>
+  );
+}
+
+function Sesion() {
   const [showSignIn, setShowSignIn] = useState(true);
+  const destino = destinoSeguro(useSearchParams().get("volver"));
 
   return (
     <>
@@ -69,9 +87,9 @@ export default function DashboardPage() {
             <span className="text-sm font-medium">Acceso del equipo de Cireneos</span>
           </div>
           {showSignIn ? (
-            <SignInForm onSwitchToSignUp={() => setShowSignIn(false)} />
+            <SignInForm destino={destino} onSwitchToSignUp={() => setShowSignIn(false)} />
           ) : (
-            <SignUpForm onSwitchToSignIn={() => setShowSignIn(true)} />
+            <SignUpForm destino={destino} onSwitchToSignIn={() => setShowSignIn(true)} />
           )}
         </div>
       </Unauthenticated>
