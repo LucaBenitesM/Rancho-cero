@@ -4,15 +4,14 @@ import { api } from "@rancho-cero/backend/convex/_generated/api";
 import { Authenticated, AuthLoading, Unauthenticated, useQuery } from "convex/react";
 import { CheckCircle2, Loader2, ShieldCheck } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
 
 import SignInForm from "@/components/sign-in-form";
-import SignUpForm from "@/components/sign-up-form";
 import UserMenu from "@/components/user-menu";
 
 // Pantalla de sesión del equipo de Cireneos. Es el punto de entrada del login
 // (necesario para cargar visitas). No tiene un "panel" de métricas: eso vive en
-// el ranking y la campaña.
+// el ranking y la campaña. No hay registro: las cuentas del equipo se crean a
+// mano (ver PLAN.md).
 function SesionIniciada() {
   const user = useQuery(api.auth.getCurrentUser);
 
@@ -55,8 +54,6 @@ function SesionIniciada() {
 }
 
 export default function DashboardPage() {
-  const [showSignIn, setShowSignIn] = useState(true);
-
   return (
     <>
       <Authenticated>
@@ -68,11 +65,7 @@ export default function DashboardPage() {
             <ShieldCheck className="h-5 w-5" />
             <span className="text-sm font-medium">Acceso del equipo de Cireneos</span>
           </div>
-          {showSignIn ? (
-            <SignInForm onSwitchToSignUp={() => setShowSignIn(false)} />
-          ) : (
-            <SignUpForm onSwitchToSignIn={() => setShowSignIn(true)} />
-          )}
+          <SignInForm />
         </div>
       </Unauthenticated>
       <AuthLoading>

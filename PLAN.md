@@ -183,8 +183,10 @@ Mientras el login no esté, se trabaja con un **selector de rol** en la esquina.
   El ranking se ve sin iniciar sesión. Los botones "Soy coordinador" y "Soy
   voluntario" de la portada llevan a la misma pantalla de sesión. La tabla de
   arriba queda como el diseño para después del piloto.
-- ⏳ La pantalla de sesión todavía muestra la opción de **crear cuenta**, aunque
-  la decisión es no tener registro.
+- ✅ **Sin registro en la app:** la pantalla de sesión solo deja iniciar sesión.
+  Las cuentas del equipo se crean antes del pitch con un pedido a
+  `POST /api/auth/sign-up/email` (email, contraseña y nombre). Ese endpoint
+  sigue abierto: quien lo conozca puede crear una cuenta.
 
 Los montos del panel y de las campañas llevan la etiqueta **"datos simulados"**.
 Las cifras reales (US$ 15.000 por casa, meta de 100 hogares) se muestran aparte.
@@ -330,5 +332,6 @@ aprobar. Decir "una segunda IA revisa y marca cualquier dato identificable".
 - [x] Botón para aceptar o rechazar el ajuste de la IA.
 - [ ] Grabar el video de toda la demo (respaldo).
 - [ ] Enlace desde el ranking a "Aprobar historia".
-- [ ] Sacar la opción de crear cuenta.
+- [x] Sacar la opción de crear cuenta de la pantalla de sesión.
+- [ ] Crear las cuentas del equipo para la demo.
 - [x] Corregir "20 campos" → 18 en la fila del total de [FICHA.md](FICHA.md).
