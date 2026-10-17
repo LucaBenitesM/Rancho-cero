@@ -33,7 +33,7 @@ export default function CampanaPage() {
   if (campana === undefined) {
     return (
       <div className="mx-auto w-full max-w-xl px-4 py-10 text-center">
-        <Loader2 className="mx-auto h-6 w-6 animate-spin text-teal-700" />
+        <Loader2 className="mx-auto h-6 w-6 animate-spin text-green-700" />
         <p className="mt-2 text-sm text-muted-foreground">Cargando campaña…</p>
       </div>
     );
@@ -59,7 +59,7 @@ export default function CampanaPage() {
     <div className="min-h-full bg-background">
       <div className="mx-auto w-full max-w-2xl px-6 py-12">
         {/* Encabezado de sección */}
-        <p className="text-xs font-medium uppercase tracking-[0.2em] text-teal-700 dark:text-teal-500">
+        <p className="text-xs font-medium uppercase tracking-[0.2em] text-green-700 dark:text-green-500">
           Campaña pública
         </p>
 
@@ -71,7 +71,7 @@ export default function CampanaPage() {
             <span className="absolute bottom-2.5 right-3 text-[10px] text-muted-foreground">
               imagen genérica · sin rasgos identificables
             </span>
-            <span className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full border border-border/60 bg-background/90 px-2.5 py-1 text-[11px] font-medium text-teal-700 dark:text-teal-400">
+            <span className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full border border-border/60 bg-background/90 px-2.5 py-1 text-[11px] font-medium text-green-700 dark:text-green-400">
               <BadgeCheck className="h-3.5 w-3.5" />
               Historia aprobada
             </span>
@@ -96,7 +96,7 @@ export default function CampanaPage() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-lg font-semibold tabular-nums text-teal-800 dark:text-teal-400">
+                  <div className="text-lg font-semibold tabular-nums text-green-800 dark:text-green-400">
                     {Math.round(progreso)}%
                   </div>
                   {!campana.financiado && (
@@ -117,7 +117,7 @@ export default function CampanaPage() {
               >
                 <div
                   className={`h-full rounded-full transition-all duration-700 ease-out ${
-                    campana.financiado ? "bg-teal-600" : "bg-teal-700 dark:bg-teal-500"
+                    campana.financiado ? "bg-green-600" : "bg-green-700 dark:bg-green-500"
                   }`}
                   style={{ width: `${progreso}%` }}
                 />
@@ -126,9 +126,9 @@ export default function CampanaPage() {
 
             {/* Donar / meta alcanzada */}
             {campana.financiado ? (
-              <div className="mt-6 rounded-lg border border-teal-600/30 bg-teal-50/60 p-5 text-center dark:bg-teal-950/20">
-                <CheckCircle2 className="mx-auto h-7 w-7 text-teal-700 dark:text-teal-400" />
-                <div className="mt-2 text-sm font-medium text-teal-800 dark:text-teal-300">
+              <div className="mt-6 rounded-lg border border-green-600/30 bg-green-50/60 p-5 text-center dark:bg-green-950/20">
+                <CheckCircle2 className="mx-auto h-7 w-7 text-green-700 dark:text-green-400" />
+                <div className="mt-2 text-sm font-medium text-green-800 dark:text-green-300">
                   Meta alcanzada
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
@@ -145,14 +145,14 @@ export default function CampanaPage() {
                       key={m}
                       type="button"
                       onClick={() => setMontoPago(m)}
-                      className="rounded-md border border-border bg-background px-3 py-2.5 text-sm font-medium transition-colors hover:border-teal-700 hover:bg-teal-700 hover:text-white dark:hover:border-teal-500 dark:hover:bg-teal-600"
+                      className="rounded-md border border-border bg-background px-3 py-2.5 text-sm font-medium transition-colors hover:border-green-700 hover:bg-green-700 hover:text-white dark:hover:border-green-500 dark:hover:bg-green-600"
                     >
                       {formatoPesos(m)}
                     </button>
                   ))}
                 </div>
                 {ultimaDonacion !== null && (
-                  <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-xs font-medium text-teal-700 dark:text-teal-400">
+                  <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-xs font-medium text-green-700 dark:text-green-400">
                     <CheckCircle2 className="h-3.5 w-3.5" />
                     ¡Gracias! Sumaste {formatoPesos(ultimaDonacion)} (simulado).
                   </p>

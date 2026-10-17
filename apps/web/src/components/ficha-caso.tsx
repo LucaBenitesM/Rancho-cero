@@ -24,8 +24,8 @@ const BLOQUES: { titulo: string; campos: string[] }[] = [
 function colorPuntos(puntos: number): string {
   if (puntos >= 3) return "bg-red-500";
   if (puntos >= 2) return "bg-orange-400";
-  if (puntos >= 1) return "bg-teal-600";
-  return "bg-teal-300";
+  if (puntos >= 1) return "bg-green-600";
+  return "bg-green-300";
 }
 
 interface Aporte {
@@ -114,7 +114,7 @@ function Contenido({
   return (
     <>
       {/* Cabecera */}
-      <div className="relative overflow-hidden rounded-t-3xl bg-teal-800 p-5 text-white">
+      <div className="relative overflow-hidden rounded-t-3xl bg-green-800 p-5 text-white">
         <div className="flex items-start justify-between gap-2">
           <div>
             <h2 className="text-lg font-bold">{caso.alias}</h2>
@@ -151,10 +151,10 @@ function Contenido({
 
       <div className="p-5">
         {/* Explicación */}
-        <div className="mb-4 flex gap-2.5 rounded-2xl border border-teal-700/20 bg-teal-50/70 p-3.5 dark:bg-teal-950/20">
-          <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-teal-700" />
+        <div className="mb-4 flex gap-2.5 rounded-2xl border border-green-700/20 bg-green-50/70 p-3.5 dark:bg-green-950/20">
+          <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-green-700" />
           <div>
-            <div className="mb-0.5 text-[10px] font-semibold uppercase tracking-wide text-teal-700 dark:text-teal-400">
+            <div className="mb-0.5 text-[10px] font-semibold uppercase tracking-wide text-green-700 dark:text-green-400">
               Explicación
             </div>
             <p className="text-xs leading-relaxed text-foreground/80">{r.explicacion}</p>
@@ -172,7 +172,7 @@ function Contenido({
               <span
                 className={`rounded-full px-2 py-0.5 text-[10px] font-medium capitalize ${
                   caso.ajuste.estado === "aceptado"
-                    ? "bg-teal-700/10 text-teal-800 dark:text-teal-300"
+                    ? "bg-green-700/10 text-green-800 dark:text-green-300"
                     : caso.ajuste.estado === "rechazado"
                       ? "bg-red-500/10 text-red-700 dark:text-red-400"
                       : "bg-amber-500/10 text-amber-700 dark:text-amber-500"

@@ -35,16 +35,28 @@ export default function Home() {
 
   return (
     <div className="min-h-full bg-background">
-      {/* Hero */}
-      <section className="border-b border-border/60 bg-muted/30">
-        <div className="mx-auto w-full max-w-5xl px-6 py-16 sm:py-20">
-          <p className="text-xs font-medium uppercase tracking-[0.2em] text-teal-700 dark:text-teal-500">
+      {/* Hero con imagen de fondo del rancho */}
+      <section className="relative overflow-hidden border-b border-border/60">
+        {/* Imagen de fondo */}
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: "url('/hero-rancho.svg')" }}
+          aria-hidden
+        />
+        {/* Velo verde para legibilidad del texto */}
+        <div
+          className="absolute inset-0 bg-gradient-to-br from-green-950/85 via-green-900/70 to-green-800/55"
+          aria-hidden
+        />
+
+        <div className="relative mx-auto w-full max-w-5xl px-6 py-20 sm:py-28">
+          <p className="text-xs font-medium uppercase tracking-[0.2em] text-green-200">
             Cireneos · Uruguay
           </p>
-          <h1 className="mt-4 max-w-2xl text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl">
+          <h1 className="mt-4 max-w-2xl text-4xl font-semibold leading-[1.1] tracking-tight text-white sm:text-5xl">
             Por un Uruguay con vivienda digna.
           </h1>
-          <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground">
+          <p className="mt-5 max-w-xl text-base leading-relaxed text-green-50/90">
             El voluntario toma fotos y graba un audio de la visita; nuestra herramienta lo convierte
             en un caso completo, priorizado y listo para buscar financiamiento. La tecnología
             propone, las personas deciden.
@@ -53,14 +65,14 @@ export default function Home() {
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Link
               href="/campana"
-              className="inline-flex items-center gap-2 rounded-md bg-teal-700 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-teal-800"
+              className="inline-flex items-center gap-2 rounded-md bg-green-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-green-500"
             >
               Quiero colaborar
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               href="/ranking"
-              className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-5 py-3 text-sm font-medium transition-colors hover:bg-muted"
+              className="inline-flex items-center gap-2 rounded-md border border-white/40 bg-white/10 px-5 py-3 text-sm font-medium text-white backdrop-blur-sm transition-colors hover:bg-white/20"
             >
               Ver el ranking de urgencia
             </Link>
@@ -69,11 +81,11 @@ export default function Home() {
       </section>
 
       {/* Franja de impacto */}
-      <section className="border-b border-border/60">
+      <section className="border-b border-border/60 bg-green-50/40 dark:bg-transparent">
         <div className="mx-auto grid w-full max-w-5xl grid-cols-1 divide-y divide-border/60 px-6 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
           {IMPACTO.map((it) => (
             <div key={it.detalle} className="py-8 sm:px-8 sm:first:pl-0 sm:last:pr-0">
-              <div className="text-3xl font-semibold tracking-tight text-teal-800 dark:text-teal-400">
+              <div className="text-3xl font-semibold tracking-tight text-green-800 dark:text-green-400">
                 {it.valor}
               </div>
               <p className="mt-1.5 text-sm leading-snug text-muted-foreground">{it.detalle}</p>
@@ -92,11 +104,11 @@ export default function Home() {
             <Link
               key={titulo}
               href={href}
-              className="group flex flex-col bg-card p-6 transition-colors hover:bg-muted/40"
+              className="group flex flex-col bg-card p-6 transition-colors hover:bg-green-50/60 dark:hover:bg-green-950/20"
             >
               <h3 className="flex items-center justify-between text-base font-medium">
                 {titulo}
-                <ArrowRight className="h-4 w-4 text-muted-foreground/50 transition-all group-hover:translate-x-0.5 group-hover:text-teal-700" />
+                <ArrowRight className="h-4 w-4 text-muted-foreground/50 transition-all group-hover:translate-x-0.5 group-hover:text-green-700" />
               </h3>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{desc}</p>
             </Link>
@@ -109,7 +121,7 @@ export default function Home() {
             <span
               className={`h-1.5 w-1.5 rounded-full ${
                 conectado
-                  ? "bg-teal-600"
+                  ? "bg-green-600"
                   : healthCheck === undefined
                     ? "animate-pulse bg-muted-foreground/50"
                     : "bg-red-500"
