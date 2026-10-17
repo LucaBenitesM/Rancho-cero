@@ -41,7 +41,7 @@ máximo posible es **45 × 3 = 135**.
 | 3. Seguridad y salubridad | Riesgo de derrumbe, inundable | 6 | 18 |
 | 4. Salud y familia | Enfermedades, menores (3 franjas), monoparental | 11 | 33 |
 | 5. Dimensión social | Vínculo, impresión 1ª visita, desalojo, adicionales | 11 | 33 |
-| **Total** | **20 campos** | **45** | **135** |
+| **Total** | **18 campos** | **45** | **135** |
 
 ---
 

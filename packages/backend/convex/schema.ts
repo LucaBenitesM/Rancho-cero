@@ -101,6 +101,8 @@ export default defineSchema({
         v.literal("rechazado")
       )
     ),
+    ajusteDecididoPor: v.optional(v.string()), // quién aceptó o rechazó el ajuste
+    ajusteDecididoEn: v.optional(v.number()),
     puntajeFinal: v.optional(v.number()),
     explicacion: v.optional(v.string()), // texto en lenguaje simple
 

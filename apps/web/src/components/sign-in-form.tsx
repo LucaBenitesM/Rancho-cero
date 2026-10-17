@@ -8,7 +8,7 @@ import z from "zod";
 
 import { authClient } from "@/lib/auth-client";
 
-export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () => void }) {
+export default function SignInForm() {
   const router = useRouter();
 
   const form = useForm({
@@ -109,16 +109,6 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
           )}
         </form.Subscribe>
       </form>
-
-      <div className="mt-4 text-center">
-        <Button
-          variant="link"
-          onClick={onSwitchToSignUp}
-          className="text-indigo-600 hover:text-indigo-800"
-        >
-          Need an account? Sign Up
-        </Button>
-      </div>
     </div>
   );
 }
