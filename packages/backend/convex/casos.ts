@@ -534,6 +534,7 @@ export const ranking = query({
         base: r.base,
         espera: r.espera,
         ajusteAplicado: r.ajusteAplicado,
+        ajusteEstado: doc.ajusteEstado, // "sugerido" | "aceptado" | "rechazado" | undefined
         explicacion: r.explicacion,
       };
     });
