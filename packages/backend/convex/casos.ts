@@ -16,7 +16,7 @@ import { mutation, query } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { calcularUrgencia } from "./urgencia";
-import { CLAVES_CAMPO, calcularPuntajeBase, calcularPuntajeTabla } from "./ficha";
+import { CLAVES_CAMPO, calcularPuntajeBase, calcularPuntajeFinal, calcularPuntajeTabla, puntosEspera } from "./ficha";
 
 const DIA = 1000 * 60 * 60 * 24;
 
@@ -466,14 +466,24 @@ export const seed = mutation({
   },
 });
 
-/** Borra todos los casos y los vuelve a sembrar. Útil cuando cambia la tabla. */
+/** Borra todos los casos (y las campañas/historias/donaciones que dependen de
+ *  ellos, para no dejar referencias huérfanas) y vuelve a sembrar. */
 export const recargar = mutation({
   args: {},
   handler: async (ctx) => {
+    // Primero lo que depende de los casos, para no dejar casoId colgando.
+    for (const tabla of ["donaciones", "campanas", "historias"] as const) {
+      const docs = await ctx.db.query(tabla).collect();
+      for (const d of docs) await ctx.db.delete(d._id);
+    }
     const todos = await ctx.db.query("casos").collect();
     for (const d of todos) await ctx.db.delete(d._id);
     const creados = await sembrar(ctx);
-    return { borrados: todos.length, creados, mensaje: `Recargadas ${creados} familias.` };
+    return {
+      borrados: todos.length,
+      creados,
+      mensaje: `Recargadas ${creados} familias. Volvé a correr campanas:seed.`,
+    };
   },
 });
 
@@ -704,7 +714,7 @@ export const guardarTranscripcion = mutation({
   },
 });
 
-/** Guarda la ficha completada por la IA + calcula puntaje base. */
+/** Guarda la ficha completada por la IA + calcula puntajes (tabla, base y final). */
 export const guardarFichaIA = mutation({
   args: {
     casoId: v.id("casos"),
@@ -716,12 +726,21 @@ export const guardarFichaIA = mutation({
   },
   handler: async (ctx, args) => {
     await requerirUsuario(ctx);
+    const caso = await ctx.db.get(args.casoId);
+    if (!caso) throw new Error("El caso no existe.");
+
     const puntajeTabla = calcularPuntajeTabla(args.campos as never);
     const puntajeBase = calcularPuntajeBase(args.campos as never);
+    // El ajuste de la IA recién sugerido todavía no está aceptado: no entra al
+    // puntaje final hasta que una persona lo acepte (PLAN.md).
+    const espera = puntosEspera(caso.relevadoEn, Date.now());
+    const puntajeFinal = calcularPuntajeFinal(puntajeBase, 0, espera);
+
     await ctx.db.patch(args.casoId, {
       ...args.campos,
       puntajeTabla,
       puntajeBase,
+      puntajeFinal,
       ajustePorcentaje: args.ajustePorcentaje,
       ajusteMotivo: args.ajusteMotivo,
       ajusteEvidencia: args.ajusteEvidencia,
@@ -744,11 +763,16 @@ export const guardarCorreccion = mutation({
 
     const puntajeTabla = calcularPuntajeTabla(campos as never);
     const puntajeBase = calcularPuntajeBase(campos as never);
+    // Solo se aplica el ajuste si fue aceptado por una persona.
+    const pct = caso.ajusteEstado === "aceptado" ? (caso.ajustePorcentaje ?? 0) : 0;
+    const espera = puntosEspera(caso.relevadoEn, Date.now());
+    const puntajeFinal = calcularPuntajeFinal(puntajeBase, pct, espera);
 
     await ctx.db.patch(casoId, {
       ...campos,
       puntajeTabla,
       puntajeBase,
+      puntajeFinal,
       estado: "confirmado",
     });
 
