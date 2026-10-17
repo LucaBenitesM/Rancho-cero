@@ -31,7 +31,7 @@ export default function CampanaPage() {
   if (campana === undefined) {
     return (
       <div className="mx-auto w-full max-w-xl px-4 py-10 text-center">
-        <Loader2 className="mx-auto h-6 w-6 animate-spin text-amber-600" />
+        <Loader2 className="mx-auto h-6 w-6 animate-spin text-emerald-600" />
         <p className="mt-2 text-sm text-muted-foreground">Cargando campaña…</p>
       </div>
     );
@@ -54,17 +54,17 @@ export default function CampanaPage() {
   const falta = Math.max(0, campana.metaUsd - campana.recaudadoUsd);
 
   return (
-    <div className="min-h-full bg-gradient-to-b from-amber-50/40 to-background dark:from-amber-950/10">
+    <div className="min-h-full bg-emerald-50/30 dark:bg-transparent">
       <div className="mx-auto w-full max-w-xl px-4 py-6">
         {/* Tarjeta principal */}
-        <article className="overflow-hidden rounded-3xl border border-border/60 bg-card shadow-sm">
+        <article className="overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm">
           {/* Imagen genérica */}
-          <div className="relative flex aspect-[16/9] w-full items-center justify-center bg-gradient-to-br from-amber-400 via-orange-500 to-orange-600">
+          <div className="relative flex aspect-[16/9] w-full items-center justify-center bg-gradient-to-br from-emerald-500 to-emerald-700">
             <HomeIcon className="h-16 w-16 text-white/90" strokeWidth={1.5} />
             <span className="absolute bottom-2 right-3 text-[10px] text-white/70">
               imagen genérica · sin rasgos identificables
             </span>
-            <span className="absolute left-3 top-3 flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-medium text-amber-700 shadow-sm">
+            <span className="absolute left-3 top-3 flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-medium text-emerald-700 shadow-sm">
               <BadgeCheck className="h-3.5 w-3.5" />
               Historia aprobada
             </span>
@@ -90,7 +90,7 @@ export default function CampanaPage() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-lg font-bold tabular-nums text-amber-600 dark:text-amber-500">
+                  <div className="text-lg font-bold tabular-nums text-emerald-700 dark:text-emerald-500">
                     {Math.round(progreso)}%
                   </div>
                   {!campana.financiado && (
@@ -113,7 +113,7 @@ export default function CampanaPage() {
                   className={`h-full rounded-full transition-all duration-700 ease-out ${
                     campana.financiado
                       ? "bg-emerald-500"
-                      : "bg-gradient-to-r from-amber-500 to-orange-600"
+                      : "bg-emerald-600"
                   }`}
                   style={{ width: `${progreso}%` }}
                 />
@@ -135,7 +135,7 @@ export default function CampanaPage() {
             ) : (
               <div className="mt-5">
                 <div className="mb-2 flex items-center gap-1.5 text-xs font-medium">
-                  <Heart className="h-3.5 w-3.5 text-amber-600" />
+                  <Heart className="h-3.5 w-3.5 text-emerald-600" />
                   Elegí un monto para donar
                 </div>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -145,7 +145,7 @@ export default function CampanaPage() {
                       type="button"
                       disabled={enviando !== null}
                       onClick={() => handleDonar(m)}
-                      className="flex items-center justify-center gap-1 rounded-xl border border-amber-500/40 bg-amber-500/5 px-3 py-2.5 text-sm font-semibold text-amber-700 transition-all hover:-translate-y-0.5 hover:bg-amber-500 hover:text-white hover:shadow-md disabled:pointer-events-none disabled:opacity-50 dark:text-amber-400 dark:hover:text-white"
+                      className="flex items-center justify-center gap-1 rounded-xl border border-emerald-600/40 bg-emerald-600/5 px-3 py-2.5 text-sm font-semibold text-emerald-700 transition-all hover:bg-emerald-600 hover:text-white disabled:pointer-events-none disabled:opacity-50 dark:text-emerald-400 dark:hover:text-white"
                     >
                       {enviando === m ? (
                         <Loader2 className="h-4 w-4 animate-spin" />

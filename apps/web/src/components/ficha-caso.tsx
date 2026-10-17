@@ -24,8 +24,8 @@ const BLOQUES: { titulo: string; campos: string[] }[] = [
 function colorPuntos(puntos: number): string {
   if (puntos >= 3) return "bg-red-500";
   if (puntos >= 2) return "bg-orange-400";
-  if (puntos >= 1) return "bg-amber-400";
-  return "bg-emerald-500";
+  if (puntos >= 1) return "bg-emerald-500";
+  return "bg-emerald-300";
 }
 
 interface Aporte {
@@ -113,8 +113,8 @@ function Contenido({
 
   return (
     <>
-      {/* Cabecera con degradé */}
-      <div className="relative overflow-hidden rounded-t-3xl bg-gradient-to-br from-amber-500 to-orange-600 p-5 text-white">
+      {/* Cabecera */}
+      <div className="relative overflow-hidden rounded-t-3xl bg-emerald-600 p-5 text-white">
         <div className="flex items-start justify-between gap-2">
           <div>
             <h2 className="text-lg font-bold">{caso.alias}</h2>
@@ -151,10 +151,10 @@ function Contenido({
 
       <div className="p-5">
         {/* Explicación */}
-        <div className="mb-4 flex gap-2.5 rounded-2xl border border-amber-500/20 bg-amber-50/60 p-3.5 dark:bg-amber-950/20">
-          <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+        <div className="mb-4 flex gap-2.5 rounded-2xl border border-emerald-600/20 bg-emerald-50/70 p-3.5 dark:bg-emerald-950/20">
+          <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
           <div>
-            <div className="mb-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-500">
+            <div className="mb-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-500">
               Explicación
             </div>
             <p className="text-xs leading-relaxed text-foreground/80">{r.explicacion}</p>

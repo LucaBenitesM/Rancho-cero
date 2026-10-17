@@ -39,19 +39,17 @@ export default function Home() {
   const conectado = healthCheck === "OK";
 
   return (
-    <div className="min-h-full bg-gradient-to-b from-amber-50/60 to-background dark:from-amber-950/15">
+    <div className="min-h-full bg-emerald-50/30 dark:bg-transparent">
       <div className="mx-auto w-full max-w-3xl px-4 py-10">
         {/* Hero */}
         <section className="text-center">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-[11px] font-medium text-amber-700 dark:text-amber-400">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-600/30 bg-emerald-600/10 px-3 py-1 text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
             <Sparkles className="h-3.5 w-3.5" />
             Cireneos · Uruguay · hackathon de IA
           </span>
           <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
             De una visita a un{" "}
-            <span className="bg-gradient-to-r from-amber-500 to-orange-600 bg-clip-text text-transparent">
-              hogar digno
-            </span>
+            <span className="text-emerald-700 dark:text-emerald-500">hogar digno</span>
           </h1>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">
             El voluntario saca fotos y graba un audio; la IA lo convierte en un caso completo,
@@ -63,16 +61,16 @@ export default function Home() {
           <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5">
             <Link
               href="/ranking"
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+              className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700"
             >
               <ListOrdered className="h-4 w-4" />
               Ver ranking de urgencia
             </Link>
             <Link
               href="/campana"
-              className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-semibold transition-all hover:-translate-y-0.5 hover:border-amber-500/40 hover:shadow-sm"
+              className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-semibold transition-colors hover:border-emerald-500/40 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20"
             >
-              <Heart className="h-4 w-4 text-amber-600" />
+              <Heart className="h-4 w-4 text-emerald-600" />
               Ver campaña
             </Link>
           </div>
@@ -84,9 +82,9 @@ export default function Home() {
             <Link
               key={titulo}
               href={href}
-              className="group flex flex-col rounded-2xl border border-border/60 bg-card p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-amber-500/40 hover:shadow-md"
+              className="group flex flex-col rounded-2xl border border-border/60 bg-card p-4 transition-all hover:border-emerald-500/40 hover:shadow-sm"
             >
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 transition-colors group-hover:bg-amber-500 group-hover:text-white">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600/10 text-emerald-600 transition-colors group-hover:bg-emerald-600 group-hover:text-white">
                 <Icon className="h-5 w-5" />
               </span>
               <h3 className="mt-3 flex items-center gap-1 text-sm font-semibold">
@@ -101,7 +99,7 @@ export default function Home() {
         {/* Pie: principio + estado */}
         <section className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
           <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <HomeIcon className="h-3.5 w-3.5 text-amber-600" />
+            <HomeIcon className="h-3.5 w-3.5 text-emerald-600" />
             La IA propone, las personas deciden · datos simulados
           </p>
           <span className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-card px-2.5 py-1 text-[11px] text-muted-foreground">
@@ -110,7 +108,7 @@ export default function Home() {
                 conectado
                   ? "bg-emerald-500"
                   : healthCheck === undefined
-                    ? "animate-pulse bg-amber-400"
+                    ? "animate-pulse bg-muted-foreground/50"
                     : "bg-red-500"
               }`}
             />

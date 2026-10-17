@@ -21,11 +21,11 @@ export default function Header() {
       <div className="mx-auto flex h-14 max-w-3xl items-center justify-between gap-2 px-4">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-sm">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white">
             <HomeIcon className="h-4 w-4" />
           </span>
           <span className="text-sm font-semibold tracking-tight">
-            Rancho <span className="text-amber-600 dark:text-amber-500">Cero</span>
+            Rancho <span className="text-emerald-700 dark:text-emerald-500">Cero</span>
           </span>
         </Link>
 
@@ -39,7 +39,7 @@ export default function Header() {
                 href={to}
                 className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
                   activo
-                    ? "bg-amber-500/10 text-amber-700 dark:text-amber-400"
+                    ? "bg-emerald-600/10 text-emerald-700 dark:text-emerald-400"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 }`}
               >
