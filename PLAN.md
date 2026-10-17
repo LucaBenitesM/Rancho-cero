@@ -1,7 +1,9 @@
 # Plan — Rancho Cero (hackathon de IA)
 
 Decisiones tomadas el sábado 17/10 antes de empezar a programar.
-La ficha de relevamiento y la fórmula de urgencia están en [FICHA.md](FICHA.md).
+La ficha de relevamiento y la fórmula de urgencia están en [FICHA.md](FICHA.md),
+basadas en la tabla de puntajes real de Cireneos ([docs/tabla_puntajes.xlsx](docs/tabla_puntajes.xlsx)):
+20 campos en 5 bloques, `peso × puntuación`, máximo 135.
 
 ---
 
@@ -36,8 +38,9 @@ se convierte en una ficha estructurada con evidencia. Esa es la función princip
 4. **Ficha.** Claude analiza fotos + transcripción y completa la ficha con valor,
    evidencia y confianza por campo. Lo dudoso queda "a confirmar".
 5. **Corrección.** El voluntario resuelve los "a confirmar" eligiendo opciones.
-6. **Urgencia.** Fórmula base + ajuste de la IA (±15%, con motivo y evidencia,
-   puede subir o bajar) + puntos por espera. El coordinador acepta o rechaza el
+6. **Urgencia.** Puntaje base de la tabla de Cireneos (total / 135, en %) +
+   ajuste de la IA (±15%, con motivo y evidencia, puede subir o bajar) + puntos
+   por espera. El coordinador acepta o rechaza el
    ajuste. La IA explica el resultado.
 7. **Ranking.** Solo casos confirmados, ordenados por puntaje.
 8. **Historia.** La IA escribe una historia anónima y digna; una segunda llamada
@@ -133,7 +136,7 @@ registro de usuarios, recuperación de contraseña.
 
 ## Reparto
 
-- **Persona 1 — IA:** tabla de la ficha, validación con Cireneos, acciones de
+- **Persona 1 — IA:** ficha según la tabla de Cireneos, dudas pendientes con Cireneos, acciones de
   Convex (ElevenLabs → Claude), prompts y esquemas.
 - **Persona 2 — App:** proyecto con Better-T-Stack, despliegue en Vercel, carga
   desde el celular, ficha con "a confirmar", corrección, login.
@@ -197,7 +200,8 @@ después a otras organizaciones de vivienda y a gobiernos.
 
 ## Pendientes
 
-- [ ] Validar [FICHA.md](FICHA.md) con Cireneos (pesos, puntos y dudas marcadas con ⚠️).
+- [x] Conseguir la tabla de puntajes real de Cireneos ([docs/tabla_puntajes.xlsx](docs/tabla_puntajes.xlsx)).
+- [ ] Resolver con Cireneos las dudas de interpretación de la tabla (marcadas con ⚠️ en [FICHA.md](FICHA.md)).
 - [ ] Confirmar permiso para usar el nombre de Cireneos y Rancho Cero en el pitch.
 - [ ] Pedir una cita o un video corto de alguien de Cireneos para la diapositiva de validación.
 - [ ] Conseguir un dato real del problema para abrir el pitch.
