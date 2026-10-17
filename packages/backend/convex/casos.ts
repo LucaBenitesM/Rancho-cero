@@ -14,7 +14,7 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
-import { calcularUrgencia } from "./urgencia";
+import { calcularUrgencia, PUNTOS, TEXTO_VALOR } from "./urgencia";
 
 const DIA = 1000 * 60 * 60 * 24;
 
@@ -535,6 +535,17 @@ export const obtener = query({
     const ajuste = extraerAjuste(doc);
     const r = calcularUrgencia(campos, doc.relevadoEn, ahora, ajuste);
 
+    // Campos "a confirmar": cuáles son y qué opciones puede elegir el voluntario.
+    const aConfirmar = CAMPOS_URGENCIA.flatMap((c) => {
+      const cd = (doc as unknown as Record<string, { aConfirmar?: boolean; valor: string }>)[c];
+      if (!cd?.aConfirmar) return [];
+      const opciones = Object.keys(PUNTOS[c as keyof typeof PUNTOS] ?? {}).map((valor) => ({
+        valor,
+        texto: TEXTO_VALOR[valor] ?? valor,
+      }));
+      return [{ campo: c, valorActual: cd.valor, opciones }];
+    });
+
     return {
       id: doc._id,
       alias: doc.alias ?? "Familia",
@@ -543,6 +554,7 @@ export const obtener = query({
       relevadoEn: doc.relevadoEn,
       resultado: r,
       ajuste,
+      aConfirmar,
     };
   },
 });

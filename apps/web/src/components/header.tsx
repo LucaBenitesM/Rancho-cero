@@ -1,6 +1,6 @@
 "use client";
 
-import { Home as HomeIcon, Heart, ListOrdered, LayoutDashboard } from "lucide-react";
+import { Home as HomeIcon, Heart, ListOrdered, LayoutDashboard, Upload } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -8,6 +8,7 @@ import { ModeToggle } from "./mode-toggle";
 
 const LINKS = [
   { to: "/", label: "Inicio", icon: HomeIcon },
+  { to: "/cargar", label: "Cargar", icon: Upload },
   { to: "/ranking", label: "Ranking", icon: ListOrdered },
   { to: "/campana", label: "Campaña", icon: Heart },
   { to: "/dashboard", label: "Panel", icon: LayoutDashboard },

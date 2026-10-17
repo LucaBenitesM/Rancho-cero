@@ -2,9 +2,9 @@
 
 import { api } from "@rancho-cero/backend/convex/_generated/api";
 import type { Id } from "@rancho-cero/backend/convex/_generated/dataModel";
-import { useQuery } from "convex/react";
-import { MapPin, Sparkles, X } from "lucide-react";
-import { useEffect } from "react";
+import { useMutation, useQuery } from "convex/react";
+import { AlertCircle, MapPin, Sparkles, X } from "lucide-react";
+import { useEffect, useState } from "react";
 
 // Agrupación de campos por bloque de la tabla de Cireneos (FICHA.md).
 const BLOQUES: { titulo: string; campos: string[] }[] = [
@@ -161,6 +161,14 @@ function Contenido({
           </div>
         </div>
 
+        {/* Corrección de campos "a confirmar" */}
+        {caso.aConfirmar && caso.aConfirmar.length > 0 && (
+          <CorregirCampos
+            casoId={caso.id as Id<"casos">}
+            pendientes={caso.aConfirmar}
+          />
+        )}
+
         {/* Ajuste de la IA */}
         {caso.ajuste && (
           <div className="mb-4 rounded-2xl border border-dashed border-border p-3.5 text-xs">
@@ -236,5 +244,97 @@ function Contenido({
         </p>
       </div>
     </>
+  );
+}
+
+// Etiquetas legibles por campo (coinciden con urgencia.ts).
+const ETIQUETA: Record<string, string> = {
+  pared: "Pared",
+  techo: "Techo",
+  piso: "Piso",
+  bano: "Baño",
+  m2PorPersona: "m² por persona",
+  ventanas: "Ventanas",
+  separacionAmbientes: "Separación de ambientes",
+  riesgoDerrumbe: "Riesgo de derrumbe",
+  inundable: "Inundable / plagas",
+  enfermedad: "Enfermedad o discapacidad",
+  menoresDe5: "Menores de 5 años",
+  menores5a12: "Menores de 5 a 12",
+  menores12a18: "Menores de 12 a 18",
+  monoparental: "Familia monoparental",
+  vinculoOrganizacion: "Vínculo con la organización",
+  impresionPrimeraVisita: "Impresión de la 1ª visita",
+  desalojo: "Desalojo / reinserción",
+  adicionales: "Adicionales",
+};
+
+interface Pendiente {
+  campo: string;
+  valorActual: string;
+  opciones: { valor: string; texto: string }[];
+}
+
+/**
+ * Bloque de corrección: el voluntario resuelve cada campo "a confirmar"
+ * eligiendo una opción de la lista cerrada (sin escribir). Al resolver el
+ * último, el caso pasa a "confirmado" y entra al ranking.
+ */
+function CorregirCampos({
+  casoId,
+  pendientes,
+}: {
+  casoId: Id<"casos">;
+  pendientes: Pendiente[];
+}) {
+  const confirmarCampo = useMutation(api.visitas.confirmarCampo);
+  const [guardando, setGuardando] = useState<string | null>(null);
+
+  async function elegir(campo: string, valor: string) {
+    setGuardando(campo);
+    try {
+      await confirmarCampo({ casoId, campo, valor });
+    } finally {
+      setGuardando(null);
+    }
+  }
+
+  return (
+    <div className="mb-4 rounded-2xl border border-orange-400/40 bg-orange-50/60 p-3.5 dark:bg-orange-950/15">
+      <div className="mb-2 flex items-center gap-1.5">
+        <AlertCircle className="h-4 w-4 text-orange-500" />
+        <span className="text-[11px] font-semibold uppercase tracking-wide text-orange-700 dark:text-orange-400">
+          A confirmar ({pendientes.length})
+        </span>
+      </div>
+      <p className="mb-3 text-[11px] text-muted-foreground">
+        La IA no pudo verificar estos campos. Elegí la opción correcta; al resolver todos, el caso
+        entra al ranking.
+      </p>
+      <div className="space-y-3">
+        {pendientes.map((p) => (
+          <div key={p.campo}>
+            <div className="mb-1 text-xs font-medium">{ETIQUETA[p.campo] ?? p.campo}</div>
+            <div className="flex flex-wrap gap-1.5">
+              {p.opciones.map((op) => (
+                <button
+                  key={op.valor}
+                  type="button"
+                  disabled={guardando !== null}
+                  onClick={() => elegir(p.campo, op.valor)}
+                  className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors disabled:opacity-50 ${
+                    op.valor === p.valorActual
+                      ? "border-emerald-600 bg-emerald-600 text-white"
+                      : "border-border bg-card hover:border-emerald-500/50 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                  }`}
+                >
+                  {op.texto}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
