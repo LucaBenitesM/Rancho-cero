@@ -47,7 +47,7 @@ Para recargar las 8 familias: `npx convex run casos:recargar` (desde
   o **imágenes generadas**. Si una foto es generada, que diga `-generada` en el
   nombre (`foto-2-generada.jpg`).
 - Horizontal, con buena luz, que se vea el material sin dudas. Si la IA no ve
-  claro el material, el campo queda "a confirmar".
+  claro el material, el campo sale señalado como dudoso.
 
 **Audio**
 
@@ -297,10 +297,10 @@ En la app: Impresión 1ª visita = **baja** · Adicionales = **ninguno**.
 
 ## Checklist antes de la demo
 
-- [ ] Cada carpeta tiene sus 5–6 fotos y su `audio.m4a`.
+- [ ] Cada carpeta tiene sus fotos (de 1 a 6) y su `audio.m4a`.
 - [ ] Revisé foto por foto: ninguna muestra personas, números ni lugares reconocibles.
 - [ ] Al menos un audio grabado con voz humana real.
 - [ ] Ningún audio dice nombres, direcciones ni diagnósticos.
 - [ ] Procesé cada caso en la app y los campos coinciden con las tablas de arriba
-      (si la IA marca algo "a confirmar", ajustar la foto o la frase).
+      (si la IA señala algo como dudoso, ajustar la foto o la frase).
 - [ ] El ranking sale en el orden y con los puntajes de la tabla de arriba.
