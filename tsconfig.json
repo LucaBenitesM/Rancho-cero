@@ -1,0 +1,3 @@
+{
+  "extends": "@rancho-cero/config/tsconfig.base.json"
+}

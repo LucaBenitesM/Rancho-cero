@@ -1,0 +1,44 @@
+{
+  "name": "rancho-cero",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "type": "module",
+  "scripts": {
+    "dev": "npm run dev --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present",
+    "check-types": "npm run check-types --workspaces --if-present",
+    "dev:web": "npm run dev --workspace web --",
+    "dev:server": "npm run dev --workspace @rancho-cero/backend --",
+    "dev:setup": "npm run dev:setup --workspace @rancho-cero/backend --",
+    "deploy:setup": "npx --yes vercel link",
+    "dev:vercel": "npx --yes vercel dev -L",
+    "env:preview": "tsx scripts/sync-vercel-env.ts preview",
+    "env:production": "tsx scripts/sync-vercel-env.ts production",
+    "deploy": "npx --yes vercel deploy",
+    "deploy:prod": "npx --yes vercel deploy --prod",
+    "deploy:check": "npx --yes vercel deploy --dry",
+    "env:generate": "varlock codegen --path ./apps/web/",
+    "postinstall": "varlock codegen --path ./apps/web/"
+  },
+  "dependencies": {
+    "zod": "^4.5.4"
+  },
+  "devDependencies": {
+    "@rancho-cero/config": "*",
+    "@types/node": "^26.4.1",
+    "tsx": "^4.23.13",
+    "typescript": "^6.0.3",
+    "varlock": "1.18.0"
+  },
+  "overrides": {
+    "@next/env": "npm:@varlock/nextjs-integration@1.2.2"
+  },
+  "packageManager": "npm@12.2.0",
+  "allowScripts": {
+    "esbuild": true,
+    "sharp": true
+  }
+}
