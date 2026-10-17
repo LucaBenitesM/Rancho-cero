@@ -2,15 +2,16 @@
 
 import { api } from "@rancho-cero/backend/convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
-import { BadgeCheck, CheckCircle2, Heart, Home as HomeIcon, Loader2, Shield } from "lucide-react";
+import { BadgeCheck, CheckCircle2, Home as HomeIcon, Loader2, Shield } from "lucide-react";
 import { useState } from "react";
 
 import { FormularioPago } from "@/components/formulario-pago";
 
-const MONTOS = [50, 100, 250, 500];
+// Montos de donación en pesos uruguayos (modo demo).
+const MONTOS = [2000, 5000, 10000, 20000];
 
-function formatoUsd(n: number): string {
-  return n.toLocaleString("es-UY", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+function formatoPesos(n: number): string {
+  return n.toLocaleString("es-UY", { style: "currency", currency: "UYU", maximumFractionDigits: 0 });
 }
 
 export default function CampanaPage() {
@@ -32,7 +33,7 @@ export default function CampanaPage() {
   if (campana === undefined) {
     return (
       <div className="mx-auto w-full max-w-xl px-4 py-10 text-center">
-        <Loader2 className="mx-auto h-6 w-6 animate-spin text-emerald-600" />
+        <Loader2 className="mx-auto h-6 w-6 animate-spin text-teal-700" />
         <p className="mt-2 text-sm text-muted-foreground">Cargando campaña…</p>
       </div>
     );
@@ -55,55 +56,59 @@ export default function CampanaPage() {
   const falta = Math.max(0, campana.metaUsd - campana.recaudadoUsd);
 
   return (
-    <div className="min-h-full bg-emerald-50/30 dark:bg-transparent">
-      <div className="mx-auto w-full max-w-xl px-4 py-6">
+    <div className="min-h-full bg-background">
+      <div className="mx-auto w-full max-w-2xl px-6 py-12">
+        {/* Encabezado de sección */}
+        <p className="text-xs font-medium uppercase tracking-[0.2em] text-teal-700 dark:text-teal-500">
+          Campaña pública
+        </p>
+
         {/* Tarjeta principal */}
-        <article className="overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm">
+        <article className="mt-4 overflow-hidden rounded-lg border border-border/60 bg-card">
           {/* Imagen genérica */}
-          <div className="relative flex aspect-[16/9] w-full items-center justify-center bg-gradient-to-br from-emerald-500 to-emerald-700">
-            <HomeIcon className="h-16 w-16 text-white/90" strokeWidth={1.5} />
-            <span className="absolute bottom-2 right-3 text-[10px] text-white/70">
+          <div className="relative flex aspect-[16/9] w-full items-center justify-center bg-muted">
+            <HomeIcon className="h-14 w-14 text-muted-foreground/40" strokeWidth={1.25} />
+            <span className="absolute bottom-2.5 right-3 text-[10px] text-muted-foreground">
               imagen genérica · sin rasgos identificables
             </span>
-            <span className="absolute left-3 top-3 flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-medium text-emerald-700 shadow-sm">
+            <span className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full border border-border/60 bg-background/90 px-2.5 py-1 text-[11px] font-medium text-teal-700 dark:text-teal-400">
               <BadgeCheck className="h-3.5 w-3.5" />
               Historia aprobada
             </span>
           </div>
 
-          <div className="p-5">
-            <h1 className="text-xl font-bold tracking-tight">{campana.titulo}</h1>
-            <p className="text-xs text-muted-foreground">{campana.barrio} · campaña pública</p>
+          <div className="p-6">
+            <h1 className="text-2xl font-semibold tracking-tight">{campana.titulo}</h1>
+            <p className="mt-1 text-sm text-muted-foreground">{campana.barrio}</p>
 
             {/* Historia */}
-            <p className="mt-3 text-sm leading-relaxed text-foreground/80">{campana.historia}</p>
+            <p className="mt-4 text-[15px] leading-relaxed text-foreground/80">{campana.historia}</p>
 
             {/* Meta + progreso */}
-            <div className="mt-5">
-              <div className="mb-2 flex items-end justify-between">
+            <div className="mt-7">
+              <div className="mb-2.5 flex items-end justify-between">
                 <div>
-                  <div className="text-2xl font-bold tabular-nums">
-                    {formatoUsd(campana.recaudadoUsd)}
+                  <div className="text-2xl font-semibold tabular-nums">
+                    {formatoPesos(campana.recaudadoUsd)}
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    de <span className="font-medium">{formatoUsd(campana.metaUsd)}</span> · una
-                    casa container
+                  <div className="mt-0.5 text-xs text-muted-foreground">
+                    de <span className="font-medium text-foreground">{formatoPesos(campana.metaUsd)}</span> · costo de una casa container
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-lg font-bold tabular-nums text-emerald-700 dark:text-emerald-500">
+                  <div className="text-lg font-semibold tabular-nums text-teal-800 dark:text-teal-400">
                     {Math.round(progreso)}%
                   </div>
                   {!campana.financiado && (
                     <div className="text-[10px] text-muted-foreground">
-                      faltan {formatoUsd(falta)}
+                      faltan {formatoPesos(falta)}
                     </div>
                   )}
                 </div>
               </div>
 
               <div
-                className="h-3 w-full overflow-hidden rounded-full bg-muted"
+                className="h-2 w-full overflow-hidden rounded-full bg-muted"
                 role="progressbar"
                 aria-valuenow={Math.round(progreso)}
                 aria-valuemin={0}
@@ -112,9 +117,7 @@ export default function CampanaPage() {
               >
                 <div
                   className={`h-full rounded-full transition-all duration-700 ease-out ${
-                    campana.financiado
-                      ? "bg-emerald-500"
-                      : "bg-emerald-600"
+                    campana.financiado ? "bg-teal-600" : "bg-teal-700 dark:bg-teal-500"
                   }`}
                   style={{ width: `${progreso}%` }}
                 />
@@ -123,38 +126,35 @@ export default function CampanaPage() {
 
             {/* Donar / meta alcanzada */}
             {campana.financiado ? (
-              <div className="mt-5 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-center">
-                <CheckCircle2 className="mx-auto h-8 w-8 text-emerald-600" />
-                <div className="mt-1 text-sm font-semibold text-emerald-700 dark:text-emerald-400">
-                  ¡Meta alcanzada! 🎉
+              <div className="mt-6 rounded-lg border border-teal-600/30 bg-teal-50/60 p-5 text-center dark:bg-teal-950/20">
+                <CheckCircle2 className="mx-auto h-7 w-7 text-teal-700 dark:text-teal-400" />
+                <div className="mt-2 text-sm font-medium text-teal-800 dark:text-teal-300">
+                  Meta alcanzada
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  La campaña llegó a {formatoUsd(campana.metaUsd)}. El caso pasa a estado{" "}
+                  La campaña llegó a {formatoPesos(campana.metaUsd)}. El caso pasa a estado{" "}
                   <span className="font-medium">financiado</span>.
                 </p>
               </div>
             ) : (
-              <div className="mt-5">
-                <div className="mb-2 flex items-center gap-1.5 text-xs font-medium">
-                  <Heart className="h-3.5 w-3.5 text-emerald-600" />
-                  Elegí un monto para donar
-                </div>
+              <div className="mt-6 border-t border-border/60 pt-6">
+                <div className="mb-3 text-sm font-medium">Elegí un monto para donar</div>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                   {MONTOS.map((m) => (
                     <button
                       key={m}
                       type="button"
                       onClick={() => setMontoPago(m)}
-                      className="flex items-center justify-center gap-1 rounded-xl border border-emerald-600/40 bg-emerald-600/5 px-3 py-2.5 text-sm font-semibold text-emerald-700 transition-all hover:bg-emerald-600 hover:text-white dark:text-emerald-400 dark:hover:text-white"
+                      className="rounded-md border border-border bg-background px-3 py-2.5 text-sm font-medium transition-colors hover:border-teal-700 hover:bg-teal-700 hover:text-white dark:hover:border-teal-500 dark:hover:bg-teal-600"
                     >
-                      {formatoUsd(m)}
+                      {formatoPesos(m)}
                     </button>
                   ))}
                 </div>
                 {ultimaDonacion !== null && (
-                  <p className="mt-2.5 flex items-center justify-center gap-1 text-center text-xs font-medium text-emerald-600">
+                  <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-xs font-medium text-teal-700 dark:text-teal-400">
                     <CheckCircle2 className="h-3.5 w-3.5" />
-                    ¡Gracias! Sumaste {formatoUsd(ultimaDonacion)} (simulado).
+                    ¡Gracias! Sumaste {formatoPesos(ultimaDonacion)} (simulado).
                   </p>
                 )}
               </div>
