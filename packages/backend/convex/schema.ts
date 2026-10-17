@@ -113,27 +113,37 @@ export default defineSchema({
     .index("por_estado", ["estado"])
     .index("por_puntaje", ["puntajeFinal"]),
 
-  // ─── HISTORIAS (para donantes, anónimas) ──────────────────
+  // ─── HISTORIAS (anónimas; uso interno de Cireneos) ────────
+  // Cada "Generar" guarda un borrador; "Aprobar historia" lo marca aprobado.
+  // Una familia puede tener varias historias.
   historias: defineTable({
     casoId: v.id("casos"),
     textoOriginal: v.string(), // primera versión de la IA
     textoRevisado: v.optional(v.string()), // tras revisión de privacidad
-    aprobada: v.boolean(), // el coordinador la aprobó
+    aprobada: v.boolean(), // false = borrador; true = el coordinador la aprobó
     imagenStorageId: v.optional(v.string()),
+    // Alertas de la revisión de privacidad (las últimas que se vieron).
+    alertasPrivacidad: v.optional(
+      v.array(v.object({ texto: v.string(), motivo: v.string(), sugerencia: v.string() }))
+    ),
     aprobadaPor: v.optional(v.string()), // id del coordinador que la aprobó
     aprobadaEn: v.optional(v.number()), // timestamp de aprobación
   }).index("por_caso", ["casoId"]),
 
-  // ─── CAMPAÑAS (meta US$ 15.000, pagos simulados) ──────────
+  // ─── CAMPAÑAS — SIN USO ───────────────────────────────────
+  // La campaña pública y las donaciones se sacaron: la app es solo para uso
+  // interno de Cireneos (las historias se publican en la web de Cireneos, no
+  // acá). Estas tablas quedan SIN USO. No se borran todavía porque tienen datos
+  // guardados y Convex rechazaría el cambio; se eliminarán cuando se limpien.
   campanas: defineTable({
     casoId: v.id("casos"),
     historiaId: v.id("historias"),
-    metaUsd: v.number(), // 15000
-    recaudadoUsd: v.number(), // suma de donaciones simuladas
+    metaUsd: v.number(),
+    recaudadoUsd: v.number(),
     activa: v.boolean(),
   }).index("por_caso", ["casoId"]),
 
-  // ─── DONACIONES (simuladas) ───────────────────────────────
+  // ─── DONACIONES — SIN USO (ver nota en campanas) ──────────
   donaciones: defineTable({
     campanaId: v.id("campanas"),
     montoUsd: v.number(),
