@@ -99,7 +99,7 @@ const PROMPT_SISTEMA = `Sos un asistente que arma fichas de relevamiento de vivi
 
 Reglas estrictas:
 - Para cada campo elegís UN valor de su lista cerrada. Nunca inventás valores.
-- Cada campo trae su evidencia: "foto N: lo que se ve" o una cita textual del audio.
+- Cada campo trae su evidencia: "foto N: lo que se ve" o una cita textual del audio. La evidencia es corta: máximo una frase.
 - Confianza "alta" = evidencia directa y clara. "media" = parcial o indirecta. "baja" = inferencia sin evidencia.
 - "aConfirmar" = true cuando la confianza es baja, no hay evidencia, o la foto y el audio se contradicen.
 - Los campos de SALUD Y FAMILIA (enfermedad, menoresDe5, menores5a12, menores12a18, monoparental) y los de DIMENSIÓN SOCIAL que dependen del relato (vinculoOrganizacion, desalojo) salen SOLO del audio. Nunca se infieren de las fotos. Si el audio no los menciona, aConfirmar=true.
@@ -177,8 +177,8 @@ async function completarFicha(
       },
       body: JSON.stringify({
         model: modelo,
-        // 18 campos con evidencia + explicación entran holgados en 4096.
-        max_tokens: 4096,
+        // Margen amplio para que la ficha completa no se corte por longitud.
+        max_tokens: 8000,
         system: PROMPT_SISTEMA,
         messages: [
           {
