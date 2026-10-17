@@ -587,7 +587,7 @@ const CAMPOS_URGENCIA = [
   "adicionales",
 ] as const;
 
-function extraerCampos(doc: Doc<"casos">): Record<string, string> {
+export function extraerCampos(doc: Doc<"casos">): Record<string, string> {
   const out: Record<string, string> = {};
   for (const c of CAMPOS_URGENCIA) {
     const campoDoc = (doc as unknown as Record<string, { valor: string }>)[c];
@@ -596,7 +596,7 @@ function extraerCampos(doc: Doc<"casos">): Record<string, string> {
   return out;
 }
 
-function extraerAjuste(doc: Doc<"casos">) {
+export function extraerAjuste(doc: Doc<"casos">) {
   if (doc.ajustePorcentaje === undefined || doc.ajusteEstado === undefined) return undefined;
   return {
     porcentaje: doc.ajustePorcentaje,

@@ -1,11 +1,13 @@
 // ─────────────────────────────────────────────────────────────
-// RANCHO CERO — Historia para donantes (PLAN.md, llamadas 2 y 3)
+// RANCHO CERO — Historias anónimas (PLAN.md, llamadas 2 y 3)
 //
 //   ficha del caso  --Claude-->  historia anónima (3 a 5 frases)
 //   historia        --Claude-->  alertas de privacidad (texto + sugerencia)
 //
-// La IA propone, el coordinador decide: nada se publica hasta que alguien
-// con sesión aprueba la historia ("Aprobar y publicar").
+// La IA propone, el coordinador decide: cada historia generada queda como
+// borrador hasta que un coordinador la aprueba ("Aprobar historia").
+// Las historias son de uso interno: Cireneos decide si las publica en su
+// propia web (las copia o las descarga desde /historias).
 //
 // A Claude solo le llegan los VALORES de la ficha (categorías cerradas),
 // nunca el alias, el barrio ni la transcripción del audio.
@@ -16,10 +18,20 @@
 import { v } from "convex/values";
 
 import { internal } from "./_generated/api";
-import { action, internalQuery, mutation, query } from "./_generated/server";
-import { requerirUsuario } from "./casos";
+import type { Id } from "./_generated/dataModel";
+import {
+  action,
+  internalMutation,
+  internalQuery,
+  mutation,
+  query,
+  type MutationCtx,
+  type QueryCtx,
+} from "./_generated/server";
+import { authComponent } from "./auth";
+import { extraerAjuste, extraerCampos, requerirUsuario } from "./casos";
 import { CLAVES_CAMPO, definicionDe } from "./ficha";
-import { META_CASA } from "./urgencia";
+import { calcularUrgencia } from "./urgencia";
 
 export type AlertaPrivacidad = { texto: string; motivo: string; sugerencia: string };
 
@@ -30,6 +42,15 @@ const alertaValidator = v.object({
 });
 
 const MAX_LARGO_HISTORIA = 2000;
+
+// Solo coordinadores generan, editan y aprueban historias; los voluntarios
+// solo las ven y las copian.
+// TODO(roles): cuando esté la función de rol (la está haciendo Cami), chequear
+// acá que el usuario sea coordinador. Por ahora alcanza con tener sesión
+// (PLAN.md: para la demo hay una sola cuenta de equipo).
+async function requerirCoordinador(ctx: QueryCtx | MutationCtx): Promise<string> {
+  return await requerirUsuario(ctx);
+}
 
 // ─── Llamada a Claude ────────────────────────────────────────
 
@@ -195,10 +216,28 @@ export const datosParaHistoria = internalQuery({
   },
 });
 
-/** Genera una historia nueva a partir de la ficha y la revisa. No guarda nada. */
+/** Guarda una historia recién generada como borrador (uso interno de `generar`). */
+export const guardarBorrador = internalMutation({
+  args: { casoId: v.id("casos"), texto: v.string(), alertas: v.array(alertaValidator) },
+  handler: async (ctx, { casoId, texto, alertas }): Promise<Id<"historias">> => {
+    await requerirCoordinador(ctx);
+    return await ctx.db.insert("historias", {
+      casoId,
+      textoOriginal: texto,
+      aprobada: false,
+      alertasPrivacidad: alertas,
+    });
+  },
+});
+
+/** Genera una historia nueva a partir de la ficha, la revisa y la guarda como borrador. */
 export const generar = action({
   args: { casoId: v.id("casos") },
-  handler: async (ctx, { casoId }): Promise<{ texto: string; alertas: AlertaPrivacidad[] }> => {
+  handler: async (
+    ctx,
+    { casoId }
+  ): Promise<{ historiaId: Id<"historias">; texto: string; alertas: AlertaPrivacidad[] }> => {
+    // TODO(roles): solo coordinadores (guardarBorrador también pasa por requerirCoordinador).
     const identidad = await ctx.auth.getUserIdentity();
     if (!identidad) throw new Error("Necesitás iniciar sesión.");
 
@@ -216,7 +255,12 @@ export const generar = action({
     if (!texto) throw new Error("La IA no devolvió una historia. Reintentá.");
 
     const alertas = await revisarTexto(texto);
-    return { texto, alertas };
+    const historiaId = await ctx.runMutation(internal.historias.guardarBorrador, {
+      casoId,
+      texto,
+      alertas,
+    });
+    return { historiaId, texto, alertas };
   },
 });
 
@@ -224,6 +268,7 @@ export const generar = action({
 export const revisarPrivacidad = action({
   args: { texto: v.string() },
   handler: async (ctx, { texto }): Promise<{ alertas: AlertaPrivacidad[] }> => {
+    // TODO(roles): solo coordinadores (es parte de editar la historia).
     const identidad = await ctx.auth.getUserIdentity();
     if (!identidad) throw new Error("Necesitás iniciar sesión.");
     const limpio = texto.trim();
@@ -233,52 +278,58 @@ export const revisarPrivacidad = action({
   },
 });
 
-/** Datos de la pantalla "Aprobar historia": el caso y lo ya publicado. */
+/** Datos de la pantalla "Aprobar historia": el caso, la última aprobada y el
+ *  borrador pendiente (si hay uno más nuevo que la aprobada). */
 export const obtenerParaAprobar = query({
   args: { casoId: v.id("casos") },
   handler: async (ctx, { casoId }) => {
-    await requerirUsuario(ctx);
+    await requerirCoordinador(ctx);
     const caso = await ctx.db.get(casoId);
     if (!caso) return null;
 
-    const historia = await ctx.db
+    // De la más nueva a la más vieja.
+    const historias = await ctx.db
       .query("historias")
       .withIndex("por_caso", (q) => q.eq("casoId", casoId))
-      .first();
-    const campana = await ctx.db
-      .query("campanas")
-      .withIndex("por_caso", (q) => q.eq("casoId", casoId))
-      .first();
+      .order("desc")
+      .collect();
+    const aprobada = historias.find((h) => h.aprobada);
+    const borrador = historias[0] && !historias[0].aprobada ? historias[0] : undefined;
 
     return {
       alias: caso.alias ?? "Familia",
       barrio: caso.barrio ?? "—",
       estado: caso.estado,
-      publicada:
-        historia && historia.aprobada
-          ? {
-              texto: historia.textoRevisado ?? historia.textoOriginal,
-              aprobadaEn: historia.aprobadaEn,
-            }
-          : null,
-      campana: campana
-        ? { metaUsd: campana.metaUsd, recaudadoUsd: campana.recaudadoUsd, activa: campana.activa }
+      aprobada: aprobada
+        ? {
+            texto: aprobada.textoRevisado ?? aprobada.textoOriginal,
+            aprobadaEn: aprobada.aprobadaEn,
+          }
+        : null,
+      borrador: borrador
+        ? {
+            historiaId: borrador._id,
+            texto: borrador.textoOriginal,
+            alertas: borrador.alertasPrivacidad ?? [],
+          }
         : null,
     };
   },
 });
 
-/** Guarda la historia aprobada y crea o actualiza la campaña del caso. */
-export const aprobarYPublicar = mutation({
+/** Aprueba un borrador: guarda la versión final, quién la aprobó y cuándo.
+ *  No publica nada ni toca campañas: Cireneos decide si la usa en su web. */
+export const aprobar = mutation({
   args: {
-    casoId: v.id("casos"),
-    textoOriginal: v.string(), // lo que escribió la IA
+    historiaId: v.id("historias"),
     texto: v.string(), // la versión final aprobada por el coordinador
     alertas: v.array(alertaValidator), // alertas vistas al aprobar
   },
   handler: async (ctx, args) => {
-    const usuarioId = await requerirUsuario(ctx);
-    const caso = await ctx.db.get(args.casoId);
+    const usuarioId = await requerirCoordinador(ctx);
+    const historia = await ctx.db.get(args.historiaId);
+    if (!historia) throw new Error("La historia no existe.");
+    const caso = await ctx.db.get(historia.casoId);
     if (!caso) throw new Error("El caso no existe.");
     if (!caso.consentimiento) {
       throw new Error("El caso no tiene el consentimiento de la familia.");
@@ -290,48 +341,75 @@ export const aprobarYPublicar = mutation({
     if (!texto) throw new Error("La historia está vacía.");
     if (texto.length > MAX_LARGO_HISTORIA) throw new Error("La historia es demasiado larga.");
 
-    const aprobacion = {
-      textoOriginal: args.textoOriginal.trim() || texto,
-      textoRevisado: texto, // es lo que muestra la página de campaña
+    await ctx.db.patch(args.historiaId, {
+      textoRevisado: texto, // textoOriginal queda como lo escribió la IA
       aprobada: true,
       alertasPrivacidad: args.alertas,
       aprobadaPor: usuarioId,
       aprobadaEn: Date.now(),
-    };
+    });
+    return { historiaId: args.historiaId };
+  },
+});
 
-    const historia = await ctx.db
-      .query("historias")
-      .withIndex("por_caso", (q) => q.eq("casoId", args.casoId))
-      .first();
-    let historiaId = historia?._id;
-    if (historiaId) {
-      await ctx.db.patch(historiaId, aprobacion);
-    } else {
-      historiaId = await ctx.db.insert("historias", { casoId: args.casoId, ...aprobacion });
+/** Pantalla /historias: todas las historias agrupadas por familia, de la
+ *  familia más urgente a la menos urgente. Voluntarios y coordinadores. */
+export const listar = query({
+  args: {},
+  handler: async (ctx) => {
+    await requerirUsuario(ctx);
+    // De la más nueva a la más vieja.
+    const historias = await ctx.db.query("historias").order("desc").collect();
+
+    const porCaso = new Map<Id<"casos">, typeof historias>();
+    for (const h of historias) {
+      const lista = porCaso.get(h.casoId) ?? [];
+      lista.push(h);
+      porCaso.set(h.casoId, lista);
     }
 
-    const campana = await ctx.db
-      .query("campanas")
-      .withIndex("por_caso", (q) => q.eq("casoId", args.casoId))
-      .first();
-    // Si ya había campaña se conserva lo recaudado; solo cambia la historia.
-    if (campana) {
-      await ctx.db.patch(campana._id, { historiaId, metaUsd: META_CASA, activa: true });
-    } else {
-      await ctx.db.insert("campanas", {
-        casoId: args.casoId,
-        historiaId,
-        metaUsd: META_CASA,
-        recaudadoUsd: 0,
-        activa: true,
+    // Nombre de quien aprobó (se busca una sola vez por usuario).
+    const nombres = new Map<string, string>();
+    async function nombreDe(usuarioId: string): Promise<string> {
+      const guardado = nombres.get(usuarioId);
+      if (guardado) return guardado;
+      let nombre = "Equipo";
+      try {
+        const usuario = await authComponent.getAnyUserById(ctx, usuarioId);
+        nombre = usuario?.name || usuario?.email || nombre;
+      } catch {
+        // Usuario borrado o id viejo: queda "Equipo".
+      }
+      nombres.set(usuarioId, nombre);
+      return nombre;
+    }
+
+    const ahora = Date.now();
+    const familias = [];
+    for (const [casoId, lista] of porCaso) {
+      const caso = await ctx.db.get(casoId);
+      if (!caso) continue;
+      const r = calcularUrgencia(extraerCampos(caso), caso.relevadoEn, ahora, extraerAjuste(caso));
+      const filas = [];
+      for (const h of lista) {
+        filas.push({
+          id: h._id,
+          texto: h.aprobada ? (h.textoRevisado ?? h.textoOriginal) : h.textoOriginal,
+          aprobada: h.aprobada,
+          // Aprobada: fecha de aprobación. Borrador: cuándo se generó.
+          fecha: h.aprobada && h.aprobadaEn ? h.aprobadaEn : h._creationTime,
+          aprobadaPor: h.aprobada && h.aprobadaPor ? await nombreDe(h.aprobadaPor) : null,
+        });
+      }
+      familias.push({
+        casoId,
+        alias: caso.alias ?? "Familia",
+        puntajeFinal: r.puntajeFinal,
+        historias: filas,
       });
     }
 
-    // No se retrocede un caso que ya está financiado o entregado.
-    if (caso.estado === "confirmado") {
-      await ctx.db.patch(args.casoId, { estado: "en_campana" });
-    }
-
-    return { historiaId };
+    familias.sort((a, b) => b.puntajeFinal - a.puntajeFinal);
+    return familias;
   },
 });
