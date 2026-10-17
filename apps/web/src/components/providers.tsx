@@ -9,7 +9,10 @@ import { authClient } from "@/lib/auth-client";
 import { ENV } from "../env";
 import { ThemeProvider } from "./theme-provider";
 
-const convex = new ConvexReactClient(ENV.NEXT_PUBLIC_CONVEX_URL);
+// Fallback a process.env cuando varlock no inyecta el ENV (ver auth-server.ts).
+const convexUrl = ENV.NEXT_PUBLIC_CONVEX_URL || process.env.NEXT_PUBLIC_CONVEX_URL || "";
+
+const convex = new ConvexReactClient(convexUrl);
 
 export default function Providers({
   children,

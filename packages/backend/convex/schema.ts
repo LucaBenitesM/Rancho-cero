@@ -39,6 +39,10 @@ export default defineSchema({
     estado: estadoCaso,
     consentimiento: v.boolean(), // obligatorio antes de cargar
 
+    // Identidad anónima (sin nombres ni direcciones reales; ver PLAN.md)
+    alias: v.optional(v.string()), // ej. "Familia A"
+    barrio: v.optional(v.string()),
+
     // Entradas originales
     fotos: v.array(v.string()), // storage IDs de Convex
     audioStorageId: v.optional(v.string()),
