@@ -48,25 +48,40 @@ export default defineSchema({
     audioStorageId: v.optional(v.string()),
     audioTranscripcion: v.optional(v.string()),
 
-    // --- Vivienda (FICHA.md) ---
-    techo: campo,
-    paredes: campo,
-    piso: campo,
-    humedad: campo,
-    riesgoElectrico: campo,
-    bano: campo,
-    agua: campo,
+    // Campos de la tabla de puntajes de Cireneos (docs/tabla_puntajes.xlsx).
+    // Cada uno puntúa peso × puntuación (1..3, algunos 0..3). Máximo: 135.
 
-    // --- Familia (solo del audio) ---
-    integrantes: campo,
-    menores: campo,
-    mayores: campo,
-    discapacidad: campo,
-    enfermedadGrave: campo,
-    embarazo: campo,
+    // --- 1. Materialidad ---
+    pared: campo,
+    techo: campo,
+    piso: campo,
+    bano: campo,
+
+    // --- 2. Habitabilidad ---
+    m2PorPersona: campo,
+    ventanas: campo,
+    separacionAmbientes: campo,
+
+    // --- 3. Seguridad y salubridad ---
+    riesgoDerrumbe: campo,
+    inundable: campo,
+
+    // --- 4. Salud y familia (solo del audio) ---
+    enfermedad: campo, // enfermedad o discapacidad; nunca el diagnóstico
+    menoresDe5: campo,
+    menores5a12: campo,
+    menores12a18: campo,
+    monoparental: campo,
+
+    // --- 5. Dimensión social ---
+    vinculoOrganizacion: campo,
+    impresionPrimeraVisita: campo, // la elige una persona, nunca la IA
+    desalojo: campo,
+    adicionales: campo,
 
     // --- Urgencia ---
-    puntajeBase: v.optional(v.number()), // 0..100
+    puntajeTabla: v.optional(v.number()), // 0..135, igual al TOTAL de la planilla
+    puntajeBase: v.optional(v.number()), // 0..100 = puntajeTabla / 135 × 100
     ajustePorcentaje: v.optional(v.number()), // -15..+15 (sugerido por IA)
     ajusteMotivo: v.optional(v.string()),
     ajusteEvidencia: v.optional(v.string()),

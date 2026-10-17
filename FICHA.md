@@ -1,8 +1,9 @@
 # Ficha de relevamiento — Rancho Cero
 
-Propuesta inicial de campos, valores, reglas de confianza y fórmula de urgencia.
-**Todo lo marcado con ⚠️ hay que validarlo con Cireneos.** Los pesos y puntos son
-una propuesta del equipo, no un criterio oficial.
+Campos, valores, reglas de confianza y fórmula de urgencia.
+Los campos, pesos y criterios salen de la **tabla de puntajes real de Cireneos**
+([docs/tabla_puntajes.xlsx](docs/tabla_puntajes.xlsx)). Lo marcado con ⚠️ son
+dudas sobre cómo interpretar la tabla que hay que confirmar con Cireneos.
 
 Esquema congelado a las **12:30 del sábado**. Cualquier cambio posterior se avisa
 a las tres personas antes de tocar el código.
@@ -19,162 +20,253 @@ a las tres personas antes de tocar el código.
 | **Confianza media** | Evidencia parcial o indirecta: se ve una parte, o se deduce de algo que se dijo. |
 | **Confianza baja** | Inferencia sin evidencia directa. |
 | **"A confirmar"** | Confianza baja, sin evidencia, o foto y audio se contradicen. El voluntario lo resuelve eligiendo una opción (sin escribir). |
-| **Datos de personas** | Los campos de familia salen **solo del audio**. Nunca se infieren de las fotos (las fotos no muestran personas). |
-| **Salud** | Discapacidad, enfermedad y embarazo nunca se infieren. Si no se mencionan, quedan "a confirmar". Nunca se guarda el diagnóstico exacto en la versión pública. |
+| **Datos de personas** | Los campos de salud y familia salen **solo del audio**. Nunca se infieren de las fotos (las fotos no muestran personas). |
+| **Salud** | Enfermedad y discapacidad nunca se infieren. Si no se mencionan, quedan "a confirmar". Nunca se guarda el diagnóstico exacto en la versión pública. |
 | **Ranking** | Solo entran casos en estado `confirmado`, es decir, sin ningún campo "a confirmar". |
 
 ---
 
-## Vivienda (peso total: 55)
+## Cómo puntúa la tabla
 
-### Techo — peso 12 · fuente: foto (audio complementa)
+Cada campo tiene un **peso** (1 a 3) y una **puntuación** (1 a 3; algunos admiten 0).
+El total del campo es `peso × puntuación`. La suma de pesos es **45**, así que el
+máximo posible es **45 × 3 = 135**.
 
-| Valor | Puntos | Evidencia típica |
-|---|---|---|
-| `material` (losa / hormigón) | 0 | Losa visible, sin filtraciones |
-| `chapa_buena` | 3 | Chapa entera, fijada, sin óxido visible |
-| `chapa_deteriorada` | 7 | Óxido, agujeros, parches, "se llueve" en el audio |
-| `madera_carton` | 8 | Tablas, cartón, fibrocemento roto |
-| `nylon_lona` | 10 | Nylon o lona como cubierta principal |
-
-### Paredes — peso 10 · fuente: foto
-
-| Valor | Puntos | Evidencia típica |
-|---|---|---|
-| `bloque_terminado` | 0 | Bloque o ladrillo revocado, sin grietas |
-| `bloque_sin_terminar` | 3 | Bloque sin revocar, aberturas sin cerrar |
-| `madera_chapa` | 6 | Tablas o chapa como paredes |
-| `mixto_precario` | 8 | Mezcla de cartón, restos, materiales recuperados |
-| `nylon_incompletas` | 10 | Nylon, lona o paredes que no cierran el ambiente |
-
-### Piso — peso 6 · fuente: foto
-
-| Valor | Puntos | Evidencia típica |
-|---|---|---|
-| `ceramica_contrapiso` | 0 | Piso terminado |
-| `contrapiso_deteriorado` | 3 | Contrapiso roto o con desniveles |
-| `madera_sobre_tierra` | 6 | Tarimas o tablas apoyadas en tierra |
-| `tierra` | 10 | Piso de tierra |
-
-### Humedad — peso 7 · fuente: foto + audio
-
-| Valor | Puntos | Evidencia típica |
-|---|---|---|
-| `sin_signos` | 0 | Paredes y techo secos |
-| `leve` | 3 | Manchas puntuales |
-| `extendida` | 7 | Moho, manchas grandes, olor mencionado en el audio |
-| `filtracion_activa` | 10 | Goteras, agua entrando, "se inunda cuando llueve" |
-
-### Riesgo eléctrico — peso 10 · fuente: foto + audio
-
-| Valor | Puntos | Evidencia típica |
-|---|---|---|
-| `instalacion_segura` | 0 | Tablero, cables embutidos o canalizados |
-| `sin_electricidad` | 5 | No hay luz eléctrica ⚠️ (¿cuenta como riesgo o como carencia?) |
-| `cables_expuestos` | 6 | Empalmes visibles, cables sueltos dentro de la casa |
-| `conexion_irregular_peligrosa` | 10 | Conexión colgada, cables cerca de agua o chapa |
-
-### Baño — peso 5 · fuente: foto + audio
-
-| Valor | Puntos | Evidencia típica |
-|---|---|---|
-| `interno_completo` | 0 | Baño dentro de la vivienda con descarga |
-| `interno_precario` | 4 | Dentro pero sin descarga o sin terminar |
-| `externo_letrina` | 7 | Letrina o baño afuera |
-| `sin_bano` | 10 | No tienen baño |
-
-### Agua — peso 5 · fuente: audio (foto complementa)
-
-| Valor | Puntos | Evidencia típica |
-|---|---|---|
-| `red_dentro` | 0 | Canilla dentro de la vivienda |
-| `canilla_terreno` | 4 | Canilla en el terreno, afuera |
-| `compartida` | 7 | Canilla de un vecino o comunitaria |
-| `sin_acceso` | 10 | Acarrean agua desde lejos |
+| Bloque | Campos | Peso del bloque | Máximo |
+|---|---|---|---|
+| 1. Materialidad | Pared, techo, piso, baño | 12 | 36 |
+| 2. Habitabilidad | m² por persona, ventanas, separación de ambientes | 5 | 15 |
+| 3. Seguridad y salubridad | Riesgo de derrumbe, inundable | 6 | 18 |
+| 4. Salud y familia | Enfermedades, menores (3 franjas), monoparental | 11 | 33 |
+| 5. Dimensión social | Vínculo, impresión 1ª visita, desalojo, adicionales | 11 | 33 |
+| **Total** | **20 campos** | **45** | **135** |
 
 ---
 
-## Familia (peso total: 45) · fuente: solo audio
+## 1. Materialidad (peso total: 12) · fuente: foto (audio complementa)
 
-### Integrantes — peso 8
+### Pared — peso 3
 
-| Valor | Puntos |
+| Valor | Puntuación | Evidencia típica |
+|---|---|---|
+| `material_con_revoque` | 1 | Bloque o ladrillo revocado |
+| `material_sin_revoque` | 2 | Bloque o ladrillo a la vista |
+| `precaria` | 3 | Chapa, madera, nylon, caña o cartón |
+
+### Techo — peso 3
+
+| Valor | Puntuación | Evidencia típica |
+|---|---|---|
+| `material` | 1 | Losa / hormigón |
+| `liviano_con_aislacion` | 2 | Chapa o madera con aislación |
+| `liviano_sin_aislacion` | 3 | Chapa o madera sin cielorraso ni aislación |
+
+### Piso — peso 3
+
+| Valor | Puntuación | Evidencia típica |
+|---|---|---|
+| `material_revestido` | 1 | Cerámica, baldosa u otro revestimiento |
+| `material_sin_terminacion` | 2 | Contrapiso sin terminar |
+| `tierra` | 3 | Piso de tierra |
+
+### Baño — peso 3
+
+| Valor | Puntuación | Evidencia típica |
+|---|---|---|
+| `completo_con_puerta` | 1 | Baño completo, con puerta |
+| `incompleto_o_exterior` | 2 | Incompleto, sin puerta o afuera de la vivienda |
+| `no_tiene` | 3 | No tienen baño |
+
+---
+
+## 2. Habitabilidad (peso total: 5)
+
+### m² por persona — peso 2 · fuente: audio (foto complementa)
+
+| Valor | Puntuación |
 |---|---|
-| 1–2 personas | 2 |
-| 3–4 personas | 5 |
-| 5–6 personas | 8 |
-| 7 o más | 10 |
+| `mas_de_10` | 1 |
+| `de_5_a_10` | 2 |
+| `menos_de_5` | 3 |
 
-⚠️ Lo ideal sería medir hacinamiento (personas por ambiente). ¿Cireneos registra la cantidad de ambientes?
+⚠️ Hace falta la superficie de la vivienda y la cantidad de integrantes. Las fotos
+no alcanzan para medir m²: el voluntario tiene que decirlo en el audio. Si falta
+alguno de los dos datos, queda "a confirmar".
 
-### Menores de 18 — peso 9
+### Ventanas — peso 2 · fuente: foto
 
-| Valor | Puntos |
+| Valor | Puntuación |
 |---|---|
-| 0 | 0 |
-| 1 | 5 |
-| 2 | 7 |
-| 3 o más | 10 |
+| `suficientes` | 1 |
+| `insuficientes` | 2 |
+| `sin_ventanas` | 3 |
 
-⚠️ ¿Los menores de 5 años deberían sumar más?
+### Separación de ambientes — peso 1 · fuente: foto + audio
 
-### Mayores de 65 — peso 5
-
-| Valor | Puntos |
+| Valor | Puntuación |
 |---|---|
-| 0 | 0 |
-| 1 | 6 |
-| 2 o más | 10 |
+| `puertas` | 1 |
+| `cortinas` | 2 |
+| `sin_separacion` | 3 |
 
-### Discapacidad — peso 8
+---
 
-| Valor | Puntos |
+## 3. Seguridad y salubridad (peso total: 6)
+
+### Riesgo de derrumbe — peso 3 · fuente: foto + audio
+
+| Valor | Puntuación | Evidencia típica |
+|---|---|---|
+| `normal` | 1 | Paredes y techo sin daños visibles |
+| `rajaduras` | 2 | Paredes o techos muy rajados |
+| `riesgo_derrumbe` | 3 | Riesgo de derrumbe o de que se vuele el techo |
+
+### Inundable — peso 3 · fuente: audio (foto complementa)
+
+| Valor | Puntuación | Evidencia típica |
+|---|---|---|
+| `normal` | 1 | — |
+| `plagas` | 2 | Presencia de plagas |
+| `inundable` | 3 | "Se inunda cuando llueve", marcas de agua |
+
+⚠️ La tabla mezcla inundación y plagas en un mismo campo. Si una vivienda tiene
+las dos cosas, se toma la de mayor puntuación (`inundable`).
+
+---
+
+## 4. Salud y familia (peso total: 11) · fuente: solo audio
+
+### Enfermedades o discapacidad — peso 3
+
+| Valor | Puntuación |
 |---|---|
-| `no` | 0 |
-| `si_sin_adaptacion` | 6 |
-| `si_requiere_accesibilidad` | 10 |
+| `nada` | 0 |
+| `leve` | 1 |
+| `media` | 2 |
+| `grave` | 3 |
 
-### Enfermedad grave — peso 8
+Se guarda la categoría, **nunca el diagnóstico exacto**.
+⚠️ Falta un criterio de Cireneos para distinguir leve, media y grave.
 
-| Valor | Puntos |
+### Menores de 5 años — peso 3
+
+| Valor | Puntuación |
 |---|---|
-| `no` | 0 |
-| `si_cronica` | 5 |
-| `si_agravada_por_vivienda` | 10 |
+| `ninguno` | 0 |
+| `uno` | 1 |
+| `dos_a_tres` | 2 |
+| `cuatro_o_mas` | 3 |
 
-Ejemplo de "agravada por la vivienda": una enfermedad respiratoria en una casa con humedad. Se guarda la categoría, **nunca el diagnóstico exacto**.
+### Menores de 5 a 12 años — peso 2
 
-### Embarazo — peso 7
-
-| Valor | Puntos |
+| Valor | Puntuación |
 |---|---|
-| `no` | 0 |
-| `si` | 10 |
+| `ninguno` | 0 |
+| `uno` | 1 |
+| `dos_a_tres` | 2 |
+| `cinco_o_mas` | 3 |
+
+⚠️ La tabla no dice cuánto vale tener **4** niños de 5 a 12 años (salta de "2 a 3" a "5 o más").
+
+### Menores de 12 a 18 años — peso 1
+
+| Valor | Puntuación |
+|---|---|
+| `ninguno` | 0 |
+| `uno` | 1 |
+| `dos` | 2 |
+| `tres_o_mas` | 3 |
+
+⚠️ La tabla dice "3 o más = 3, 2 a 3 = 2": el 3 aparece en las dos franjas. Tomamos 2 = 2 y 3 o más = 3.
+
+### Familia monoparental — peso 2
+
+| Valor | Puntuación |
+|---|---|
+| `padre_y_madre` | 1 |
+| `solo_padre` | 2 |
+| `solo_madre` | 3 |
+
+⚠️ ¿Cómo se puntúan otras situaciones (abuela a cargo, tutor, otro familiar)?
+
+---
+
+## 5. Dimensión social (peso total: 11) · fuente: audio
+
+### Vínculo con la organización — peso 3
+
+| Valor | Puntuación |
+|---|---|
+| `menos_de_1_ano` | 1 |
+| `de_1_a_2_anos` | 2 |
+| `mas_de_2_anos` | 3 |
+
+### Impresión de la 1ª visita — peso 3
+
+| Valor | Puntuación |
+|---|---|
+| `baja` | 1 |
+| `media` | 2 |
+| `alta` | 3 |
+
+⚠️ La tabla no trae criterio. Proponemos que el voluntario la elija (baja / media /
+alta urgencia percibida). **La IA nunca la completa**: siempre queda "a confirmar"
+hasta que la elija una persona.
+
+### Desalojo / reinserción familiar — peso 2
+
+| Valor | Puntuación |
+|---|---|
+| `largo_plazo` | 1 |
+| `mediano_plazo` | 2 |
+| `inmediato` | 3 |
+
+⚠️ ¿Qué puntuación lleva una familia sin riesgo de desalojo? Por ahora, `largo_plazo` (1).
+
+### Adicionales — peso 3
+
+| Valor | Puntuación |
+|---|---|
+| `ninguno` | 1 |
+| `algunos` | 2 |
+| `graves` | 3 |
+
+⚠️ La tabla no trae criterio. ¿Es lo mismo que el **ajuste** de la IA (factores que
+la ficha no contempla)? Si es así, conviene que el ajuste viva acá y no como un
+porcentaje aparte. Mientras tanto lo elige el coordinador.
 
 ---
 
 ## Fórmula de urgencia
 
 ```
-base    = Σ (peso_campo × puntos_valor / 10)        → 0 a 100
-ajuste  = sugerido por la IA, entre -15% y +15%     → solo si una persona lo acepta
+total   = Σ (peso_campo × puntuación_valor)          → 0 a 135
+base    = total / 135 × 100                          → 0 a 100
+ajuste  = sugerido por la IA, entre -15% y +15%      → solo si una persona lo acepta
 espera  = +1 punto por mes desde el relevamiento, tope +12   ⚠️
 
 puntaje = base × (1 + ajuste) + espera
 ```
 
+- `total` y `base` reproducen exactamente la planilla de Cireneos (celdas TOTAL y %).
 - Si el coordinador **rechaza** el ajuste, `ajuste = 0`.
 - El ajuste siempre trae **motivo + evidencia** (número de foto o cita del audio).
 - La IA explica el resultado en lenguaje simple: qué campos pesaron más y por qué.
+- ⚠️ La tabla ya premia el tiempo de vínculo con la organización. ¿Sigue haciendo
+  falta sumar puntos por espera?
 
-### Factores que justifican un ajuste (no están en la ficha)
+### Factores que justifican un ajuste (no están en la tabla)
+
+Inundación y desalojo ya no van acá: ahora son campos de la tabla.
 
 | Factor | Dirección |
 |---|---|
 | Situación de violencia o riesgo dentro del hogar | ⬆️ |
-| Vivienda en zona inundable o al borde de un talud o cañada | ⬆️ |
-| Desalojo inminente | ⬆️ |
+| Vivienda al borde de un talud o cañada | ⬆️ |
+| Riesgo eléctrico grave (conexión colgada, cables cerca de agua o chapa) | ⬆️ |
+| Sin acceso a agua potable | ⬆️ |
 | Persona postrada o con cuidados permanentes | ⬆️ |
+| Embarazo | ⬆️ |
 | La familia ya tiene una solución habitacional en curso (otro programa, mudanza) | ⬇️ |
 | El estado real es mejor que lo que reflejan los campos (ej. ampliación reciente) | ⬇️ |
 
@@ -188,9 +280,9 @@ puntaje = base × (1 + ajuste) + espera
 {
   "campos": {
     "techo": {
-      "valor": "chapa_deteriorada",
+      "valor": "liviano_sin_aislacion",
       "confianza": "alta",
-      "evidencia": "foto 2: chapa con óxido y agujeros; audio: 'cuando llueve se moja todo'",
+      "evidencia": "foto 2: chapa sin cielorraso; audio: 'en invierno no se aguanta el frío'",
       "a_confirmar": false
     }
   },
@@ -209,9 +301,10 @@ puntaje = base × (1 + ajuste) + espera
 
 ## Pendiente de validar con Cireneos
 
-1. Los pesos de cada campo y los puntos de cada valor.
-2. Si "sin electricidad" cuenta como riesgo.
-3. Si se registra la cantidad de ambientes (para medir hacinamiento).
-4. Si los menores de 5 años suman más.
-5. Los puntos por tiempo de espera y su tope.
-6. Si están de acuerdo con la lista de factores de ajuste.
+1. Criterio para "Impresión de la 1ª visita" y "Adicionales" (la tabla no lo trae).
+2. Si "Adicionales" reemplaza al ajuste de la IA.
+3. Cómo distinguir enfermedad o discapacidad leve, media y grave.
+4. Los cortes de menores: 4 niños de 5 a 12 años y el solapamiento en 12 a 18.
+5. Otras composiciones familiares en "monoparental".
+6. Qué puntúa una familia sin riesgo de desalojo.
+7. Si se mantienen los puntos por tiempo de espera, dado que ya se puntúa el vínculo.
