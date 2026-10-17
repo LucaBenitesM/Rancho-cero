@@ -1,6 +1,6 @@
 "use client";
 
-import { Home as HomeIcon, Heart, ListOrdered, LayoutDashboard, Upload } from "lucide-react";
+import { Home as HomeIcon, Heart, ListOrdered, Upload } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -11,7 +11,6 @@ const LINKS = [
   { to: "/nueva-visita", label: "Nueva visita", icon: Upload },
   { to: "/ranking", label: "Ranking", icon: ListOrdered },
   { to: "/campana", label: "Campaña", icon: Heart },
-  { to: "/dashboard", label: "Panel", icon: LayoutDashboard },
 ] as const;
 
 export default function Header() {

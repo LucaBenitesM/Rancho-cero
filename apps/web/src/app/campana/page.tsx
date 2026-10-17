@@ -5,6 +5,8 @@ import { useMutation, useQuery } from "convex/react";
 import { BadgeCheck, CheckCircle2, Heart, Home as HomeIcon, Loader2, Shield } from "lucide-react";
 import { useState } from "react";
 
+import { FormularioPago } from "@/components/formulario-pago";
+
 const MONTOS = [50, 100, 250, 500];
 
 function formatoUsd(n: number): string {
@@ -15,17 +17,16 @@ export default function CampanaPage() {
   const campana = useQuery(api.campanas.obtenerActiva);
   const donar = useMutation(api.campanas.donar);
   const [ultimaDonacion, setUltimaDonacion] = useState<number | null>(null);
-  const [enviando, setEnviando] = useState<number | null>(null);
+  // Monto elegido que abre el formulario de pago (null = cerrado).
+  const [montoPago, setMontoPago] = useState<number | null>(null);
 
-  async function handleDonar(monto: number) {
+  // Confirmación desde el formulario de pago: solo llega el monto (los datos de
+  // tarjeta nunca salen del formulario). Registra la donación como hasta ahora.
+  async function confirmarDonacion(monto: number) {
     if (!campana) return;
-    setEnviando(monto);
-    try {
-      await donar({ campanaId: campana.id, montoUsd: monto });
-      setUltimaDonacion(monto);
-    } finally {
-      setEnviando(null);
-    }
+    await donar({ campanaId: campana.id, montoUsd: monto });
+    setUltimaDonacion(monto);
+    setMontoPago(null);
   }
 
   if (campana === undefined) {
@@ -143,15 +144,10 @@ export default function CampanaPage() {
                     <button
                       key={m}
                       type="button"
-                      disabled={enviando !== null}
-                      onClick={() => handleDonar(m)}
-                      className="flex items-center justify-center gap-1 rounded-xl border border-emerald-600/40 bg-emerald-600/5 px-3 py-2.5 text-sm font-semibold text-emerald-700 transition-all hover:bg-emerald-600 hover:text-white disabled:pointer-events-none disabled:opacity-50 dark:text-emerald-400 dark:hover:text-white"
+                      onClick={() => setMontoPago(m)}
+                      className="flex items-center justify-center gap-1 rounded-xl border border-emerald-600/40 bg-emerald-600/5 px-3 py-2.5 text-sm font-semibold text-emerald-700 transition-all hover:bg-emerald-600 hover:text-white dark:text-emerald-400 dark:hover:text-white"
                     >
-                      {enviando === m ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        formatoUsd(m)
-                      )}
+                      {formatoUsd(m)}
                     </button>
                   ))}
                 </div>
@@ -168,9 +164,18 @@ export default function CampanaPage() {
 
         <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-[10px] text-muted-foreground">
           <Shield className="h-3 w-3" />
-          Datos simulados · sin pagos reales · el botón suma a la campaña en Convex
+          Modo demo · sin pagos reales · los datos de tarjeta no se guardan
         </p>
       </div>
+
+      {/* Formulario de pago (demo): se abre al elegir un monto. */}
+      {montoPago !== null && (
+        <FormularioPago
+          monto={montoPago}
+          onCerrar={() => setMontoPago(null)}
+          onConfirmar={confirmarDonacion}
+        />
+      )}
     </div>
   );
 }
