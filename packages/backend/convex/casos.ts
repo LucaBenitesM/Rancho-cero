@@ -15,6 +15,7 @@ import { authComponent } from "./auth";
 import { mutation, query } from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
+import { requerirCoordinador } from "./roles";
 import { calcularUrgencia } from "./urgencia";
 import {
   CLAVES_CAMPO,
@@ -506,6 +507,7 @@ function aliasDe(doc: Doc<"casos">, i: number) {
 export const ranking = query({
   args: {},
   handler: async (ctx) => {
+    await requerirCoordinador(ctx, "Solo los coordinadores pueden ver el ranking.");
     const ahora = Date.now();
     // Todos los casos que superaron la confirmación siguen en el ranking.
     const confirmables = ["confirmado", "en_campana", "financiado"] as const;
@@ -546,6 +548,7 @@ export const ranking = query({
 export const obtener = query({
   args: { id: v.id("casos") },
   handler: async (ctx, { id }) => {
+    await requerirCoordinador(ctx, "Solo los coordinadores pueden ver la ficha de una familia.");
     const doc = await ctx.db.get(id);
     if (!doc) return null;
 
@@ -857,6 +860,7 @@ export const decidirAjuste = mutation({
     decision: v.union(v.literal("aceptado"), v.literal("rechazado")),
   },
   handler: async (ctx, { casoId, decision }) => {
+    await requerirCoordinador(ctx, "Solo los coordinadores pueden aceptar o rechazar el ajuste.");
     const usuarioId = await requerirUsuario(ctx);
     const caso = await ctx.db.get(casoId);
     if (!caso) throw new Error("El caso no existe.");

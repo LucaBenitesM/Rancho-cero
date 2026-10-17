@@ -16,6 +16,7 @@ import type * as healthCheck from "../healthCheck.js";
 import type * as historias from "../historias.js";
 import type * as http from "../http.js";
 import type * as procesarVisita from "../procesarVisita.js";
+import type * as roles from "../roles.js";
 import type * as urgencia from "../urgencia.js";
 
 import type {
@@ -33,6 +34,7 @@ declare const fullApi: ApiFromModules<{
   historias: typeof historias;
   http: typeof http;
   procesarVisita: typeof procesarVisita;
+  roles: typeof roles;
   urgencia: typeof urgencia;
 }>;
 

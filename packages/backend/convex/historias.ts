@@ -18,6 +18,7 @@ import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { action, internalQuery, mutation, query } from "./_generated/server";
 import { requerirUsuario } from "./casos";
+import { requerirCoordinador } from "./roles";
 import { CLAVES_CAMPO, definicionDe } from "./ficha";
 import { META_CASA } from "./urgencia";
 
@@ -199,6 +200,7 @@ export const datosParaHistoria = internalQuery({
 export const generar = action({
   args: { casoId: v.id("casos") },
   handler: async (ctx, { casoId }): Promise<{ texto: string; alertas: AlertaPrivacidad[] }> => {
+    await requerirCoordinador(ctx, "Solo los coordinadores pueden generar historias.");
     const identidad = await ctx.auth.getUserIdentity();
     if (!identidad) throw new Error("Necesitás iniciar sesión.");
 
@@ -224,6 +226,7 @@ export const generar = action({
 export const revisarPrivacidad = action({
   args: { texto: v.string() },
   handler: async (ctx, { texto }): Promise<{ alertas: AlertaPrivacidad[] }> => {
+    await requerirCoordinador(ctx, "Solo los coordinadores pueden editar historias.");
     const identidad = await ctx.auth.getUserIdentity();
     if (!identidad) throw new Error("Necesitás iniciar sesión.");
     const limpio = texto.trim();
@@ -237,6 +240,7 @@ export const revisarPrivacidad = action({
 export const obtenerParaAprobar = query({
   args: { casoId: v.id("casos") },
   handler: async (ctx, { casoId }) => {
+    await requerirCoordinador(ctx, "Solo los coordinadores pueden aprobar historias.");
     await requerirUsuario(ctx);
     const caso = await ctx.db.get(casoId);
     if (!caso) return null;
@@ -277,6 +281,7 @@ export const aprobarYPublicar = mutation({
     alertas: v.array(alertaValidator), // alertas vistas al aprobar
   },
   handler: async (ctx, args) => {
+    await requerirCoordinador(ctx, "Solo los coordinadores pueden aprobar historias.");
     const usuarioId = await requerirUsuario(ctx);
     const caso = await ctx.db.get(args.casoId);
     if (!caso) throw new Error("El caso no existe.");
