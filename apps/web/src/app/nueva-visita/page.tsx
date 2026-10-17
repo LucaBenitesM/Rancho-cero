@@ -21,9 +21,10 @@ import { Checkbox } from "@rancho-cero/ui/components/checkbox";
 import { Label } from "@rancho-cero/ui/components/label";
 import { useAction, useMutation } from "convex/react";
 import { TriangleAlert } from "lucide-react";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
+import GrabadorAudio from "@/components/grabador-audio";
 import { MAX_FOTOS, ZonaFotos } from "@/components/zona-fotos";
 
 // Mapa clave -> campo de la ficha, para editar la ficha devuelta por la IA.
@@ -105,8 +106,6 @@ export default function NuevaVisitaPage() {
   const [transcripcionFallo, setTranscripcionFallo] = useState(false);
   const [ficha, setFicha] = useState<FichaEditable | null>(null);
   const [guardando, setGuardando] = useState(false);
-
-  const audioInputRef = useRef<HTMLInputElement>(null);
 
   // Sube un archivo al storage de Convex y devuelve su storageId tipado.
   async function subirArchivo(file: File): Promise<Id<"_storage">> {
@@ -254,20 +253,12 @@ export default function NuevaVisitaPage() {
           <Card>
             <CardHeader>
               <CardTitle>Audio de la visita</CardTitle>
-              <CardDescription>Máximo 2 minutos. Lo transcribe ElevenLabs.</CardDescription>
+              <CardDescription>
+                Grabá el audio en el momento (hasta 2 minutos). Lo transcribe ElevenLabs.
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-2">
-              <input
-                ref={audioInputRef}
-                type="file"
-                accept="audio/*"
-                className="hidden"
-                onChange={(e) => setAudio(e.target.files?.[0] ?? null)}
-              />
-              <Button type="button" variant="outline" onClick={() => audioInputRef.current?.click()}>
-                {audio ? "Cambiar audio" : "Elegir audio"}
-              </Button>
-              {audio && <p className="text-sm text-muted-foreground">{audio.name}</p>}
+            <CardContent>
+              <GrabadorAudio onAudio={setAudio} maxSegundos={120} />
             </CardContent>
           </Card>
 
