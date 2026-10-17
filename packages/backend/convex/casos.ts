@@ -12,6 +12,7 @@ import { v } from "convex/values";
 
 import { mutation, query } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
+import type { MutationCtx } from "./_generated/server";
 import { calcularUrgencia } from "./urgencia";
 
 const DIA = 1000 * 60 * 60 * 24;
@@ -41,19 +42,24 @@ const SEED: SeedCaso[] = [
     barrio: "Barrio Esperanza",
     diasAtras: 190,
     campos: {
-      techo: "nylon_lona",
-      paredes: "nylon_incompletas",
+      pared: "precaria",
+      techo: "liviano_sin_aislacion",
       piso: "tierra",
-      humedad: "filtracion_activa",
-      riesgoElectrico: "conexion_irregular_peligrosa",
-      bano: "sin_bano",
-      agua: "sin_acceso",
-      integrantes: "7+",
-      menores: "3+",
-      mayores: "1",
-      discapacidad: "si_requiere_accesibilidad",
-      enfermedadGrave: "si_agravada_por_vivienda",
-      embarazo: "no",
+      bano: "no_tiene",
+      m2PorPersona: "menos_de_5",
+      ventanas: "sin_ventanas",
+      separacionAmbientes: "sin_separacion",
+      riesgoDerrumbe: "riesgo_derrumbe",
+      inundable: "inundable",
+      enfermedad: "grave",
+      menoresDe5: "dos_a_tres",
+      menores5a12: "dos_a_tres",
+      menores12a18: "uno",
+      monoparental: "solo_madre",
+      vinculoOrganizacion: "mas_de_2_anos",
+      impresionPrimeraVisita: "alta",
+      desalojo: "inmediato",
+      adicionales: "graves",
     },
     ajuste: {
       porcentaje: 12,
@@ -67,19 +73,24 @@ const SEED: SeedCaso[] = [
     barrio: "Las Piedras",
     diasAtras: 120,
     campos: {
-      techo: "chapa_deteriorada",
-      paredes: "madera_chapa",
-      piso: "madera_sobre_tierra",
-      humedad: "extendida",
-      riesgoElectrico: "cables_expuestos",
-      bano: "externo_letrina",
-      agua: "compartida",
-      integrantes: "5-6",
-      menores: "2",
-      mayores: "0",
-      discapacidad: "no",
-      enfermedadGrave: "si_cronica",
-      embarazo: "si",
+      pared: "precaria",
+      techo: "liviano_sin_aislacion",
+      piso: "material_sin_terminacion",
+      bano: "incompleto_o_exterior",
+      m2PorPersona: "de_5_a_10",
+      ventanas: "insuficientes",
+      separacionAmbientes: "cortinas",
+      riesgoDerrumbe: "rajaduras",
+      inundable: "inundable",
+      enfermedad: "media",
+      menoresDe5: "uno",
+      menores5a12: "dos_a_tres",
+      menores12a18: "ninguno",
+      monoparental: "solo_madre",
+      vinculoOrganizacion: "de_1_a_2_anos",
+      impresionPrimeraVisita: "alta",
+      desalojo: "inmediato",
+      adicionales: "algunos",
     },
     ajuste: {
       porcentaje: 10,
@@ -93,19 +104,24 @@ const SEED: SeedCaso[] = [
     barrio: "Nuevo Amanecer",
     diasAtras: 75,
     campos: {
-      techo: "madera_carton",
-      paredes: "mixto_precario",
+      pared: "precaria",
+      techo: "liviano_sin_aislacion",
       piso: "tierra",
-      humedad: "extendida",
-      riesgoElectrico: "cables_expuestos",
-      bano: "externo_letrina",
-      agua: "canilla_terreno",
-      integrantes: "3-4",
-      menores: "1",
-      mayores: "2+",
-      discapacidad: "si_sin_adaptacion",
-      enfermedadGrave: "no",
-      embarazo: "no",
+      bano: "incompleto_o_exterior",
+      m2PorPersona: "de_5_a_10",
+      ventanas: "insuficientes",
+      separacionAmbientes: "cortinas",
+      riesgoDerrumbe: "rajaduras",
+      inundable: "plagas",
+      enfermedad: "media",
+      menoresDe5: "uno",
+      menores5a12: "uno",
+      menores12a18: "dos",
+      monoparental: "solo_padre",
+      vinculoOrganizacion: "mas_de_2_anos",
+      impresionPrimeraVisita: "media",
+      desalojo: "mediano_plazo",
+      adicionales: "algunos",
     },
   },
   {
@@ -113,19 +129,24 @@ const SEED: SeedCaso[] = [
     barrio: "Barrio Esperanza",
     diasAtras: 60,
     campos: {
-      techo: "chapa_deteriorada",
-      paredes: "bloque_sin_terminar",
-      piso: "contrapiso_deteriorado",
-      humedad: "extendida",
-      riesgoElectrico: "sin_electricidad",
-      bano: "interno_precario",
-      agua: "canilla_terreno",
-      integrantes: "5-6",
-      menores: "3+",
-      mayores: "0",
-      discapacidad: "no",
-      enfermedadGrave: "no",
-      embarazo: "si",
+      pared: "material_sin_revoque",
+      techo: "liviano_sin_aislacion",
+      piso: "material_sin_terminacion",
+      bano: "incompleto_o_exterior",
+      m2PorPersona: "de_5_a_10",
+      ventanas: "insuficientes",
+      separacionAmbientes: "cortinas",
+      riesgoDerrumbe: "rajaduras",
+      inundable: "plagas",
+      enfermedad: "leve",
+      menoresDe5: "dos_a_tres",
+      menores5a12: "uno",
+      menores12a18: "uno",
+      monoparental: "solo_madre",
+      vinculoOrganizacion: "de_1_a_2_anos",
+      impresionPrimeraVisita: "media",
+      desalojo: "mediano_plazo",
+      adicionales: "algunos",
     },
   },
   {
@@ -133,19 +154,24 @@ const SEED: SeedCaso[] = [
     barrio: "Km 14",
     diasAtras: 45,
     campos: {
-      techo: "chapa_deteriorada",
-      paredes: "madera_chapa",
-      piso: "madera_sobre_tierra",
-      humedad: "leve",
-      riesgoElectrico: "cables_expuestos",
-      bano: "externo_letrina",
-      agua: "compartida",
-      integrantes: "3-4",
-      menores: "2",
-      mayores: "1",
-      discapacidad: "no",
-      enfermedadGrave: "si_cronica",
-      embarazo: "no",
+      pared: "material_sin_revoque",
+      techo: "liviano_con_aislacion",
+      piso: "material_sin_terminacion",
+      bano: "incompleto_o_exterior",
+      m2PorPersona: "de_5_a_10",
+      ventanas: "insuficientes",
+      separacionAmbientes: "puertas",
+      riesgoDerrumbe: "rajaduras",
+      inundable: "normal",
+      enfermedad: "media",
+      menoresDe5: "uno",
+      menores5a12: "uno",
+      menores12a18: "uno",
+      monoparental: "padre_y_madre",
+      vinculoOrganizacion: "de_1_a_2_anos",
+      impresionPrimeraVisita: "media",
+      desalojo: "largo_plazo",
+      adicionales: "algunos",
     },
   },
   {
@@ -153,19 +179,24 @@ const SEED: SeedCaso[] = [
     barrio: "Las Piedras",
     diasAtras: 30,
     campos: {
-      techo: "chapa_buena",
-      paredes: "madera_chapa",
-      piso: "contrapiso_deteriorado",
-      humedad: "leve",
-      riesgoElectrico: "cables_expuestos",
-      bano: "interno_precario",
-      agua: "canilla_terreno",
-      integrantes: "3-4",
-      menores: "1",
-      mayores: "0",
-      discapacidad: "no",
-      enfermedadGrave: "no",
-      embarazo: "no",
+      pared: "material_sin_revoque",
+      techo: "liviano_con_aislacion",
+      piso: "material_sin_terminacion",
+      bano: "incompleto_o_exterior",
+      m2PorPersona: "de_5_a_10",
+      ventanas: "suficientes",
+      separacionAmbientes: "puertas",
+      riesgoDerrumbe: "normal",
+      inundable: "normal",
+      enfermedad: "leve",
+      menoresDe5: "uno",
+      menores5a12: "ninguno",
+      menores12a18: "uno",
+      monoparental: "padre_y_madre",
+      vinculoOrganizacion: "menos_de_1_ano",
+      impresionPrimeraVisita: "media",
+      desalojo: "largo_plazo",
+      adicionales: "ninguno",
     },
   },
   {
@@ -173,19 +204,24 @@ const SEED: SeedCaso[] = [
     barrio: "Nuevo Amanecer",
     diasAtras: 20,
     campos: {
-      techo: "madera_carton",
-      paredes: "mixto_precario",
-      piso: "madera_sobre_tierra",
-      humedad: "extendida",
-      riesgoElectrico: "conexion_irregular_peligrosa",
-      bano: "sin_bano",
-      agua: "compartida",
-      integrantes: "5-6",
-      menores: "2",
-      mayores: "1",
-      discapacidad: "no",
-      enfermedadGrave: "no",
-      embarazo: "no",
+      pared: "precaria",
+      techo: "liviano_sin_aislacion",
+      piso: "material_sin_terminacion",
+      bano: "no_tiene",
+      m2PorPersona: "de_5_a_10",
+      ventanas: "insuficientes",
+      separacionAmbientes: "cortinas",
+      riesgoDerrumbe: "riesgo_derrumbe",
+      inundable: "plagas",
+      enfermedad: "nada",
+      menoresDe5: "uno",
+      menores5a12: "uno",
+      menores12a18: "ninguno",
+      monoparental: "padre_y_madre",
+      vinculoOrganizacion: "menos_de_1_ano",
+      impresionPrimeraVisita: "media",
+      desalojo: "mediano_plazo",
+      adicionales: "algunos",
     },
   },
   {
@@ -193,38 +229,48 @@ const SEED: SeedCaso[] = [
     barrio: "Km 14",
     diasAtras: 10,
     campos: {
-      techo: "chapa_buena",
-      paredes: "bloque_sin_terminar",
-      piso: "ceramica_contrapiso",
-      humedad: "sin_signos",
-      riesgoElectrico: "instalacion_segura",
-      bano: "interno_completo",
-      agua: "red_dentro",
-      integrantes: "1-2",
-      menores: "0",
-      mayores: "1",
-      discapacidad: "no",
-      enfermedadGrave: "no",
-      embarazo: "no",
+      pared: "material_con_revoque",
+      techo: "material",
+      piso: "material_revestido",
+      bano: "completo_con_puerta",
+      m2PorPersona: "mas_de_10",
+      ventanas: "suficientes",
+      separacionAmbientes: "puertas",
+      riesgoDerrumbe: "normal",
+      inundable: "normal",
+      enfermedad: "nada",
+      menoresDe5: "ninguno",
+      menores5a12: "ninguno",
+      menores12a18: "uno",
+      monoparental: "padre_y_madre",
+      vinculoOrganizacion: "menos_de_1_ano",
+      impresionPrimeraVisita: "baja",
+      desalojo: "largo_plazo",
+      adicionales: "ninguno",
     },
   },
 ];
 
 // Evidencias de ejemplo por campo (para que la ficha muestre la trazabilidad).
 const EVIDENCIA: Record<string, string> = {
+  pared: "foto 2: paredes del ambiente principal",
   techo: "foto 1: cubierta de la vivienda",
-  paredes: "foto 2: paredes del ambiente principal",
   piso: "foto 3: piso del ambiente principal",
-  humedad: "foto 4 + audio: signos de humedad",
-  riesgoElectrico: "foto 5: instalación eléctrica",
   bano: "foto 6 + audio: estado del baño",
-  agua: "audio: acceso al agua",
-  integrantes: "audio: cantidad de personas",
-  menores: "audio: menores de 18",
-  mayores: "audio: mayores de 65",
-  discapacidad: "audio: situación de discapacidad",
-  enfermedadGrave: "audio: enfermedad en el hogar",
-  embarazo: "audio: embarazo en el hogar",
+  m2PorPersona: "audio: superficie e integrantes",
+  ventanas: "foto 4: aberturas",
+  separacionAmbientes: "foto 5 + audio: distribución",
+  riesgoDerrumbe: "foto 1 + audio: estado estructural",
+  inundable: "audio: inundación o plagas",
+  enfermedad: "audio: situación de salud del hogar",
+  menoresDe5: "audio: menores de 5 años",
+  menores5a12: "audio: menores de 5 a 12",
+  menores12a18: "audio: menores de 12 a 18",
+  monoparental: "audio: composición familiar",
+  vinculoOrganizacion: "audio: tiempo de vínculo con Cireneos",
+  impresionPrimeraVisita: "elección del voluntario en la visita",
+  desalojo: "audio: riesgo de desalojo",
+  adicionales: "elección del coordinador",
 };
 
 function construirCampos(campos: Record<string, string>) {
@@ -235,6 +281,36 @@ function construirCampos(campos: Record<string, string>) {
   return out as never; // el schema valida la forma exacta
 }
 
+async function sembrar(ctx: MutationCtx) {
+  const ahora = Date.now();
+  let creados = 0;
+  for (const s of SEED) {
+    const relevadoEn = ahora - s.diasAtras * DIA;
+    const resultado = calcularUrgencia(s.campos, relevadoEn, ahora, s.ajuste);
+    const campos = construirCampos(s.campos) as Record<string, ReturnType<typeof campo>>;
+
+    await ctx.db.insert("casos", {
+      estado: "confirmado",
+      consentimiento: true,
+      alias: s.alias,
+      barrio: s.barrio,
+      fotos: [],
+      ...campos,
+      puntajeTabla: resultado.total,
+      puntajeBase: resultado.base,
+      ajustePorcentaje: s.ajuste?.porcentaje,
+      ajusteMotivo: s.ajuste?.motivo,
+      ajusteEvidencia: s.ajuste?.evidencia,
+      ajusteEstado: s.ajuste?.estado,
+      puntajeFinal: resultado.puntajeFinal,
+      explicacion: resultado.explicacion,
+      relevadoEn,
+    } as never);
+    creados++;
+  }
+  return creados;
+}
+
 /** Carga las familias de ejemplo si la tabla está vacía. Idempotente. */
 export const seed = mutation({
   args: {},
@@ -243,34 +319,19 @@ export const seed = mutation({
     if (existentes.length > 0) {
       return { creados: 0, mensaje: "Ya había casos cargados." };
     }
-
-    const ahora = Date.now();
-    let creados = 0;
-    for (const s of SEED) {
-      const relevadoEn = ahora - s.diasAtras * DIA;
-      const resultado = calcularUrgencia(s.campos, relevadoEn, ahora, s.ajuste);
-      const campos = construirCampos(s.campos) as Record<string, ReturnType<typeof campo>>;
-
-      await ctx.db.insert("casos", {
-        estado: "confirmado",
-        consentimiento: true,
-        alias: s.alias,
-        barrio: s.barrio,
-        fotos: [],
-        ...campos,
-        puntajeBase: resultado.base,
-        ajustePorcentaje: s.ajuste?.porcentaje,
-        ajusteMotivo: s.ajuste?.motivo,
-        ajusteEvidencia: s.ajuste?.evidencia,
-        ajusteEstado: s.ajuste?.estado,
-        puntajeFinal: resultado.puntajeFinal,
-        explicacion: resultado.explicacion,
-        relevadoEn,
-      } as never);
-      creados++;
-    }
-
+    const creados = await sembrar(ctx);
     return { creados, mensaje: `Se cargaron ${creados} familias de ejemplo.` };
+  },
+});
+
+/** Borra todos los casos y los vuelve a sembrar. Útil cuando cambia la tabla. */
+export const recargar = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const todos = await ctx.db.query("casos").collect();
+    for (const d of todos) await ctx.db.delete(d._id);
+    const creados = await sembrar(ctx);
+    return { borrados: todos.length, creados, mensaje: `Recargadas ${creados} familias.` };
   },
 });
 
@@ -309,6 +370,7 @@ export const ranking = query({
         alias: meta.alias,
         barrio: meta.barrio,
         puntajeFinal: r.puntajeFinal,
+        total: r.total,
         base: r.base,
         espera: r.espera,
         ajusteAplicado: r.ajusteAplicado,
@@ -346,19 +408,24 @@ export const obtener = query({
 });
 
 const CAMPOS_URGENCIA = [
+  "pared",
   "techo",
-  "paredes",
   "piso",
-  "humedad",
-  "riesgoElectrico",
   "bano",
-  "agua",
-  "integrantes",
-  "menores",
-  "mayores",
-  "discapacidad",
-  "enfermedadGrave",
-  "embarazo",
+  "m2PorPersona",
+  "ventanas",
+  "separacionAmbientes",
+  "riesgoDerrumbe",
+  "inundable",
+  "enfermedad",
+  "menoresDe5",
+  "menores5a12",
+  "menores12a18",
+  "monoparental",
+  "vinculoOrganizacion",
+  "impresionPrimeraVisita",
+  "desalojo",
+  "adicionales",
 ] as const;
 
 function extraerCampos(doc: Doc<"casos">): Record<string, string> {

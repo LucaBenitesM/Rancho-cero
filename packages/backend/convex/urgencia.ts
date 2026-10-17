@@ -1,10 +1,12 @@
 // ─────────────────────────────────────────────────────────────
 // RANCHO CERO — Fórmula de urgencia (EN CÓDIGO, NO con IA)
 //
-// Replica exacta de la tabla de puntajes de FICHA.md. Vive en el backend
-// para que el ranking se calcule del lado servidor de forma determinística.
+// Replica exacta de la tabla de puntajes real de Cireneos
+// (docs/tabla_puntajes.xlsx, ver FICHA.md). Vive en el backend para que el
+// ranking se calcule del lado servidor de forma determinística.
 //
-//   base    = Σ (peso_campo × puntos_valor / 10)        → 0 a 100
+//   total   = Σ (peso_campo × puntuacion_valor)        → 0 a 135
+//   base    = total / 135 × 100                         → 0 a 100
 //   ajuste  = sugerido por la IA, entre -15% y +15%     → solo si se acepta
 //   espera  = +1 punto por mes desde el relevamiento, tope +12
 //
@@ -12,113 +14,162 @@
 // ─────────────────────────────────────────────────────────────
 
 export const ETIQUETAS_CAMPO: Record<string, string> = {
+  pared: "Pared",
   techo: "Techo",
-  paredes: "Paredes",
   piso: "Piso",
-  humedad: "Humedad",
-  riesgoElectrico: "Riesgo eléctrico",
   bano: "Baño",
-  agua: "Agua",
-  integrantes: "Integrantes",
-  menores: "Menores de 18",
-  mayores: "Mayores de 65",
-  discapacidad: "Discapacidad",
-  enfermedadGrave: "Enfermedad grave",
-  embarazo: "Embarazo",
+  m2PorPersona: "m² por persona",
+  ventanas: "Ventanas",
+  separacionAmbientes: "Separación de ambientes",
+  riesgoDerrumbe: "Riesgo de derrumbe",
+  inundable: "Inundable / plagas",
+  enfermedad: "Enfermedad o discapacidad",
+  menoresDe5: "Menores de 5 años",
+  menores5a12: "Menores de 5 a 12",
+  menores12a18: "Menores de 12 a 18",
+  monoparental: "Familia monoparental",
+  vinculoOrganizacion: "Vínculo con la organización",
+  impresionPrimeraVisita: "Impresión de la 1ª visita",
+  desalojo: "Desalojo / reinserción",
+  adicionales: "Adicionales",
 };
 
-// Pesos por campo (FICHA.md). Vivienda = 55, Familia = 45. Total = 100.
+// Bloques de la tabla (para agrupar en la ficha).
+export const BLOQUES: { titulo: string; campos: CampoUrgencia[] }[] = [
+  { titulo: "1. Materialidad", campos: ["pared", "techo", "piso", "bano"] },
+  { titulo: "2. Habitabilidad", campos: ["m2PorPersona", "ventanas", "separacionAmbientes"] },
+  { titulo: "3. Seguridad y salubridad", campos: ["riesgoDerrumbe", "inundable"] },
+  {
+    titulo: "4. Salud y familia",
+    campos: ["enfermedad", "menoresDe5", "menores5a12", "menores12a18", "monoparental"],
+  },
+  {
+    titulo: "5. Dimensión social",
+    campos: ["vinculoOrganizacion", "impresionPrimeraVisita", "desalojo", "adicionales"],
+  },
+];
+
+// Peso de cada campo (1..3). Suma de pesos = 45 → máximo 45 × 3 = 135 (FICHA.md).
 export const PESOS = {
-  techo: 12,
-  paredes: 10,
-  piso: 6,
-  humedad: 7,
-  riesgoElectrico: 10,
-  bano: 5,
-  agua: 5,
-  integrantes: 8,
-  menores: 9,
-  mayores: 5,
-  discapacidad: 8,
-  enfermedadGrave: 8,
-  embarazo: 7,
+  // 1. Materialidad (12)
+  pared: 3,
+  techo: 3,
+  piso: 3,
+  bano: 3,
+  // 2. Habitabilidad (5)
+  m2PorPersona: 2,
+  ventanas: 2,
+  separacionAmbientes: 1,
+  // 3. Seguridad y salubridad (6)
+  riesgoDerrumbe: 3,
+  inundable: 3,
+  // 4. Salud y familia (11)
+  enfermedad: 3,
+  menoresDe5: 3,
+  menores5a12: 2,
+  menores12a18: 1,
+  monoparental: 2,
+  // 5. Dimensión social (11)
+  vinculoOrganizacion: 3,
+  impresionPrimeraVisita: 3,
+  desalojo: 2,
+  adicionales: 3,
 } as const;
 
 export type CampoUrgencia = keyof typeof PESOS;
 
+export const PESO_TOTAL = 45;
+export const PUNTAJE_TABLA_MAX = 135;
+
+// Puntuación de cada valor posible (0..3), por campo. Copiado de FICHA.md.
 export const PUNTOS: Record<CampoUrgencia, Record<string, number>> = {
-  techo: { material: 0, chapa_buena: 3, chapa_deteriorada: 7, madera_carton: 8, nylon_lona: 10 },
-  paredes: {
-    bloque_terminado: 0,
-    bloque_sin_terminar: 3,
-    madera_chapa: 6,
-    mixto_precario: 8,
-    nylon_incompletas: 10,
-  },
-  piso: { ceramica_contrapiso: 0, contrapiso_deteriorado: 3, madera_sobre_tierra: 6, tierra: 10 },
-  humedad: { sin_signos: 0, leve: 3, extendida: 7, filtracion_activa: 10 },
-  riesgoElectrico: {
-    instalacion_segura: 0,
-    sin_electricidad: 5,
-    cables_expuestos: 6,
-    conexion_irregular_peligrosa: 10,
-  },
-  bano: { interno_completo: 0, interno_precario: 4, externo_letrina: 7, sin_bano: 10 },
-  agua: { red_dentro: 0, canilla_terreno: 4, compartida: 7, sin_acceso: 10 },
-  integrantes: { "1-2": 2, "3-4": 5, "5-6": 8, "7+": 10 },
-  menores: { "0": 0, "1": 5, "2": 7, "3+": 10 },
-  mayores: { "0": 0, "1": 6, "2+": 10 },
-  discapacidad: { no: 0, si_sin_adaptacion: 6, si_requiere_accesibilidad: 10 },
-  enfermedadGrave: { no: 0, si_cronica: 5, si_agravada_por_vivienda: 10 },
-  embarazo: { no: 0, si: 10 },
+  pared: { material_con_revoque: 1, material_sin_revoque: 2, precaria: 3 },
+  techo: { material: 1, liviano_con_aislacion: 2, liviano_sin_aislacion: 3 },
+  piso: { material_revestido: 1, material_sin_terminacion: 2, tierra: 3 },
+  bano: { completo_con_puerta: 1, incompleto_o_exterior: 2, no_tiene: 3 },
+  m2PorPersona: { mas_de_10: 1, de_5_a_10: 2, menos_de_5: 3 },
+  ventanas: { suficientes: 1, insuficientes: 2, sin_ventanas: 3 },
+  separacionAmbientes: { puertas: 1, cortinas: 2, sin_separacion: 3 },
+  riesgoDerrumbe: { normal: 1, rajaduras: 2, riesgo_derrumbe: 3 },
+  inundable: { normal: 1, plagas: 2, inundable: 3 },
+  enfermedad: { nada: 0, leve: 1, media: 2, grave: 3 },
+  menoresDe5: { ninguno: 0, uno: 1, dos_a_tres: 2, cuatro_o_mas: 3 },
+  menores5a12: { ninguno: 0, uno: 1, dos_a_tres: 2, cinco_o_mas: 3 },
+  menores12a18: { ninguno: 0, uno: 1, dos: 2, tres_o_mas: 3 },
+  monoparental: { padre_y_madre: 1, solo_padre: 2, solo_madre: 3 },
+  vinculoOrganizacion: { menos_de_1_ano: 1, de_1_a_2_anos: 2, mas_de_2_anos: 3 },
+  impresionPrimeraVisita: { baja: 1, media: 2, alta: 3 },
+  desalojo: { largo_plazo: 1, mediano_plazo: 2, inmediato: 3 },
+  adicionales: { ninguno: 1, algunos: 2, graves: 3 },
 };
 
+// Texto legible de cada valor, para la ficha y la explicación.
 export const TEXTO_VALOR: Record<string, string> = {
-  material: "losa / hormigón",
-  chapa_buena: "chapa buena",
-  chapa_deteriorada: "chapa deteriorada",
-  madera_carton: "madera / cartón",
-  nylon_lona: "nylon / lona",
-  bloque_terminado: "bloque terminado",
-  bloque_sin_terminar: "bloque sin terminar",
-  madera_chapa: "madera / chapa",
-  mixto_precario: "mixto precario",
-  nylon_incompletas: "nylon / incompletas",
-  ceramica_contrapiso: "cerámica / contrapiso",
-  contrapiso_deteriorado: "contrapiso deteriorado",
-  madera_sobre_tierra: "madera sobre tierra",
+  // pared
+  material_con_revoque: "material con revoque",
+  material_sin_revoque: "material sin revoque",
+  precaria: "precaria (chapa/madera/nylon)",
+  // techo
+  material: "material (losa / hormigón)",
+  liviano_con_aislacion: "liviano con aislación",
+  liviano_sin_aislacion: "liviano sin aislación",
+  // piso
+  material_revestido: "material revestido",
+  material_sin_terminacion: "contrapiso sin terminar",
   tierra: "piso de tierra",
-  sin_signos: "sin signos",
+  // baño
+  completo_con_puerta: "completo, con puerta",
+  incompleto_o_exterior: "incompleto o exterior",
+  no_tiene: "no tiene baño",
+  // m2
+  mas_de_10: "más de 10 m²",
+  de_5_a_10: "de 5 a 10 m²",
+  menos_de_5: "menos de 5 m²",
+  // ventanas
+  suficientes: "suficientes",
+  insuficientes: "insuficientes",
+  sin_ventanas: "sin ventanas",
+  // separación
+  puertas: "con puertas",
+  cortinas: "con cortinas",
+  sin_separacion: "sin separación",
+  // riesgo derrumbe
+  normal: "normal",
+  rajaduras: "rajaduras",
+  riesgo_derrumbe: "riesgo de derrumbe",
+  // inundable
+  plagas: "plagas",
+  inundable: "inundable",
+  // enfermedad
+  nada: "sin enfermedad",
   leve: "leve",
-  extendida: "extendida",
-  filtracion_activa: "filtración activa",
-  instalacion_segura: "instalación segura",
-  sin_electricidad: "sin electricidad",
-  cables_expuestos: "cables expuestos",
-  conexion_irregular_peligrosa: "conexión irregular peligrosa",
-  interno_completo: "interno completo",
-  interno_precario: "interno precario",
-  externo_letrina: "externo / letrina",
-  sin_bano: "sin baño",
-  red_dentro: "red dentro",
-  canilla_terreno: "canilla en el terreno",
-  compartida: "compartida",
-  sin_acceso: "sin acceso",
-  "1-2": "1 a 2 personas",
-  "3-4": "3 a 4 personas",
-  "5-6": "5 a 6 personas",
-  "7+": "7 o más personas",
-  "0": "ninguno",
-  "1": "1",
-  "2": "2",
-  "3+": "3 o más",
-  "2+": "2 o más",
-  no: "no",
-  si: "sí",
-  si_sin_adaptacion: "sí, sin adaptación",
-  si_requiere_accesibilidad: "sí, requiere accesibilidad",
-  si_cronica: "sí, crónica",
-  si_agravada_por_vivienda: "sí, agravada por la vivienda",
+  media: "media",
+  grave: "grave",
+  // menores
+  ninguno: "ninguno",
+  uno: "uno",
+  dos_a_tres: "dos a tres",
+  cuatro_o_mas: "cuatro o más",
+  cinco_o_mas: "cinco o más",
+  dos: "dos",
+  tres_o_mas: "tres o más",
+  // monoparental
+  padre_y_madre: "padre y madre",
+  solo_padre: "solo el padre",
+  solo_madre: "solo la madre",
+  // vínculo
+  menos_de_1_ano: "menos de 1 año",
+  de_1_a_2_anos: "de 1 a 2 años",
+  mas_de_2_anos: "más de 2 años",
+  // impresión
+  baja: "baja",
+  // desalojo
+  largo_plazo: "largo plazo",
+  mediano_plazo: "mediano plazo",
+  inmediato: "inmediato",
+  // adicionales
+  algunos: "algunos",
+  graves: "graves",
 };
 
 export interface AporteCampo {
@@ -127,8 +178,8 @@ export interface AporteCampo {
   valor: string;
   textoValor: string;
   peso: number;
-  puntos: number;
-  aporte: number;
+  puntos: number; // puntuación del valor (0..3)
+  aporte: number; // peso × puntuación
 }
 
 export interface AjusteCaso {
@@ -139,7 +190,8 @@ export interface AjusteCaso {
 }
 
 export interface ResultadoUrgencia {
-  base: number;
+  total: number; // 0..135 (TOTAL de la planilla)
+  base: number; // 0..100
   espera: number;
   mesesEspera: number;
   ajusteAplicado: number;
@@ -183,11 +235,12 @@ export function calcularUrgencia(
       textoValor: TEXTO_VALOR[valor] ?? valor,
       peso,
       puntos,
-      aporte: (peso * puntos) / 10,
+      aporte: peso * puntos,
     };
   });
 
-  const base = aportes.reduce((acc, a) => acc + a.aporte, 0);
+  const total = aportes.reduce((acc, a) => acc + a.aporte, 0);
+  const base = (total / PUNTAJE_TABLA_MAX) * 100;
   const meses = mesesDeEspera(relevadoEn, ahora);
   const espera = puntosEspera(meses);
   const ajusteAplicado = ajuste && ajuste.estado === "aceptado" ? ajuste.porcentaje / 100 : 0;
@@ -195,6 +248,7 @@ export function calcularUrgencia(
   const aportesOrdenados = [...aportes].sort((a, b) => b.aporte - a.aporte);
 
   return {
+    total,
     base: redondear(base),
     espera,
     mesesEspera: meses,
