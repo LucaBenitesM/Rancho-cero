@@ -23,11 +23,37 @@ const BLOQUES: { titulo: string; campos: string[] }[] = [
   },
 ];
 
-function colorPuntos(puntos: number): string {
-  if (puntos >= 3) return "bg-red-500";
-  if (puntos >= 2) return "bg-orange-400";
-  if (puntos >= 1) return "bg-green-600";
-  return "bg-green-300";
+// Nivel de carencia según la puntuación del campo (1 = mejor, 3 = peor).
+// Se muestra como una etiqueta clara, no un punto de color suelto.
+function nivelDe(puntos: number, pesoMax: number): {
+  texto: string;
+  punto: string;
+  chip: string;
+} {
+  // Relativo al máximo del campo (algunos van 0..3, otros 1..3).
+  if (puntos >= 3)
+    return {
+      texto: "Crítico",
+      punto: "bg-red-500",
+      chip: "bg-red-500/10 text-red-700 dark:text-red-400",
+    };
+  if (puntos === 2)
+    return {
+      texto: "Alto",
+      punto: "bg-orange-500",
+      chip: "bg-orange-500/10 text-orange-700 dark:text-orange-400",
+    };
+  if (puntos === 1)
+    return {
+      texto: "Medio",
+      punto: "bg-yellow-500",
+      chip: "bg-yellow-500/10 text-yellow-700 dark:text-yellow-500",
+    };
+  return {
+    texto: "Sin carencia",
+    punto: "bg-green-600",
+    chip: "bg-green-600/10 text-green-700 dark:text-green-400",
+  };
 }
 
 interface Aporte {
@@ -185,7 +211,7 @@ function Contenido({
 
         {/* Ajuste de la IA */}
         {caso.ajuste && (
-          <div className="mb-4 rounded-2xl border border-dashed border-border p-3.5 text-xs">
+          <div className="mb-4 rounded-2xl border border-border bg-muted/30 p-3.5 text-xs">
             <div className="mb-1.5 flex items-center justify-between">
               <span className="font-semibold">
                 Ajuste sugerido por IA {caso.ajuste.porcentaje > 0 ? "+" : ""}
@@ -239,52 +265,80 @@ function Contenido({
           </Link>
         )}
 
-        {/* Bloques de la tabla */}
-        <div className="space-y-4">
+        {/* Desglose por bloque de la tabla de Cireneos */}
+        <div className="space-y-5">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold">Desglose de la evaluación</h3>
+            <span className="text-[11px] text-muted-foreground">
+              Total: <span className="font-semibold text-foreground">{r.total}</span> / 135
+            </span>
+          </div>
+
           {BLOQUES.map((bloque) => {
             const filas = bloque.campos
               .map((c) => porCampo.get(c))
               .filter((a): a is Aporte => a !== undefined);
             if (filas.length === 0) return null;
             const subtotal = filas.reduce((acc, a) => acc + a.aporte, 0);
+            const maxBloque = filas.reduce((acc, a) => acc + a.peso * 3, 0);
             return (
-              <div key={bloque.titulo}>
-                <div className="mb-1.5 flex items-center justify-between">
-                  <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                    {bloque.titulo}
-                  </span>
-                  <span className="text-[10px] font-medium text-muted-foreground">
-                    {subtotal} pts
+              <div key={bloque.titulo} className="overflow-hidden rounded-xl border border-border/70">
+                {/* Encabezado del bloque */}
+                <div className="flex items-center justify-between border-b border-border/70 bg-muted/40 px-3.5 py-2">
+                  <span className="text-xs font-semibold">{bloque.titulo}</span>
+                  <span className="text-[11px] font-medium text-muted-foreground">
+                    {subtotal} / {maxBloque} pts
                   </span>
                 </div>
-                <div className="overflow-hidden rounded-xl border border-border/60">
-                  {filas.map((a, idx) => (
-                    <div
-                      key={a.campo}
-                      className={`flex items-center gap-2.5 px-3 py-2 text-xs ${
-                        idx % 2 === 1 ? "bg-muted/30" : ""
-                      }`}
-                    >
-                      <div className={`h-2 w-2 shrink-0 rounded-full ${colorPuntos(a.puntos)}`} />
-                      <div className="flex-1">
-                        <span className="font-medium">{a.etiqueta}</span>
-                        <span className="text-muted-foreground"> · {a.textoValor}</span>
+
+                {/* Campos del bloque */}
+                <div className="divide-y divide-border/60">
+                  {filas.map((a) => {
+                    const nivel = nivelDe(a.puntos, a.peso * 3);
+                    return (
+                      <div key={a.campo} className="flex items-center gap-3 px-3.5 py-2.5">
+                        {/* Identidad del campo */}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium">{a.etiqueta}</span>
+                            <span
+                              className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${nivel.chip}`}
+                            >
+                              <span className={`h-1.5 w-1.5 rounded-full ${nivel.punto}`} />
+                              {nivel.texto}
+                            </span>
+                          </div>
+                          <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                            {a.textoValor}
+                          </p>
+                        </div>
+
+                        {/* Aporte al puntaje */}
+                        <div className="shrink-0 text-right">
+                          <div className="text-sm font-semibold tabular-nums">{a.aporte}</div>
+                          <div className="text-[10px] text-muted-foreground">
+                            de {a.peso * 3} pts
+                          </div>
+                        </div>
                       </div>
-                      <div className="shrink-0 text-[10px] text-muted-foreground tabular-nums">
-                        peso {a.peso} × {a.puntos}
-                      </div>
-                      <div className="w-8 shrink-0 text-right font-semibold tabular-nums">
-                        {a.aporte}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             );
           })}
         </div>
 
-        <p className="mt-4 text-center text-[10px] text-muted-foreground">
+        {/* Leyenda de niveles */}
+        <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-muted-foreground">
+          <span className="font-medium">Nivel de carencia:</span>
+          <span className="inline-flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-green-600" /> Sin carencia</span>
+          <span className="inline-flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-yellow-500" /> Medio</span>
+          <span className="inline-flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-orange-500" /> Alto</span>
+          <span className="inline-flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-red-500" /> Crítico</span>
+        </div>
+
+        <p className="mt-3 text-center text-[10px] text-muted-foreground">
           Datos simulados · la fórmula vive en código (FICHA.md), no la decide la IA
         </p>
       </div>
