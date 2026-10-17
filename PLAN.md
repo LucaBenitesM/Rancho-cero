@@ -10,6 +10,13 @@ basadas en la tabla de puntajes real de Cireneos ([docs/tabla_puntajes.xlsx](doc
 18 campos en 5 bloques, `peso × puntuación`, máximo 135. La fórmula vive en un
 solo lugar del código (`packages/backend/convex/ficha.ts`).
 
+> **Cambio de enfoque:** la app ahora es **solo para uso interno de
+> Cireneos**. Ya no hay donaciones ni campaña pública: se sacaron la portada
+> pública, la página de campaña y el formulario de donación. Todo pide sesión
+> y hay dos roles, **voluntario** y **coordinador** (ver
+> [Roles y permisos](#roles-y-permisos)). Lo de campaña y donación que queda
+> abajo es historia del plan.
+
 ---
 
 ## La idea en una frase
@@ -83,9 +90,9 @@ se convierte en una ficha estructurada con evidencia. Esa es la función princip
    - ✅ **Aceptar o rechazar el ajuste:** en la ficha de la familia (desde el
      ranking) hay botones "Aceptar" y "Rechazar" mientras el ajuste está
      "sugerido" y el caso ya fue confirmado. Al decidir, se recalcula el puntaje
-     y queda registrado quién decidió y cuándo. Hace falta sesión. Mientras nadie
+     y queda registrado quién decidió y cuándo. Solo coordinadores. Mientras nadie
      decide, el ajuste se ve pero **no suma**.
-8. ✅ **Ranking.** Solo casos confirmados, ordenados por puntaje.
+8. ✅ **Ranking.** Solo casos confirmados, ordenados por puntaje. Solo lo ven los coordinadores.
    Con filtro de orden y scroll. Al tocar una familia se abre su ficha: puntaje
    por bloque de la tabla, espera, ajuste con su estado y explicación.
 9. **Historia.** La IA escribe una historia anónima y digna; una segunda llamada
@@ -98,11 +105,14 @@ se convierte en una ficha estructurada con evidencia. Esa es la función princip
      aprobó y cuándo. A Claude solo le llegan los valores de la ficha, nunca el
      alias, el barrio ni el audio.
    - ✅ Se llega desde la ficha de la familia en el ranking, con el botón
-     "Escribir y aprobar historia".
+     "Escribir y aprobar historia". Generar, editar y aprobar: solo coordinadores.
+   - ⏳ **Ver historias** (`/historias`): las ven voluntarios y coordinadores.
+     El link ya está en el menú; la página está en camino.
 10. ⏳ **Imagen.** La IA elige una foto y propone un recorte sin rasgos
    identificables; el coordinador lo aprueba. Si no, ilustración genérica.
    Sin empezar.
-11. ✅ **Campaña.** Meta de US$ 15.000, barra de progreso y botón "Donar" (simulado).
+11. ❌ **Campaña (se sacó).** Con el cambio a uso interno se borraron la página
+   de campaña y la donación. Lo que sigue es cómo funcionaba. Meta de US$ 15.000, barra de progreso y botón "Donar" (simulado).
    Hoy la meta y los montos están en **pesos uruguayos** ($ 600.000, unos
    US$ 15.000). Al elegir un monto se abre un formulario de pago de demo
    (valida la tarjeta, no la guarda ni cobra). Al llegar a la meta, el caso pasa
@@ -119,17 +129,21 @@ salud. Si falla al volver a procesar, se queda en la pantalla de "faltan datos".
 
 ## Pantallas (hoy)
 
-| Pantalla | Ruta | Qué hace | Estado |
-|---|---|---|---|
-| Portada | `/` | Foto de un rancho de fondo, cifras del problema y tres botones: "Soy coordinador", "Soy voluntario", "Quiero donar" | ✅ |
-| Sesión | `/dashboard` | Iniciar sesión y accesos a "Nueva visita" y "Ranking" | ✅ |
-| Nueva visita | `/nueva-visita` | Consentimiento → fotos → audio → procesar → (faltan datos) → ficha para revisar y guardar | ✅ |
-| Ranking | `/ranking` | Familias confirmadas por puntaje, con la ficha y el desglose de cada una; en la ficha se acepta o rechaza el ajuste | ✅ |
-| Aprobar historia | `/historia/[id]` | Generar historia, revisar privacidad, editar, aprobar y publicar | ✅ (se abre desde la ficha de la familia) |
-| Campaña | `/campana` | Historia aprobada, barra hacia la meta en pesos y donación simulada | ✅ |
+| Pantalla | Ruta | Qué hace | Quién entra | Estado |
+|---|---|---|---|---|
+| Sesión (login) | `/dashboard` | Iniciar sesión. Es lo único que se ve sin sesión | Todos | ✅ |
+| Inicio | `/` | Lleva a Nueva visita (o al login sin sesión) | Con sesión | ✅ |
+| Nueva visita | `/nueva-visita` | Consentimiento → fotos → audio → procesar → (faltan datos) → ficha para revisar y guardar | Voluntario y coordinador | ✅ |
+| Historias | `/historias` | Ver las historias | Voluntario y coordinador | ⏳ |
+| Ranking | `/ranking` | Familias confirmadas por puntaje, con la ficha y el desglose de cada una; en la ficha se acepta o rechaza el ajuste | Coordinador | ✅ |
+| Aprobar historia | `/historia/[id]` | Generar historia, revisar privacidad, editar, aprobar y publicar | Coordinador | ✅ (se abre desde la ficha de la familia) |
+| ~~Portada pública~~ y ~~Campaña~~ | ~~`/campana`~~ | Se borraron con el cambio a uso interno | — | ❌ |
 
-Estilo: paleta verde sobria, institucional, con una foto de un rancho de
-fondo en la portada.
+Header: **Nueva visita · Historias** (más **Ranking** para coordinadores), el
+rol de la persona ("Voluntario" o "Coordinador") y "Cerrar sesión". En el
+celular los links pasan a una segunda fila.
+
+Estilo: paleta verde sobria, institucional.
 
 ---
 
@@ -149,6 +163,9 @@ fondo en la portada.
 
 `relevado → confirmado → en campaña → financiado → casa entregada`
 
+> Sin campaña pública, en la app hoy solo se usan **relevado** y
+> **confirmado**. Los otros estados siguen en la base de datos.
+
 - Mientras la IA deja 5 campos dudosos o más, sigue en **relevado** y no se
   puede confirmar.
 - Pasa a **confirmado** cuando el voluntario revisa la ficha y la guarda.
@@ -160,38 +177,54 @@ fondo en la portada.
 ## Roles y permisos
 
 Login con **Better Auth** (email y contraseña). Cuentas creadas a mano, sin
-registro. La portada tiene tres botones: "Soy coordinador", "Soy voluntario" y
-"Quiero donar" (este último no pide login).
+registro. La app es **solo para el equipo de Cireneos**: sin sesión solo se ve
+la pantalla de login, y cualquier otra página redirige ahí.
 
-| Acción | Voluntario | Coordinador | Donante |
-|---|---|---|---|
-| Cargar visita | ✅ | ✅ | ❌ |
-| Revisar y corregir la ficha | ✅ (sus casos) | ✅ | ❌ |
-| Ver ranking completo | ❌ | ✅ | ❌ |
-| Aceptar / rechazar ajuste | ❌ | ✅ | ❌ |
-| Aprobar historia, imagen y campaña | ❌ | ✅ | ❌ |
-| Ver campañas, impacto y donar | ✅ | ✅ | ✅ |
+Hay **dos roles**:
 
-Mientras el login no esté, se trabaja con un **selector de rol** en la esquina.
+| Acción | Voluntario | Coordinador |
+|---|---|---|
+| Cargar visita (Nueva visita) | ✅ | ✅ |
+| Revisar y corregir la ficha | ✅ (sus casos) | ✅ (sus casos) |
+| Ver historias (`/historias`) | ✅ | ✅ |
+| Ver ranking y ficha de la familia | ❌ | ✅ |
+| Aceptar / rechazar ajuste | ❌ | ✅ |
+| Generar, editar y aprobar historias | ❌ | ✅ |
 
-**Estado hoy:**
-- ✅ Login con Better Auth (email y contraseña). Hace falta sesión para cargar
-  visitas y para generar y aprobar historias. El selector de rol no hizo falta.
-- **Para la demo hay un solo tipo de cuenta del equipo** (decisión del 17/10 a
-  la noche): la app no distingue voluntario de coordinador. Cualquiera con
-  sesión puede cargar visitas, aceptar o rechazar ajustes y aprobar historias.
-  El ranking se ve sin iniciar sesión. Los botones "Soy coordinador" y "Soy
-  voluntario" de la portada llevan a la misma pantalla de sesión. La tabla de
-  arriba queda como el diseño para después del piloto.
+**Cómo se define el rol:** con la variable de entorno de Convex
+**`COORDINADORES`**, una lista de emails separados por coma (se compara sin
+mayúsculas ni espacios). Si el email de quien inició sesión está en la lista,
+es **coordinador**; si no, es **voluntario**. Si la variable no está definida,
+todos son voluntarios. No hay emails en el código.
+
+```bash
+# desde packages/backend
+npx convex env set COORDINADORES "a@ejemplo.org,b@ejemplo.org"         # desarrollo
+npx convex env set COORDINADORES "a@ejemplo.org,b@ejemplo.org" --prod  # producción
+```
+
+El cambio se aplica enseguida, sin volver a desplegar.
+
+**Estado hoy:** ✅ hecho.
+- Backend: `convex/roles.ts` (`obtenerRol`, `requerirSesion`,
+  `requerirCoordinador` y la query `miRol`). El ranking, la ficha de la familia,
+  el ajuste y generar/editar/aprobar historias rechazan a quien no es
+  coordinador con un mensaje claro ("Solo los coordinadores pueden aprobar
+  historias"). Lo de Nueva visita pide sesión y acepta los dos roles.
+- Páginas: sin sesión redirigen al login (`proxy.ts`). Si un voluntario entra
+  al ranking o a aprobar historia ve "No tenés permiso para ver esta página"
+  con un link a Nueva visita. Mientras se carga el rol se ve "Cargando…".
 - ✅ **Sin registro en la app:** la pantalla de sesión solo deja iniciar sesión.
-  Las cuentas del equipo se crean antes del pitch con un pedido a
+  Las cuentas del equipo se crean con un pedido a
   `POST /api/auth/sign-up/email` (email, contraseña y nombre). Ese endpoint
-  sigue abierto: quien lo conozca puede crear una cuenta.
+  sigue abierto: quien lo conozca puede crear una cuenta (sería voluntario).
+- Ya no existe la decisión de "un solo tipo de cuenta" del 17/10 a la noche ni
+  el botón "Quiero donar".
 
 Los montos del panel y de las campañas llevan la etiqueta **"datos simulados"**.
 Las cifras reales (US$ 15.000 por casa, meta de 100 hogares) se muestran aparte.
-✅ Ranking, campaña y portada dicen "datos simulados" o "modo demo". Las cifras
-reales están en la portada.
+✅ El ranking dice "datos simulados". La campaña y la portada (con las cifras
+reales) se sacaron con el cambio a uso interno.
 
 ---
 
@@ -206,7 +239,8 @@ App web adaptada al celular, **con conexión** (datos móviles). Sin versión of
 
 ## Fuera de alcance
 
-Mapa satelital, pagos reales, conexión donante–familia, WhatsApp, modo offline,
+Mapa satelital, pagos reales, donaciones y campaña pública (se sacaron con el
+cambio a uso interno), conexión donante–familia, WhatsApp, modo offline,
 registro de usuarios, recuperación de contraseña.
 
 ---
@@ -222,9 +256,9 @@ registro de usuarios, recuperación de contraseña.
 **Estado hoy:**
 - **Imprescindible:** ✅ todo hecho, más el pedido de más datos y el grabador de audio.
 - **Importante:** ✅ ajuste de urgencia con aceptar/rechazar · ✅ historia anónima ·
-  ✅ login (una sola cuenta de equipo; los permisos por rol quedan para después).
-- **Deseable:** ✅ revisión de privacidad · ✅ campaña con barra y donación
-  (en pesos) · ⏳ panel de impacto (hoy son las cifras de la portada) · ⏳ recorte de foto.
+  ✅ login con 2 roles (voluntario y coordinador, por la variable `COORDINADORES`).
+- **Deseable:** ✅ revisión de privacidad · ❌ campaña con barra y donación
+  (se hizo y después se sacó con el cambio a uso interno) · ⏳ panel de impacto · ⏳ recorte de foto.
 
 ## Horarios
 
@@ -334,4 +368,8 @@ aprobar. Decir "una segunda IA revisa y marca cualquier dato identificable".
 - [x] Enlace desde el ranking a "Aprobar historia".
 - [x] Sacar la opción de crear cuenta de la pantalla de sesión.
 - [ ] Crear las cuentas del equipo para la demo.
+- [x] Roles voluntario y coordinador (variable `COORDINADORES`).
+- [ ] Cargar `COORDINADORES` en Convex de producción.
+- [ ] Página `/historias` para ver las historias (voluntario y coordinador).
+- [x] Sacar la campaña, la donación y la portada pública.
 - [x] Corregir "20 campos" → 18 en la fila del total de [FICHA.md](FICHA.md).
