@@ -218,11 +218,8 @@ function descargarFichaA4(
   .galeria img { width: 100%; height: 150px; object-fit: cover; border-radius: 6px; border: 1px solid #e4e0d2; display: block; }
   .galeria figcaption { font-size: 10px; color: #888; margin-top: 3px; text-align: center; }
   footer { margin-top: 16px; border-top: 1px solid #e4e0d2; padding-top: 8px; font-size: 10px; color: #999; text-align: center; }
-  @media screen { body { background: #ddd; padding: 20px; } .doc { background: #fff; padding: 16mm; box-shadow: 0 2px 12px rgba(0,0,0,.15); } .print-hint { text-align:center; font-size:12px; color:#555; margin-bottom:12px; } }
-  @media print { .print-hint { display: none; } }
 </style></head>
 <body>
-  <div class="print-hint">Usá “Guardar como PDF” en el diálogo de impresión para descargar el informe completo.</div>
   <div class="doc">
     <header>
       <div>
@@ -250,34 +247,67 @@ function descargarFichaA4(
     }
     <footer>Datos de uso interno de Cireneos. El puntaje de urgencia se calcula con la tabla de criterios de Cireneos.</footer>
   </div>
-  <script>
-    window.addEventListener("load", function(){
-      // Espera a que las imágenes terminen de cargar antes de imprimir,
-      // para que las fotos aparezcan en el PDF.
-      var imgs = Array.prototype.slice.call(document.images);
-      var pendientes = imgs.filter(function(i){ return !i.complete; }).length;
-      var impreso = false;
-      function listo(){ if (impreso) return; impreso = true; setTimeout(function(){ window.print(); }, 300); }
-      if (pendientes === 0) { listo(); return; }
-      imgs.forEach(function(img){
-        if (img.complete) return;
-        img.addEventListener("load", function(){ if (--pendientes === 0) listo(); });
-        img.addEventListener("error", function(){ if (--pendientes === 0) listo(); });
-      });
-      // Red de seguridad: imprime igual tras 5 s aunque alguna imagen no cargue.
-      setTimeout(listo, 5000);
-    });
-  <\/script>
 </body></html>`;
 
-  const win = window.open("", "_blank", "width=820,height=1000");
-  if (!win) {
-    toast.error("El navegador bloqueó la ventana. Permití las ventanas emergentes para descargar.");
+  // Imprime en un iframe OCULTO (no abre ninguna ventana visible): el usuario
+  // solo ve el diálogo de "Guardar como PDF".
+  const iframe = document.createElement("iframe");
+  iframe.setAttribute("aria-hidden", "true");
+  iframe.style.position = "fixed";
+  iframe.style.right = "0";
+  iframe.style.bottom = "0";
+  iframe.style.width = "0";
+  iframe.style.height = "0";
+  iframe.style.border = "0";
+  iframe.style.visibility = "hidden";
+
+  iframe.onload = () => {
+    const win = iframe.contentWindow;
+    const doc = iframe.contentDocument;
+    if (!win || !doc) return;
+
+    let impreso = false;
+    const limpiar = () => {
+      // Quita el iframe un rato después de imprimir.
+      setTimeout(() => iframe.remove(), 1000);
+    };
+    const imprimir = () => {
+      if (impreso) return;
+      impreso = true;
+      win.focus();
+      win.print();
+      limpiar();
+    };
+
+    // Espera a que carguen las imágenes para que salgan en el PDF.
+    const imgs = Array.prototype.slice.call(doc.images) as HTMLImageElement[];
+    let pendientes = imgs.filter((i) => !i.complete).length;
+    if (pendientes === 0) {
+      setTimeout(imprimir, 150);
+    } else {
+      imgs.forEach((img) => {
+        if (img.complete) return;
+        const paso = () => {
+          if (--pendientes === 0) setTimeout(imprimir, 150);
+        };
+        img.addEventListener("load", paso);
+        img.addEventListener("error", paso);
+      });
+      // Red de seguridad: imprime igual tras 5 s.
+      setTimeout(imprimir, 5000);
+    }
+  };
+
+  document.body.appendChild(iframe);
+  const idoc = iframe.contentDocument;
+  if (!idoc) {
+    iframe.remove();
+    toast.error("No se pudo generar el informe. Probá de nuevo.");
     return;
   }
-  win.document.open();
-  win.document.write(html);
-  win.document.close();
+  idoc.open();
+  idoc.write(html);
+  idoc.close();
 }
 
 /** Ficha de un caso. Carga desde Convex (api.casos.obtener). */
