@@ -21,18 +21,16 @@ function SesionIniciada() {
   const rol = useQuery(api.roles.miRol);
 
   return (
-    // Foto de fondo con velo oscuro y la tarjeta encima. familia-3.jpg es una
-    // captura de la web con la barra de menú arriba: el contenedor arranca por
-    // encima de la sección (-top-[18%]) para que esa barra quede afuera.
+    // Foto de fondo con velo oscuro y la tarjeta encima.
     <div className="relative isolate flex flex-1 items-center justify-center overflow-hidden px-4 py-12 sm:py-20">
-      <div className="absolute inset-x-0 -top-[18%] bottom-0 -z-20">
+      <div className="absolute inset-0 -z-20">
         <Image
-          src="/imagenes/familia-3.jpg"
-          alt="Casa de Rancho Cero recién instalada, con niños saludando desde la puerta"
+          src="/imagenes/familia-1.jpg"
+          alt="Una familia sonriente sentada en la puerta de su nueva casa de Rancho Cero"
           fill
           priority
           sizes="100vw"
-          className="object-cover object-[85%_bottom]"
+          className="object-cover object-[center_40%]"
         />
       </div>
       <div className="absolute inset-0 -z-10 bg-black/50" aria-hidden />
