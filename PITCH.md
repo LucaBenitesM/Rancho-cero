@@ -4,6 +4,11 @@ Guion para el domingo a las 16:00. Basado en [PLAN.md](PLAN.md) y [FICHA.md](FIC
 con la **tabla de puntajes real de Cireneos** (18 campos, máximo 135).
 Actualizado con la app del sábado 17/10 a la noche.
 
+> **El orden final del pitch, diapo por diapo y con quién dice qué, está en
+> [PITCH-DIAPOS.md](PITCH-DIAPOS.md).** Este archivo queda como detalle de la
+> demo. La app es de **uso interno de Cireneos** (voluntario y coordinador):
+> ya no hay campaña pública ni donaciones.
+
 **Roles en escena:** **Presentador** (habla) y **Operador** (maneja el celular y la
 pantalla). En la demo, el operador hace de voluntario.
 
@@ -20,9 +25,9 @@ pantalla). En la demo, el operador hace de voluntario.
 | Tiempo | Bloque | Pantalla |
 |---|---|---|
 | 0:00–0:30 | 1. Problema | Foto del rancho de la demo (techo con agujeros, sin personas) → gráfico de la brecha |
-| 0:30–0:45 | 2. Solución | "IA para automatizar el relevamiento" · fotos + audio → ficha → ranking → campaña |
+| 0:30–0:45 | 2. Solución | "IA para automatizar el relevamiento" · fotos + audio → ficha → ranking |
 | 0:45–2:25 | 3. Demo en vivo | Celular espejado + app |
-| 2:25–3:00 | 4. Por qué importa | Campaña del caso / diapositiva final |
+| 2:25–3:00 | 4. Por qué importa | Diapositiva final |
 
 ---
 
@@ -56,8 +61,7 @@ atendidas", con la brecha marcada. Sin datos reales: curvas sin números y
 > Por eso hicimos esto: **IA para automatizar el relevamiento.**
 >
 > El voluntario saca fotos y graba un audio. Nada más. La IA lo convierte en una
-> ficha con evidencia, un puntaje de urgencia y una campaña para financiar la
-> casa, **sin que nadie escriba nada**. La IA propone, las personas deciden.
+> ficha con evidencia y un puntaje de urgencia, **sin que nadie escriba nada**. La IA propone, las personas deciden.
 > Se los muestro.
 
 ## 3. Demo en vivo (0:45–2:25)
@@ -81,15 +85,15 @@ recién aparece cuando una persona trajo los datos.
 | 8 | 1:48 | Señala el campo con ⚠️ y lee el motivo de la duda. En **"Menores de 12 a 18"** elige **"uno"**: el aviso desaparece. Toca **"Guardar ficha"**: el caso pasa a **confirmado**. | "Lo que todavía duda, lo señala. No sabe si el más grande tiene diecisiete o dieciocho. El voluntario corrige y guarda." |
 | 9 | 1:57 | Abre el **Ranking**, toca la familia nueva y muestra el **ajuste +10%** con motivo y evidencia. Toca **Aceptar**. | "La tabla no tiene un campo para 'un cable colgado sobre una chapa mojada'. La IA lo vio y sugiere subir un 10%, nunca más de 15%. Si nadie lo acepta, no se aplica." |
 | 10 | 2:07 | Vuelve al ranking: el caso está en el puesto 2 o 3. | "Entra al ranking con el criterio de Cireneos, y cualquiera puede ver por qué." |
-| 11 | 2:12 | **Fijo, no se salta.** Abre la **campaña**: historia anónima, barra hacia la meta y botón "Donar". | "Y con la aprobación del coordinador, el caso ya es una campaña anónima, lista para que alguien done su casa." |
+| 11 | 2:12 | Desde la ficha de la familia toca **Escribir y aprobar historia** → **Generar historia**. | "Y la IA escribe la historia de la familia, sin nombres ni barrio. Una segunda revisión marca lo que la pueda identificar y el coordinador la aprueba." |
 | — | 2:20 | *Margen de 5 s para demoras.* | |
 
 - **Paso 9:** "Aceptar" aparece en la ficha de la familia mientras el ajuste
   está "sugerido". Al tocarlo, el puntaje se recalcula y el caso puede subir en
   el ranking: **ensayar en qué puesto queda** con el ajuste aceptado. Cada caso se
   acepta una sola vez, así que para ensayar de nuevo hay que cargar otra visita.
-- **Paso 11:** la meta se ve en pesos (**$ 600.000**, unos US$ 15.000). El
-  presentador sigue diciendo "15.000 dólares" en la sección 4.
+- **Pasos 9 a 11:** el ranking, el ajuste y la historia los ve solo el
+  **coordinador**: hay que entrar con esa cuenta (ver [PITCH-DIAPOS.md](PITCH-DIAPOS.md)).
 
 ### Audio en vivo
 
@@ -160,9 +164,8 @@ Qué debería salir, según la tabla de [FICHA.md](FICHA.md):
 >
 > *(Vuelve la foto del rancho del principio.)*
 >
-> La familia de esta casa ya tiene su ficha, su lugar en el ranking y su
-> campaña. Faltan 15.000 dólares para que la próxima lluvia la pase seca.
-> Gracias.
+> La familia de esta casa ya tiene su ficha y su lugar en el ranking. Lo que
+> queremos es que la próxima lluvia la pase seca. Gracias.
 
 ---
 
