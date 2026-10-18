@@ -3,8 +3,6 @@ import { Montserrat, Open_Sans, Permanent_Marker } from "next/font/google";
 
 import "../index.css";
 
-import Footer from "@/components/footer";
-import Header from "@/components/header";
 import Providers from "@/components/providers";
 import { getToken } from "@/lib/auth-server";
 
@@ -28,8 +26,9 @@ const permanentMarker = Permanent_Marker({
 });
 
 export const metadata: Metadata = {
-  title: "Rancho Cero · Cireneos",
-  description: "Herramienta del equipo de Cireneos para el programa Rancho Cero.",
+  title: "relevAI · Plataforma de fundaciones",
+  description:
+    "relevAI conecta fundaciones con herramientas de relevamiento y priorización asistidas por IA.",
 };
 
 export default async function RootLayout({
@@ -44,11 +43,7 @@ export default async function RootLayout({
         className={`${montserrat.variable} ${openSans.variable} ${permanentMarker.variable} antialiased`}
       >
         <Providers initialToken={token}>
-          <div className="flex min-h-svh flex-col">
-            <Header />
-            <div className="flex flex-1 flex-col">{children}</div>
-            <Footer />
-          </div>
+          <div className="flex min-h-svh flex-col">{children}</div>
         </Providers>
       </body>
     </html>

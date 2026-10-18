@@ -1,147 +1,169 @@
 "use client";
 
-import { api } from "@rancho-cero/backend/convex/_generated/api";
-import { buttonVariants } from "@rancho-cero/ui/components/button";
-import { useQuery } from "convex/react";
-import { BookOpen, Heart, House } from "lucide-react";
-import type { Route } from "next";
-import Image from "next/image";
+import { ArrowRight, Plus, Sparkles } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
-import Protegida from "@/components/protegida";
+import { leerFundaciones, type Fundacion } from "@/lib/fundaciones";
 
-// Portada interna: presenta el programa y lleva a la acción principal del rol
-// (voluntario -> Nueva visita, coordinador -> Ranking). Sin sesión, va al login.
+// Portal relevAI: la capa "madre" (azul y blanco). Muestra los perfiles de las
+// fundaciones. Cireneos ya viene cargada y abre la app Rancho Cero; se pueden
+// agregar fundaciones de muestra. Esta pantalla no requiere sesión.
 
-const PASOS = [
-  {
-    icono: House,
-    titulo: "Visitá",
-    texto: "Sacá fotos de la vivienda y grabá un audio con la familia. La IA arma la ficha por vos.",
-  },
-  {
-    icono: Heart,
-    titulo: "Priorizá",
-    texto: "Cada ficha suma puntaje con la tabla de Cireneos, para llegar primero a quien más lo necesita.",
-  },
-  {
-    icono: BookOpen,
-    titulo: "Contá su historia",
-    texto: "Una historia anónima y cuidada de cada familia, para el trabajo del equipo de Cireneos.",
-  },
-];
+export default function RelevaiPortal() {
+  // Se lee en el cliente para incluir las fundaciones guardadas en localStorage.
+  const [fundaciones, setFundaciones] = useState<Fundacion[]>([]);
+  const [montado, setMontado] = useState(false);
 
-function Inicio() {
-  const rol = useQuery(api.roles.miRol);
-  const esCoordinador = rol === "coordinador";
-  const accion: { href: Route; label: string } = esCoordinador
-    ? { href: "/ranking", label: "Ver ranking" }
-    : { href: "/nueva-visita", label: "Cargar nueva visita" };
+  useEffect(() => {
+    setFundaciones(leerFundaciones());
+    setMontado(true);
+  }, []);
 
   return (
-    <main className="flex-1">
-      {/* Portada */}
-      <section className="relative isolate flex min-h-[520px] items-end overflow-hidden sm:min-h-[600px] sm:items-center">
-        <Image
-          src="/imagenes/familia-2.jpg"
-          alt="Dos niños abrazados y sonriendo frente a una casa de Rancho Cero recién instalada"
-          fill
-          priority
-          sizes="100vw"
-          className="-z-20 -scale-x-100 object-cover object-[40%_center] sm:object-[50%_15%]"
-        />
-        <div
-          className="absolute inset-0 -z-10 bg-gradient-to-t from-black/75 via-black/45 to-black/20 sm:bg-gradient-to-r sm:from-black/70 sm:via-black/40 sm:to-black/5"
-          aria-hidden
-        />
-        <div className="mx-auto w-full max-w-6xl px-4 py-12 text-white sm:px-6">
-          <div className="max-w-xl">
-            <p className="font-heading text-xs font-semibold tracking-[0.25em] text-manteca uppercase">
-              Un programa de Cireneos
-            </p>
-            <h1 className="mt-3 font-pincel text-6xl leading-[0.95] font-normal sm:text-7xl lg:text-8xl">
-              Rancho Cero
-            </h1>
-            <p className="mt-4 font-heading text-xl font-bold sm:text-2xl">
-              Por un Uruguay con Rancho Cero
-            </p>
-            <p className="mt-2 max-w-md text-sm leading-relaxed text-white/90 sm:text-base">
-              Acompañamos a cada familia desde la primera visita hasta su nuevo hogar.
-            </p>
-            <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-3">
-              <Link href={accion.href} className={buttonVariants({ variant: "acento", size: "lg" })}>
-                {accion.label}
-              </Link>
-              {esCoordinador && (
-                <Link
-                  href="/nueva-visita"
-                  className="text-sm font-semibold text-white underline decoration-manteca decoration-2 underline-offset-4 hover:text-manteca"
-                >
-                  o cargá una nueva visita
-                </Link>
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Cómo funciona */}
-      <section className="bg-oliva text-white">
-        <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20">
-          <h2 className="text-center font-heading text-2xl font-bold sm:text-3xl">Cómo trabajamos</h2>
-          <p className="mx-auto mt-2 max-w-lg text-center text-sm text-white/80 sm:text-base">
-            Tres pasos para que ninguna familia quede esperando.
-          </p>
-          <ul className="mt-10 grid gap-10 sm:grid-cols-3 sm:gap-8">
-            {PASOS.map(({ icono: Icono, titulo, texto }) => (
-              <li key={titulo} className="flex flex-col items-center text-center">
-                <Icono className="size-16 text-manteca" strokeWidth={1.1} aria-hidden />
-                <h3 className="mt-4 font-heading text-lg font-bold tracking-wide uppercase">{titulo}</h3>
-                <p className="mt-2 max-w-xs text-sm leading-relaxed text-white/85">{texto}</p>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
-
-      {/* Foto + frase */}
-      <section className="mx-auto grid max-w-6xl items-center gap-8 px-4 py-14 sm:px-6 sm:py-20 md:grid-cols-2 md:gap-12">
-        <div className="relative aspect-[3/2] overflow-hidden rounded-3xl shadow-lg">
-          <Image
-            src="/imagenes/familia-2.jpg"
-            alt="Dos niños abrazados y sonriendo frente a una casa de Rancho Cero recién instalada"
-            fill
-            sizes="(min-width: 768px) 560px, 100vw"
-            className="object-cover"
-          />
-        </div>
-        <div>
-          <p className="font-heading text-xs font-semibold tracking-[0.25em] text-oliva uppercase">
-            Cada visita cuenta
-          </p>
-          <h2 className="mt-2 font-heading text-2xl font-bold text-oliva-oscuro sm:text-3xl">
-            Detrás de cada ficha hay una familia
-          </h2>
-          <p className="mt-3 text-base leading-relaxed text-muted-foreground">
-            Lo que cargás en la visita define a quién llegamos primero. Tomate tu tiempo, escuchá y
-            registrá con cuidado: así decidimos con justicia.
-          </p>
+    <main className="flex min-h-svh flex-col bg-gradient-to-b from-slate-50 to-blue-50 text-slate-900">
+      {/* Barra superior */}
+      <header className="border-b border-blue-100 bg-white/80 backdrop-blur">
+        <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-5">
+          <Logo />
           <Link
-            href={accion.href}
-            className={`mt-6 ${buttonVariants({ variant: "acento", size: "lg" })}`}
+            href="/agregar-fundacion"
+            className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700"
           >
-            {accion.label}
+            <Plus className="size-4" />
+            Agregar fundación
+          </Link>
+        </div>
+      </header>
+
+      {/* Hero */}
+      <section className="mx-auto w-full max-w-5xl px-5 pt-14 pb-8 text-center sm:pt-20">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+          <Sparkles className="size-3.5" />
+          Relevamiento asistido por IA
+        </span>
+        <h1 className="mt-5 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
+          Una plataforma, muchas fundaciones
+        </h1>
+        <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg">
+          relevAI reúne a las organizaciones sociales y les da herramientas para relevar, priorizar
+          y decidir con datos. Elegí una fundación para entrar a su espacio de trabajo.
+        </p>
+      </section>
+
+      {/* Grilla de fundaciones */}
+      <section className="mx-auto w-full max-w-5xl flex-1 px-5 pb-20">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-sm font-semibold tracking-wide text-slate-500 uppercase">
+            Fundaciones
+          </h2>
+          {montado && (
+            <span className="text-xs text-slate-400">
+              {fundaciones.length} {fundaciones.length === 1 ? "fundación" : "fundaciones"}
+            </span>
+          )}
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {fundaciones.map((f) => (
+            <TarjetaFundacion key={f.id} fundacion={f} />
+          ))}
+
+          {/* Tarjeta para agregar */}
+          <Link
+            href="/agregar-fundacion"
+            className="group flex min-h-[172px] flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-blue-200 bg-white/50 p-6 text-center transition-colors hover:border-blue-400 hover:bg-white"
+          >
+            <span className="flex size-11 items-center justify-center rounded-full bg-blue-100 text-blue-600 transition-colors group-hover:bg-blue-600 group-hover:text-white">
+              <Plus className="size-5" />
+            </span>
+            <span className="text-sm font-semibold text-slate-700">Agregar fundación</span>
+            <span className="text-xs text-slate-400">Sumá una organización al portal</span>
           </Link>
         </div>
       </section>
+
+      {/* Pie */}
+      <footer className="border-t border-blue-100 bg-white/70">
+        <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-2 px-5 py-6 text-xs text-slate-500 sm:flex-row">
+          <Logo pequeno />
+          <p>Plataforma de relevamiento y priorización para fundaciones.</p>
+        </div>
+      </footer>
     </main>
   );
 }
 
-export default function Home() {
+function TarjetaFundacion({ fundacion }: { fundacion: Fundacion }) {
+  const activa = Boolean(fundacion.ruta);
+
+  const cuerpo = (
+    <>
+      <div className="flex items-start gap-3">
+        <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 text-base font-bold text-white shadow-sm">
+          {fundacion.iniciales}
+        </span>
+        <div className="min-w-0">
+          <h3 className="flex items-center gap-2 text-base font-bold text-slate-900">
+            {fundacion.nombre}
+            {fundacion.fija && (
+              <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
+                Activa
+              </span>
+            )}
+          </h3>
+          <p className="text-xs font-medium text-slate-400">{fundacion.lugar}</p>
+        </div>
+      </div>
+      <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-slate-600">
+        {fundacion.descripcion}
+      </p>
+      <div className="mt-4 flex items-center justify-between">
+        {activa ? (
+          <span className="inline-flex items-center gap-1 text-sm font-semibold text-blue-600 transition-transform group-hover:gap-2">
+            Entrar <ArrowRight className="size-4" />
+          </span>
+        ) : (
+          <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-400">
+            Próximamente
+          </span>
+        )}
+      </div>
+    </>
+  );
+
+  if (activa && fundacion.ruta) {
+    return (
+      <Link
+        href={fundacion.ruta as "/cireneos"}
+        className="group flex min-h-[172px] flex-col rounded-2xl border border-blue-100 bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md"
+      >
+        {cuerpo}
+      </Link>
+    );
+  }
+
   return (
-    <Protegida>
-      <Inicio />
-    </Protegida>
+    <div className="flex min-h-[172px] cursor-default flex-col rounded-2xl border border-slate-100 bg-white/60 p-5 opacity-80">
+      {cuerpo}
+    </div>
+  );
+}
+
+// Logotipo tipográfico de relevAI (sin assets): "relev" + "AI" destacado.
+function Logo({ pequeno = false }: { pequeno?: boolean }) {
+  return (
+    <Link href="/" className="flex items-center gap-2" aria-label="relevAI, inicio">
+      <span
+        className={`flex items-center justify-center rounded-lg bg-blue-600 font-bold text-white ${
+          pequeno ? "size-6 text-xs" : "size-8 text-sm"
+        }`}
+      >
+        r
+      </span>
+      <span className={`font-bold tracking-tight text-slate-900 ${pequeno ? "text-sm" : "text-xl"}`}>
+        relev<span className="text-blue-600">AI</span>
+      </span>
+    </Link>
   );
 }
