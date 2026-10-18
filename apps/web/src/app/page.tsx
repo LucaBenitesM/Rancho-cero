@@ -99,43 +99,27 @@ function TarjetaFundacion({ fundacion }: { fundacion: Fundacion }) {
   const activa = Boolean(fundacion.ruta);
   const ruta = (fundacion.ruta ?? "/") as "/cireneos";
 
-  // Monograma / logo. Si la fundación está activa, el logo ES el enlace para
-  // entrar: se clickea el logo para abrir la fundación.
+  // Logo (grande) o monograma de iniciales.
   const emblema = fundacion.logo ? (
-    <span className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white ring-1 ring-slate-200">
+    <span className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200">
       <Image
         src={fundacion.logo}
         alt={`Logo de ${fundacion.nombre}`}
-        width={48}
-        height={48}
-        className="size-full object-contain p-0.5"
+        width={64}
+        height={64}
+        className="size-full object-contain p-1"
       />
     </span>
   ) : (
-    <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 text-base font-bold text-white shadow-sm">
+    <span className="flex size-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 text-lg font-bold text-white shadow-sm">
       {fundacion.iniciales}
     </span>
   );
 
-  return (
-    <div
-      className={`flex min-h-[172px] flex-col rounded-2xl border bg-white p-5 shadow-sm transition-all ${
-        activa ? "border-blue-100 hover:border-blue-200" : "border-slate-100 bg-white/60 opacity-80"
-      }`}
-    >
+  const cuerpo = (
+    <>
       <div className="flex items-start gap-3">
-        {activa ? (
-          <Link
-            href={ruta}
-            aria-label={`Entrar a ${fundacion.nombre}`}
-            title={`Entrar a ${fundacion.nombre}`}
-            className="group shrink-0 rounded-xl outline-none transition-transform hover:scale-105 focus-visible:ring-4 focus-visible:ring-blue-500/30"
-          >
-            {emblema}
-          </Link>
-        ) : (
-          emblema
-        )}
+        {emblema}
         <div className="min-w-0">
           <h3 className="flex items-center gap-2 text-base font-bold text-slate-900">
             {fundacion.nombre}
@@ -155,18 +139,34 @@ function TarjetaFundacion({ fundacion }: { fundacion: Fundacion }) {
 
       <div className="mt-4 flex items-center justify-between">
         {activa ? (
-          <Link
-            href={ruta}
-            className="group inline-flex items-center gap-1 text-sm font-semibold text-blue-600 transition-all hover:gap-2"
-          >
+          <span className="inline-flex items-center gap-1 text-sm font-semibold text-blue-600 transition-all group-hover:gap-2">
             Entrar <ArrowRight className="size-4" />
-          </Link>
+          </span>
         ) : (
           <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-400">
             Próximamente
           </span>
         )}
       </div>
+    </>
+  );
+
+  // La tarjeta entera es el enlace para entrar a la fundación.
+  if (activa) {
+    return (
+      <Link
+        href={ruta}
+        aria-label={`Entrar a ${fundacion.nombre}`}
+        className="group flex min-h-[172px] flex-col rounded-2xl border border-blue-100 bg-white p-5 shadow-sm outline-none transition-all hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md focus-visible:ring-4 focus-visible:ring-blue-500/30"
+      >
+        {cuerpo}
+      </Link>
+    );
+  }
+
+  return (
+    <div className="flex min-h-[172px] cursor-default flex-col rounded-2xl border border-slate-100 bg-white/60 p-5 opacity-80">
+      {cuerpo}
     </div>
   );
 }
