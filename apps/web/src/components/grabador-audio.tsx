@@ -12,6 +12,7 @@ type Estado =
   | "pidiendo-permiso"
   | "grabando"
   | "grabado"
+  | "archivo"
   | "sin-permiso"
   | "no-disponible";
 
@@ -97,6 +98,8 @@ export default function GrabadorAudio({ onAudio, maxSegundos = 120 }: Props) {
 
   async function grabar() {
     setError(null);
+    setArchivoSubido(null);
+    if (inputRef.current) inputRef.current.value = "";
     if (typeof MediaRecorder === "undefined" || !navigator.mediaDevices?.getUserMedia) {
       setEstado("no-disponible");
       setError(
@@ -199,18 +202,33 @@ export default function GrabadorAudio({ onAudio, maxSegundos = 120 }: Props) {
 
   function elegirArchivo(file: File | null) {
     setArchivoSubido(file?.name ?? null);
+    // Si venían de una grabación, la descartamos al subir un archivo.
+    if (file) {
+      audioRef.current?.pause();
+      setReproduciendo(false);
+      setAudioUrl(null);
+      setSegundos(0);
+      if (estado === "grabando") detener();
+      setEstado("archivo");
+    }
     onAudio(file);
   }
 
-  const sinMicrofono = estado === "sin-permiso" || estado === "no-disponible";
+  function quitarArchivo() {
+    setArchivoSubido(null);
+    if (inputRef.current) inputRef.current.value = "";
+    setEstado("inicial");
+    onAudio(null);
+  }
+
   const restante = maxSegundos - segundos;
 
   return (
     <div className="space-y-3">
       {estado === "inicial" && (
         <p className="text-sm text-muted-foreground">
-          Vamos a pedirte permiso para usar el micrófono. Cuando el navegador pregunte, tocá
-          «Permitir». Podés grabar hasta {Math.round(maxSegundos / 60)} minutos.
+          Grabá el audio de la visita en el momento, o subí un archivo de audio ya grabado. Podés
+          grabar hasta {Math.round(maxSegundos / 60)} minutos.
         </p>
       )}
 
@@ -247,11 +265,25 @@ export default function GrabadorAudio({ onAudio, maxSegundos = 120 }: Props) {
         </p>
       )}
 
+      {/* El input de archivo está siempre disponible (las dos opciones). */}
+      <input
+        ref={inputRef}
+        type="file"
+        accept="audio/*"
+        className="hidden"
+        onChange={(e) => elegirArchivo(e.target.files?.[0] ?? null)}
+      />
+
       <div className="flex flex-wrap gap-3">
         {(estado === "inicial" || estado === "sin-permiso") && (
-          <Button type="button" size="lg" onClick={grabar}>
-            <Mic /> {estado === "sin-permiso" ? "Probar de nuevo" : "Grabar"}
-          </Button>
+          <>
+            <Button type="button" size="lg" onClick={grabar}>
+              <Mic /> {estado === "sin-permiso" ? "Probar de nuevo" : "Grabar en el momento"}
+            </Button>
+            <Button type="button" size="lg" variant="outline" onClick={() => inputRef.current?.click()}>
+              <Upload /> Subir audio
+            </Button>
+          </>
         )}
 
         {estado === "pidiendo-permiso" && (
@@ -282,25 +314,29 @@ export default function GrabadorAudio({ onAudio, maxSegundos = 120 }: Props) {
           </>
         )}
 
-        {sinMicrofono && (
+        {estado === "archivo" && (
           <>
-            <input
-              ref={inputRef}
-              type="file"
-              accept="audio/*"
-              className="hidden"
-              onChange={(e) => elegirArchivo(e.target.files?.[0] ?? null)}
-            />
             <Button type="button" size="lg" variant="outline" onClick={() => inputRef.current?.click()}>
-              {estado === "no-disponible" ? <MicOff /> : <Upload />}
-              {archivoSubido ? "Cambiar archivo" : "Subir archivo de audio"}
+              <Upload /> Cambiar archivo
+            </Button>
+            <Button type="button" size="lg" variant="outline" onClick={quitarArchivo}>
+              <RotateCcw /> Quitar
             </Button>
           </>
         )}
+
+        {estado === "no-disponible" && (
+          <Button type="button" size="lg" variant="outline" onClick={() => inputRef.current?.click()}>
+            <MicOff /> {archivoSubido ? "Cambiar archivo" : "Subir audio"}
+          </Button>
+        )}
       </div>
 
-      {sinMicrofono && archivoSubido && (
-        <p className="text-sm text-muted-foreground">{archivoSubido}</p>
+      {archivoSubido && (
+        <p className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Upload className="size-3.5 shrink-0 text-oliva" />
+          Archivo: {archivoSubido}
+        </p>
       )}
 
       {audioUrl && (
