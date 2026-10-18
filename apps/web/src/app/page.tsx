@@ -43,12 +43,12 @@ function Inicio() {
       {/* Portada */}
       <section className="relative isolate flex min-h-[520px] items-end overflow-hidden sm:min-h-[600px] sm:items-center">
         <Image
-          src="/imagenes/familia-1.jpg"
-          alt="Una familia sonriente sentada en la puerta de su nueva casa de Rancho Cero"
+          src="/imagenes/familia-2.jpg"
+          alt="Dos niños abrazados y sonriendo frente a una casa de Rancho Cero recién instalada"
           fill
           priority
           sizes="100vw"
-          className="-z-20 object-cover object-[70%_center]"
+          className="-z-20 -scale-x-100 object-cover object-[40%_center] sm:object-[50%_15%]"
         />
         <div
           className="absolute inset-0 -z-10 bg-gradient-to-t from-black/75 via-black/45 to-black/20 sm:bg-gradient-to-r sm:from-black/70 sm:via-black/40 sm:to-black/5"
