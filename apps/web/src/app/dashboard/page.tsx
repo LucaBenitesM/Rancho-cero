@@ -21,8 +21,22 @@ function SesionIniciada() {
   const rol = useQuery(api.roles.miRol);
 
   return (
-    <div className="mx-auto w-full max-w-md px-4 py-12 sm:py-16">
-      <div className="rounded-3xl border border-border/80 bg-card p-7 text-center shadow-[0_4px_24px_-8px_rgb(84_86_55/0.18)] sm:p-8">
+    // Foto de fondo con velo oscuro y la tarjeta encima. familia-3.jpg es una
+    // captura de la web con la barra de menú arriba: el contenedor arranca por
+    // encima de la sección (-top-[18%]) para que esa barra quede afuera.
+    <div className="relative isolate flex flex-1 items-center justify-center overflow-hidden px-4 py-12 sm:py-20">
+      <div className="absolute inset-x-0 -top-[18%] bottom-0 -z-20">
+        <Image
+          src="/imagenes/familia-3.jpg"
+          alt="Casa de Rancho Cero recién instalada, con niños saludando desde la puerta"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-[85%_bottom]"
+        />
+      </div>
+      <div className="absolute inset-0 -z-10 bg-black/50" aria-hidden />
+      <div className="w-full max-w-md rounded-3xl border border-white/40 bg-card/95 p-7 text-center shadow-2xl backdrop-blur-sm sm:p-8">
         <span className="mx-auto flex size-14 items-center justify-center rounded-full bg-salvia-suave text-oliva">
           <CheckCircle2 className="size-7" />
         </span>
