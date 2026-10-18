@@ -13,6 +13,8 @@ export interface Fundacion {
   lugar: string;
   /** Iniciales para el monograma de la tarjeta (ej. "CI"). */
   iniciales: string;
+  /** Ruta del logo en /public; si está, se muestra en vez del monograma. */
+  logo?: string;
   /** Ruta interna si la fundación tiene app; undefined = "Próximamente". */
   ruta?: string;
   /** true solo para Cireneos (no se puede borrar ni editar). */
@@ -27,6 +29,7 @@ export const CIRENEOS: Fundacion = {
     "Programa Rancho Cero: releva visitas con IA y prioriza familias por urgencia habitacional.",
   lugar: "Uruguay",
   iniciales: "CI",
+  logo: "/imagenes/logo-cireneos.png",
   ruta: "/cireneos",
   fija: true,
 };
