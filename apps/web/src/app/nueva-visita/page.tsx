@@ -121,6 +121,11 @@ function NuevaVisita() {
   const [fotos, setFotos] = useState<File[]>([]);
   const [audio, setAudio] = useState<File | null>(null);
 
+  // Datos de contacto de la familia (uso interno; los carga el voluntario).
+  const [nombreRepresentante, setNombreRepresentante] = useState("");
+  const [telefono, setTelefono] = useState("");
+  const [direccion, setDireccion] = useState("");
+
   const [casoId, setCasoId] = useState<Id<"casos"> | null>(null);
   const [transcripcion, setTranscripcion] = useState("");
   const [transcripcionFallo, setTranscripcionFallo] = useState(false);
@@ -234,6 +239,9 @@ function NuevaVisita() {
         consentimiento,
         fotos: fotosIds,
         audioStorageId: audioId,
+        nombreRepresentante,
+        telefono,
+        direccion,
       });
       setCasoId(nuevoCasoId);
       setCantidadAudios(1);
@@ -320,6 +328,9 @@ function NuevaVisita() {
     setConsentimiento(false);
     setFotos([]);
     setAudio(null);
+    setNombreRepresentante("");
+    setTelefono("");
+    setDireccion("");
     setCasoId(null);
     setTranscripcion("");
     setTranscripcionFallo(false);
@@ -382,6 +393,58 @@ function NuevaVisita() {
                 />
                 <span className="text-base font-medium">La familia dio su consentimiento.</span>
               </label>
+            </CardContent>
+          </Card>
+
+          {/* Datos de contacto (uso interno) */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Datos de la familia</CardTitle>
+              <CardDescription>
+                Uso interno de Cireneos. No se publican ni se usan para el puntaje. Podés dejarlos
+                vacíos y completarlos después.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="nombreRepresentante">Nombre y apellido del referente</Label>
+                <input
+                  id="nombreRepresentante"
+                  type="text"
+                  value={nombreRepresentante}
+                  onChange={(e) => setNombreRepresentante(e.target.value)}
+                  placeholder="Ej.: María González"
+                  autoComplete="off"
+                  className="h-11 w-full rounded-xl border border-input bg-card px-3 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 sm:text-sm"
+                />
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="telefono">Teléfono</Label>
+                  <input
+                    id="telefono"
+                    type="tel"
+                    inputMode="tel"
+                    value={telefono}
+                    onChange={(e) => setTelefono(e.target.value)}
+                    placeholder="Ej.: 099 123 456"
+                    autoComplete="off"
+                    className="h-11 w-full rounded-xl border border-input bg-card px-3 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 sm:text-sm"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="direccion">Dirección de la casa</Label>
+                  <input
+                    id="direccion"
+                    type="text"
+                    value={direccion}
+                    onChange={(e) => setDireccion(e.target.value)}
+                    placeholder="Ej.: Calle y número, barrio"
+                    autoComplete="off"
+                    className="h-11 w-full rounded-xl border border-input bg-card px-3 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 sm:text-sm"
+                  />
+                </div>
+              </div>
             </CardContent>
           </Card>
 

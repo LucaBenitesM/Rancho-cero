@@ -3,7 +3,7 @@
 import { api } from "@rancho-cero/backend/convex/_generated/api";
 import type { Id } from "@rancho-cero/backend/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
-import { MapPin, PenLine, Sparkles, X } from "lucide-react";
+import { Download, MapPin, PenLine, Phone, Sparkles, User, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -63,6 +63,150 @@ interface Aporte {
   peso: number;
   puntos: number;
   aporte: number;
+}
+
+// Escapa texto para interpolar seguro dentro del HTML del documento A4.
+function esc(s: unknown): string {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+// Arma un documento A4 autónomo con la ficha y lo abre en una ventana nueva
+// lista para imprimir / "Guardar como PDF". Sin dependencias externas.
+function descargarFichaA4(
+  caso: NonNullable<ReturnType<typeof useQuery<typeof api.casos.obtener>>>
+) {
+  const r = caso.resultado;
+  const aportes = r.aportes as Aporte[];
+  const porCampo = new Map(aportes.map((a) => [a.campo, a]));
+  const fecha = new Date(caso.relevadoEn).toLocaleDateString("es-UY", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+
+  const nivelTexto = (puntos: number) =>
+    puntos >= 3 ? "Crítico" : puntos === 2 ? "Alto" : puntos === 1 ? "Medio" : "Sin carencia";
+
+  const bloquesHtml = BLOQUES.map((bloque) => {
+    const filas = bloque.campos
+      .map((c) => porCampo.get(c))
+      .filter((a): a is Aporte => a !== undefined);
+    if (filas.length === 0) return "";
+    const subtotal = filas.reduce((acc, a) => acc + a.aporte, 0);
+    const maxBloque = filas.reduce((acc, a) => acc + a.peso * 3, 0);
+    const filasHtml = filas
+      .map(
+        (a) => `
+        <tr>
+          <td class="campo">${esc(a.etiqueta)}</td>
+          <td class="valor">${esc(a.textoValor || "—")}</td>
+          <td class="nivel">${esc(nivelTexto(a.puntos))}</td>
+          <td class="pts">${esc(a.aporte)} / ${esc(a.peso * 3)}</td>
+        </tr>`
+      )
+      .join("");
+    return `
+      <section class="bloque">
+        <div class="bloque-head">
+          <h3>${esc(bloque.titulo)}</h3>
+          <span>${esc(subtotal)} / ${esc(maxBloque)} pts</span>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Campo</th><th>Observación</th><th>Nivel</th><th>Puntaje</th></tr>
+          </thead>
+          <tbody>${filasHtml}</tbody>
+        </table>
+      </section>`;
+  }).join("");
+
+  const contacto = [
+    caso.nombreRepresentante && `<div><span>Referente</span><strong>${esc(caso.nombreRepresentante)}</strong></div>`,
+    caso.telefono && `<div><span>Teléfono</span><strong>${esc(caso.telefono)}</strong></div>`,
+    caso.direccion && `<div><span>Dirección</span><strong>${esc(caso.direccion)}</strong></div>`,
+    caso.barrio && caso.barrio !== "—" && `<div><span>Barrio</span><strong>${esc(caso.barrio)}</strong></div>`,
+  ]
+    .filter(Boolean)
+    .join("");
+
+  const ajusteHtml = caso.ajuste
+    ? `<section class="ajuste">
+         <h3>Ajuste sugerido por IA (${caso.ajuste.porcentaje > 0 ? "+" : ""}${esc(caso.ajuste.porcentaje)}%) · ${esc(caso.ajuste.estado)}</h3>
+         <p>${esc(caso.ajuste.motivo)}</p>
+         <p class="ev">${esc(caso.ajuste.evidencia)}</p>
+       </section>`
+    : "";
+
+  const html = `<!doctype html>
+<html lang="es"><head><meta charset="utf-8" />
+<title>Ficha ${esc(caso.alias)}</title>
+<style>
+  @page { size: A4; margin: 16mm; }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; color: #1F1F1A; margin: 0; }
+  .doc { max-width: 180mm; margin: 0 auto; }
+  header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 3px solid #545637; padding-bottom: 10px; margin-bottom: 14px; }
+  header h1 { font-size: 22px; margin: 0; color: #3b3d26; }
+  header .sub { color: #666; font-size: 12px; margin-top: 2px; }
+  header .puntaje { text-align: right; }
+  header .puntaje b { font-size: 34px; color: #545637; line-height: 1; }
+  header .puntaje span { display: block; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: #888; }
+  .meta { display: flex; gap: 8px; flex-wrap: wrap; font-size: 11px; color: #444; margin-bottom: 14px; }
+  .meta span { background: #f1efe6; border-radius: 999px; padding: 3px 9px; }
+  .contacto { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px 18px; background: #faf8f2; border: 1px solid #e4e0d2; border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; }
+  .contacto div { font-size: 12px; }
+  .contacto span { display: block; color: #888; font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
+  .explicacion { background: #f3f4ea; border-left: 4px solid #8E9460; padding: 10px 12px; border-radius: 6px; font-size: 12px; margin-bottom: 14px; }
+  .ajuste { border: 1px solid #e4e0d2; border-radius: 8px; padding: 10px 12px; margin-bottom: 14px; font-size: 12px; }
+  .ajuste h3 { margin: 0 0 4px; font-size: 13px; }
+  .ajuste .ev { color: #777; font-style: italic; }
+  .bloque { margin-bottom: 12px; break-inside: avoid; }
+  .bloque-head { display: flex; justify-content: space-between; background: #eef0e4; border-radius: 6px 6px 0 0; padding: 6px 10px; font-size: 12px; font-weight: 700; color: #3b3d26; }
+  table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  th, td { text-align: left; padding: 5px 10px; border-bottom: 1px solid #ececec; }
+  th { background: #fafafa; font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: #888; }
+  td.pts, th:last-child { text-align: right; white-space: nowrap; }
+  footer { margin-top: 16px; border-top: 1px solid #e4e0d2; padding-top: 8px; font-size: 10px; color: #999; text-align: center; }
+  @media screen { body { background: #ddd; padding: 20px; } .doc { background: #fff; padding: 16mm; box-shadow: 0 2px 12px rgba(0,0,0,.15); } .print-hint { text-align:center; font-size:12px; color:#555; margin-bottom:12px; } }
+  @media print { .print-hint { display: none; } }
+</style></head>
+<body>
+  <div class="print-hint">Usá “Guardar como PDF” en el diálogo de impresión para descargar la ficha.</div>
+  <div class="doc">
+    <header>
+      <div>
+        <h1>${esc(caso.alias)}</h1>
+        <div class="sub">Ficha de urgencia · Cireneos · Relevado el ${esc(fecha)}</div>
+      </div>
+      <div class="puntaje"><b>${esc(r.puntajeFinal)}</b><span>Puntaje final</span></div>
+    </header>
+    <div class="meta">
+      <span>Tabla: ${esc(r.total)} / 135</span>
+      <span>Base: ${esc(r.base)}</span>
+      <span>Espera: +${esc(r.espera)} (${esc(r.mesesEspera)} ${r.mesesEspera === 1 ? "mes" : "meses"})</span>
+      <span>Ajuste: ${r.ajusteAplicado === 0 ? "—" : `${r.ajusteAplicado > 0 ? "+" : ""}${Math.round(r.ajusteAplicado * 100)}%`}</span>
+    </div>
+    ${contacto ? `<div class="contacto">${contacto}</div>` : ""}
+    <div class="explicacion"><strong>Explicación:</strong> ${esc(r.explicacion)}</div>
+    ${ajusteHtml}
+    ${bloquesHtml}
+    <footer>Datos de uso interno de Cireneos. La fórmula de urgencia vive en código (FICHA.md), no la decide la IA.</footer>
+  </div>
+  <script>window.addEventListener("load", function(){ setTimeout(function(){ window.print(); }, 300); });<\/script>
+</body></html>`;
+
+  const win = window.open("", "_blank", "width=820,height=1000");
+  if (!win) {
+    toast.error("El navegador bloqueó la ventana. Permití las ventanas emergentes para descargar.");
+    return;
+  }
+  win.document.open();
+  win.document.write(html);
+  win.document.close();
 }
 
 /** Ficha de un caso. Carga desde Convex (api.casos.obtener). */
@@ -200,6 +344,47 @@ function Contenido({
       </div>
 
       <div className="p-5 sm:p-6">
+        {/* Datos de contacto (uso interno) + descarga */}
+        {(caso.nombreRepresentante || caso.telefono || caso.direccion) && (
+          <div className="mb-4 rounded-2xl border border-border bg-card p-4 shadow-sm">
+            <div className="mb-2 font-heading text-[11px] font-bold tracking-[0.12em] text-oliva uppercase">
+              Datos de la familia
+            </div>
+            <div className="grid gap-2 text-sm sm:grid-cols-2">
+              {caso.nombreRepresentante && (
+                <div className="flex items-center gap-2">
+                  <User className="size-3.5 shrink-0 text-oliva" />
+                  <span>{caso.nombreRepresentante}</span>
+                </div>
+              )}
+              {caso.telefono && (
+                <div className="flex items-center gap-2">
+                  <Phone className="size-3.5 shrink-0 text-oliva" />
+                  <a href={`tel:${caso.telefono.replace(/\s+/g, "")}`} className="hover:underline">
+                    {caso.telefono}
+                  </a>
+                </div>
+              )}
+              {caso.direccion && (
+                <div className="flex items-center gap-2 sm:col-span-2">
+                  <MapPin className="size-3.5 shrink-0 text-oliva" />
+                  <span>{caso.direccion}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Descargar ficha como documento A4 (imprimir → Guardar como PDF) */}
+        <button
+          type="button"
+          onClick={() => descargarFichaA4(caso)}
+          className="mb-4 flex w-full items-center justify-center gap-2 rounded-full border border-salvia/60 bg-card px-5 py-2.5 text-sm font-semibold text-oliva-oscuro transition-colors hover:bg-salvia-suave"
+        >
+          <Download className="size-4" />
+          Descargar ficha (A4)
+        </button>
+
         {/* Explicación */}
         <div className="mb-4 flex gap-3 rounded-2xl border border-salvia/30 bg-salvia-suave/70 p-4">
           <Sparkles className="mt-0.5 size-4 shrink-0 text-oliva" />
