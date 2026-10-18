@@ -55,6 +55,10 @@ export default defineSchema({
 
     // Entradas originales
     fotos: v.array(v.string()), // storage IDs de Convex
+    // Fotos de MUESTRA (solo datos de ejemplo/seed): rutas públicas en
+    // /public, no storage IDs. Se muestran en el informe cuando no hay fotos
+    // reales subidas. Las visitas reales usan `fotos` (storage).
+    fotosMuestra: v.optional(v.array(v.string())),
     audioStorageId: v.optional(v.string()),
     audiosExtra: v.optional(v.array(v.string())), // audios agregados cuando faltaban datos
     // Transcripción de cada audio (así no se transcribe dos veces el mismo).

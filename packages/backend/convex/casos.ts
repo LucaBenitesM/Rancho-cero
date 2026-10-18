@@ -42,6 +42,7 @@ interface SeedCaso {
   representante?: string;
   telefono?: string;
   direccion?: string;
+  fotosMuestra?: string[]; // rutas públicas (/imagenes/...) para el informe de demo
   transcripcion?: string; // guion del audio (demo/GUIA-DEMO.md)
   campos: Record<string, string>;
   evidencias?: Record<string, string>; // si falta, se usa EVIDENCIA
@@ -61,6 +62,7 @@ const SEED: SeedCaso[] = [
     representante: "María Fernández",
     telefono: "099 123 456",
     direccion: "Calle Los Ceibos 1234, Barrio Esperanza",
+    fotosMuestra: ["/imagenes/familia-1.jpg", "/imagenes/barrio.jpg", "/imagenes/familia-2.jpg"],
     diasAtras: 125,
     transcripcion:
       "Bueno, estamos acá en la casa... es todo de chapa y madera, el techo no tiene nada abajo, " +
@@ -124,6 +126,7 @@ const SEED: SeedCaso[] = [
     representante: "Juan Rodríguez",
     telefono: "098 234 567",
     direccion: "Av. Artigas 567, Las Piedras",
+    fotosMuestra: ["/imagenes/barrio.jpg", "/imagenes/familia-3.jpg"],
     diasAtras: 120,
     campos: {
       pared: "precaria",
@@ -158,6 +161,7 @@ const SEED: SeedCaso[] = [
     representante: "Lucía Pereyra",
     telefono: "091 345 678",
     direccion: "Camino Maldonado 890, Nuevo Amanecer",
+    fotosMuestra: ["/imagenes/familia-2.jpg", "/imagenes/barrio.jpg"],
     diasAtras: 75,
     campos: {
       pared: "precaria",
@@ -187,6 +191,7 @@ const SEED: SeedCaso[] = [
     representante: "Carlos Methol",
     telefono: "092 456 789",
     direccion: "Calle Las Acacias 45, Barrio Esperanza",
+    fotosMuestra: ["/imagenes/familia-1.jpg", "/imagenes/familia-3.jpg", "/imagenes/barrio.jpg"],
     diasAtras: 215,
     transcripcion:
       "Es una casa de bloque, sin revocar. El techo es chapa sola, sin aislación. El piso es " +
@@ -251,6 +256,7 @@ const SEED: SeedCaso[] = [
     representante: "Sandra Gómez",
     telefono: "094 567 890",
     direccion: "Ruta 8 Km 14, asentamiento El Monte",
+    fotosMuestra: ["/imagenes/barrio.jpg", "/imagenes/familia-2.jpg"],
     diasAtras: 35,
     transcripcion:
       "La casa es de madera, tiene un cielorraso de espuma que pusieron ellos. El piso es " +
@@ -314,6 +320,7 @@ const SEED: SeedCaso[] = [
     representante: "Diego Larrosa",
     telefono: "095 678 901",
     direccion: "Calle Treinta y Tres 210, Las Piedras",
+    fotosMuestra: ["/imagenes/familia-3.jpg", "/imagenes/barrio.jpg"],
     diasAtras: 30,
     campos: {
       pared: "material_sin_revoque",
@@ -342,6 +349,7 @@ const SEED: SeedCaso[] = [
     representante: "Valeria Núñez",
     telefono: "096 789 012",
     direccion: "Pasaje Los Fresnos 12, Nuevo Amanecer",
+    fotosMuestra: ["/imagenes/familia-2.jpg", "/imagenes/familia-1.jpg"],
     diasAtras: 20,
     campos: {
       pared: "precaria",
@@ -371,6 +379,7 @@ const SEED: SeedCaso[] = [
     representante: "Roberto Silva",
     telefono: "097 890 123",
     direccion: "Ruta 8 Km 14, calle interna s/n",
+    fotosMuestra: ["/imagenes/barrio.jpg", "/imagenes/familia-3.jpg"],
     diasAtras: 65,
     transcripcion:
       "Esta casa está bastante bien, eh. Es de material, revocada, con techo de losa. El piso es " +
@@ -475,6 +484,7 @@ async function sembrar(ctx: MutationCtx) {
       telefono: s.telefono,
       direccion: s.direccion,
       fotos: [],
+      fotosMuestra: s.fotosMuestra,
       audioTranscripcion: s.transcripcion,
       ...campos,
       puntajeTabla: resultado.total,
@@ -589,9 +599,11 @@ export const obtener = query({
     const r = calcularUrgencia(campos, doc.relevadoEn, ahora, ajuste);
 
     // URLs servibles de las fotos subidas (para mostrarlas en el informe).
-    const fotos = (
+    const fotosReales = (
       await Promise.all((doc.fotos ?? []).map((sid) => ctx.storage.getUrl(sid as Id<"_storage">)))
     ).filter((u): u is string => Boolean(u));
+    // Si no hay fotos reales, se usan las de muestra (datos de ejemplo/seed).
+    const fotos = fotosReales.length > 0 ? fotosReales : (doc.fotosMuestra ?? []);
 
     return {
       id: doc._id,
