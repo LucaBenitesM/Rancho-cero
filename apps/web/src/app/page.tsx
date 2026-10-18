@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowRight, Plus, Sparkles } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -100,9 +101,21 @@ function TarjetaFundacion({ fundacion }: { fundacion: Fundacion }) {
   const cuerpo = (
     <>
       <div className="flex items-start gap-3">
-        <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 text-base font-bold text-white shadow-sm">
-          {fundacion.iniciales}
-        </span>
+        {fundacion.logo ? (
+          <span className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white ring-1 ring-slate-200">
+            <Image
+              src={fundacion.logo}
+              alt={`Logo de ${fundacion.nombre}`}
+              width={48}
+              height={48}
+              className="size-full object-contain p-0.5"
+            />
+          </span>
+        ) : (
+          <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 text-base font-bold text-white shadow-sm">
+            {fundacion.iniciales}
+          </span>
+        )}
         <div className="min-w-0">
           <h3 className="flex items-center gap-2 text-base font-bold text-slate-900">
             {fundacion.nombre}
