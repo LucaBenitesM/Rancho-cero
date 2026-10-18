@@ -27,7 +27,7 @@ const PASOS = [
   {
     icono: BookOpen,
     titulo: "Contá su historia",
-    texto: "Una historia anónima y cuidada de cada familia, lista para compartir con quienes donan.",
+    texto: "Una historia anónima y cuidada de cada familia, para el trabajo del equipo de Cireneos.",
   },
 ];
 

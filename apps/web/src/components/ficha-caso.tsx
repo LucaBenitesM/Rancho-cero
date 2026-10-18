@@ -23,27 +23,45 @@ const BLOQUES: { titulo: string; campos: string[] }[] = [
   },
 ];
 
-// Nivel de carencia según la puntuación del campo (1 = mejor, 3 = peor).
-// Se muestra como una etiqueta clara, no un punto de color suelto.
-function nivelDe(puntos: number, pesoMax: number): {
+// Campos cuya escala de puntuación arranca en 0 (el resto arranca en 1).
+// En los que arrancan en 1, puntuación 1 = mejor valor posible = "Sin carencia".
+// Ver la tabla en packages/backend/convex/ficha.ts.
+const PUNTOS_MINIMOS: Record<string, number> = {
+  enfermedad: 0,
+  menoresDe5: 0,
+  menores5a12: 0,
+  menores12a18: 0,
+};
+
+// Puntuación máxima de cualquier campo de la tabla de Cireneos.
+const PUNTOS_MAXIMOS = 3;
+
+// Nivel de carencia según la puntuación del campo, NORMALIZADA a su escala
+// real: algunos campos van de 1 a 3 (1 = sin carencia) y otros de 0 a 3
+// (0 = sin carencia). Sin esto, "pared revocada" (lo mejor, puntos=1) salía
+// como "Medio". frac = (puntos - min) / (max - min).
+function nivelDe(campoClave: string, puntos: number): {
   texto: string;
   punto: string;
   chip: string;
 } {
-  // Relativo al máximo del campo (algunos van 0..3, otros 1..3).
-  if (puntos >= 3)
+  const min = PUNTOS_MINIMOS[campoClave] ?? 1;
+  const rango = PUNTOS_MAXIMOS - min;
+  const frac = rango > 0 ? (puntos - min) / rango : 0;
+
+  if (frac >= 1)
     return {
       texto: "Crítico",
       punto: "bg-urgencia-critica",
       chip: "bg-urgencia-critica/12 text-urgencia-critica-texto",
     };
-  if (puntos === 2)
+  if (frac >= 0.5)
     return {
       texto: "Alto",
       punto: "bg-urgencia-alta",
       chip: "bg-urgencia-alta/15 text-urgencia-alta-texto",
     };
-  if (puntos === 1)
+  if (frac > 0)
     return {
       texto: "Medio",
       punto: "bg-urgencia-media",
@@ -88,8 +106,7 @@ function descargarFichaA4(
     year: "numeric",
   });
 
-  const nivelTexto = (puntos: number) =>
-    puntos >= 3 ? "Crítico" : puntos === 2 ? "Alto" : puntos === 1 ? "Medio" : "Sin carencia";
+  const nivelTexto = (campoClave: string, puntos: number) => nivelDe(campoClave, puntos).texto;
 
   const bloquesHtml = BLOQUES.map((bloque) => {
     const filas = bloque.campos
@@ -104,7 +121,7 @@ function descargarFichaA4(
         <tr>
           <td class="campo">${esc(a.etiqueta)}</td>
           <td class="valor">${esc(a.textoValor || "—")}</td>
-          <td class="nivel">${esc(nivelTexto(a.puntos))}</td>
+          <td class="nivel">${esc(nivelTexto(a.campo, a.puntos))}</td>
           <td class="pts">${esc(a.aporte)} / ${esc(a.peso * 3)}</td>
         </tr>`
       )
@@ -194,7 +211,7 @@ function descargarFichaA4(
     <div class="explicacion"><strong>Explicación:</strong> ${esc(r.explicacion)}</div>
     ${ajusteHtml}
     ${bloquesHtml}
-    <footer>Datos de uso interno de Cireneos. La fórmula de urgencia vive en código (FICHA.md), no la decide la IA.</footer>
+    <footer>Datos de uso interno de Cireneos. El puntaje de urgencia se calcula con la tabla de criterios de Cireneos.</footer>
   </div>
   <script>window.addEventListener("load", function(){ setTimeout(function(){ window.print(); }, 300); });<\/script>
 </body></html>`;
@@ -484,7 +501,7 @@ function Contenido({
                 {/* Campos del bloque */}
                 <div className="divide-y divide-border/60">
                   {filas.map((a) => {
-                    const nivel = nivelDe(a.puntos, a.peso * 3);
+                    const nivel = nivelDe(a.campo, a.puntos);
                     return (
                       <div key={a.campo} className="flex items-center gap-3 px-4 py-3">
                         {/* Identidad del campo */}
@@ -529,7 +546,7 @@ function Contenido({
         </div>
 
         <p className="mt-3 text-center text-[10px] text-muted-foreground">
-          Datos simulados · la fórmula vive en código (FICHA.md), no la decide la IA
+          El puntaje de urgencia se calcula con la tabla de criterios de Cireneos.
         </p>
       </div>
     </>

@@ -55,7 +55,7 @@ npx convex env set ANTHROPIC_API_KEY   "sk-ant-..."        --prod
 npx convex env set ELEVENLABS_API_KEY  "..."               --prod
 npx convex env set SITE_URL            "https://<app>.vercel.app" --prod
 # opcionales (tienen default en el código):
-npx convex env set ANTHROPIC_MODEL     "claude-sonnet-4-5" --prod
+npx convex env set ANTHROPIC_MODEL     "claude-sonnet-5-5" --prod
 npx convex env set ELEVENLABS_STT_MODEL "scribe_v1"        --prod
 ```
 
@@ -64,7 +64,7 @@ npx convex env set ELEVENLABS_STT_MODEL "scribe_v1"        --prod
 | `ANTHROPIC_API_KEY` | **Sí** | — | Claude (ficha + ajuste + explicación) |
 | `ELEVENLABS_API_KEY` | **Sí** | — | ElevenLabs (audio → transcripción) |
 | `SITE_URL` | **Sí** | — | Better Auth (`baseURL` y `trustedOrigins`) = la URL pública de Vercel |
-| `ANTHROPIC_MODEL` | No | `claude-sonnet-4-5` | fijar/cambiar modelo de Claude |
+| `ANTHROPIC_MODEL` | No | `claude-sonnet-5-5` | fijar/cambiar modelo de Claude |
 | `ELEVENLABS_STT_MODEL` | No | `scribe_v1` | modelo de transcripción |
 
 > `SITE_URL` es circular con Vercel: necesitás la URL del proyecto. Para el primer
@@ -89,6 +89,6 @@ El build en Vercel va a: desplegar Convex → `next build` con la URL de prod �
 - [ ] `CONVEX_DEPLOY_KEY` y `NEXT_PUBLIC_CONVEX_SITE_URL` en Vercel (Production).
 - [ ] `ANTHROPIC_API_KEY`, `ELEVENLABS_API_KEY`, `SITE_URL` en Convex prod.
 - [ ] `npm run deploy:prod` termina sin errores.
-- [ ] Abre el link de Vercel: Inicio, Ranking (con las 8 familias), Campaña.
-- [ ] En producción, correr una vez los seeds si la base está vacía:
-      `npx convex run casos:seed --prod` y `npx convex run campanas:seed --prod`.
+- [ ] Abre el link de Vercel: Inicio, Nueva visita, Ranking e Historias.
+- [ ] En producción, cargar los datos de ejemplo una vez si la base está vacía:
+      `npx convex run casos:seed --prod`.

@@ -68,16 +68,16 @@ function Ranking() {
         </header>
 
         {/* Barra de orden */}
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
           <span className="text-sm font-semibold text-muted-foreground">Ordenar por</span>
-          <div className="inline-flex rounded-full border border-border bg-card p-1 shadow-sm">
+          <div className="flex flex-wrap gap-1 rounded-2xl border border-border bg-card p-1 shadow-sm">
             {OPCIONES_ORDEN.map((op) => (
               <button
                 key={op.id}
                 type="button"
                 onClick={() => setOrden(op.id)}
                 aria-pressed={orden === op.id}
-                className={`rounded-full px-4 py-2 text-xs font-semibold transition-colors ${
+                className={`flex-1 rounded-full px-3 py-2 text-xs font-semibold whitespace-nowrap transition-colors sm:flex-none sm:px-4 ${
                   orden === op.id
                     ? "bg-oliva text-white"
                     : "text-muted-foreground hover:text-oliva-oscuro"
@@ -93,8 +93,8 @@ function Ranking() {
         <div className="mb-4 flex items-center gap-2.5 rounded-2xl border border-salvia/30 bg-salvia-suave/60 px-4 py-3 text-xs text-oliva-oscuro">
           <Info className="size-4 shrink-0 text-oliva" />
           <span>
-            Datos simulados · puntaje calculado en código (FICHA.md). Tocá una familia para ver su
-            ficha.
+            Familias ordenadas por urgencia según la tabla de criterios de Cireneos. Tocá una
+            familia para ver su ficha.
           </span>
         </div>
 
@@ -109,10 +109,13 @@ function Ranking() {
           </div>
         ) : ordenadas.length === 0 ? (
           <div className="rounded-2xl border border-border/80 bg-card p-8 text-center text-sm text-muted-foreground shadow-sm">
-            No hay casos cargados todavía.
-            <br />
-            Corré <code className="text-xs">npx convex run casos:seed</code> en{" "}
-            <code className="text-xs">packages/backend</code>.
+            <p className="font-heading text-base font-bold text-oliva-oscuro">
+              Todavía no hay familias en el ranking
+            </p>
+            <p className="mt-1.5">
+              Cargá una visita desde <span className="font-semibold text-oliva-oscuro">Nueva visita</span>{" "}
+              y, cuando guardes la ficha, la familia aparece acá priorizada por urgencia.
+            </p>
           </div>
         ) : (
           <>
