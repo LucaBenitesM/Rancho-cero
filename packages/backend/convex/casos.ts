@@ -561,6 +561,9 @@ export const obtener = query({
       id: doc._id,
       alias: doc.alias ?? "Familia",
       barrio: doc.barrio ?? "—",
+      nombreRepresentante: doc.nombreRepresentante ?? "",
+      telefono: doc.telefono ?? "",
+      direccion: doc.direccion ?? "",
       estado: doc.estado,
       relevadoEn: doc.relevadoEn,
       resultado: r,
@@ -666,6 +669,10 @@ export const crearCaso = mutation({
     consentimiento: v.boolean(),
     fotos: v.array(v.id("_storage")),
     audioStorageId: v.optional(v.id("_storage")),
+    // Datos de contacto (opcionales, uso interno).
+    nombreRepresentante: v.optional(v.string()),
+    telefono: v.optional(v.string()),
+    direccion: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const usuarioId = await requerirUsuario(ctx);
@@ -687,11 +694,20 @@ export const crearCaso = mutation({
       CLAVES_CAMPO.map((clave) => [clave, campoVacio]),
     ) as Record<string, typeof campoVacio>;
 
+    // Normaliza: cadena recortada o undefined si quedó vacía.
+    const limpio = (s?: string) => {
+      const t = s?.trim();
+      return t ? t : undefined;
+    };
+
     const casoId = await ctx.db.insert("casos", {
       estado: "relevado",
       consentimiento: args.consentimiento,
       fotos: args.fotos,
       audioStorageId: args.audioStorageId,
+      nombreRepresentante: limpio(args.nombreRepresentante),
+      telefono: limpio(args.telefono),
+      direccion: limpio(args.direccion),
       ...camposVacios,
       relevadoEn: Date.now(),
       creadoPor: usuarioId,

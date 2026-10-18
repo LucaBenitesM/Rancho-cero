@@ -41,9 +41,17 @@ export default defineSchema({
     estado: estadoCaso,
     consentimiento: v.boolean(), // obligatorio antes de cargar
 
-    // Identidad anónima (sin nombres ni direcciones reales; ver PLAN.md)
+    // Identidad anónima (alias para el ranking y las historias públicas).
     alias: v.optional(v.string()), // ej. "Familia A"
     barrio: v.optional(v.string()),
+
+    // Datos de contacto de la familia — USO INTERNO (PII).
+    // Los carga el voluntario a mano; NO los completa la IA, NO entran al
+    // puntaje y NO se usan en las historias públicas (que siguen anónimas).
+    // Solo se ven en la ficha interna, detrás del login de coordinador.
+    nombreRepresentante: v.optional(v.string()), // nombre y apellido del referente
+    telefono: v.optional(v.string()),
+    direccion: v.optional(v.string()),
 
     // Entradas originales
     fotos: v.array(v.string()), // storage IDs de Convex
