@@ -12,7 +12,8 @@
 // A Claude solo le llegan los VALORES de la ficha (categorías cerradas),
 // nunca el alias, el barrio ni la transcripción del audio.
 //
-// Variables de entorno de Convex: ANTHROPIC_API_KEY y ANTHROPIC_MODEL.
+// Variables de entorno de Convex: ANTHROPIC_API_KEY y, opcional, ANTHROPIC_MODEL
+// (si falta, se usa MODELO_POR_DEFECTO).
 // ─────────────────────────────────────────────────────────────
 
 import { v } from "convex/values";
@@ -44,6 +45,8 @@ const alertaValidator = v.object({
 
 const MAX_LARGO_HISTORIA = 2000;
 
+const MODELO_POR_DEFECTO = "claude-sonnet-5-5";
+
 // Solo coordinadores generan, editan y aprueban historias; los voluntarios
 // solo las ven y las copian. La verificación de rol vive en ./roles
 // (requerirCoordinador), que se importa arriba.
@@ -56,10 +59,7 @@ async function pedirJsonAClaude(sistema: string, usuario: string): Promise<unkno
   if (!apiKey) {
     throw new Error("Falta la variable de entorno ANTHROPIC_API_KEY en Convex.");
   }
-  const modelo = process.env.ANTHROPIC_MODEL;
-  if (!modelo) {
-    throw new Error("Falta la variable de entorno ANTHROPIC_MODEL en Convex.");
-  }
+  const modelo = process.env.ANTHROPIC_MODEL?.trim() || MODELO_POR_DEFECTO;
 
   const controlador = new AbortController();
   const t = setTimeout(() => controlador.abort(), 60_000);
@@ -118,13 +118,14 @@ async function pedirJsonAClaude(sistema: string, usuario: string): Promise<unkno
 
 // ─── 1. Historia anónima ─────────────────────────────────────
 
-const PROMPT_HISTORIA = `Escribís historias para donantes de Rancho Cero (Cireneos, Uruguay), que reemplaza viviendas precarias por casas container de US$ 15.000.
+const PROMPT_HISTORIA = `Escribís historias anónimas para Rancho Cero, el programa de vivienda de Cireneos (Uruguay). Cireneos puede publicar estas historias en su propia web para contar, con respeto, la realidad de las familias que acompaña.
 
 A partir de la ficha de relevamiento de una familia, escribí una historia anónima y digna:
-- Entre 3 y 5 frases, en español.
+- Entre 3 y 5 frases, en español rioplatense neutro.
 - Con respeto: sin dramatizar, sin dar lástima, sin adjetivos exagerados. Hablá de la familia como protagonista, no como víctima.
-- Explicá qué necesita la familia y por qué su casa es urgente, con hechos concretos de la ficha (techo, piso, baño, espacio, riesgos, desalojo).
-- Podés cerrar con una frase sobre lo que cambia una casa firme, sin pedir dinero de forma insistente.
+- Contá cómo vive hoy la familia y qué necesita, con hechos concretos de la ficha (techo, piso, baño, espacio, riesgos, desalojo).
+- Podés cerrar con una frase sobre lo que cambia tener una casa firme.
+- No pidas dinero ni donaciones, no menciones montos ni costos.
 
 Privacidad (obligatorio):
 - Nunca nombres, apellidos, alias, calles, números de casa, barrios, ciudades, escuelas ni lugares de trabajo.
@@ -153,7 +154,7 @@ function fichaParaPrompt(campos: Record<string, string>, ajusteMotivo?: string):
 
 // ─── 2. Revisión de privacidad ───────────────────────────────
 
-const PROMPT_PRIVACIDAD = `Revisás la privacidad de historias públicas para donantes de una ONG de vivienda en Uruguay. La historia NO puede permitir identificar a la familia.
+const PROMPT_PRIVACIDAD = `Revisás la privacidad de historias anónimas que Cireneos, una ONG de vivienda de Uruguay, puede publicar en su web. La historia NO puede permitir identificar a la familia.
 
 Marcá cada fragmento que contenga alguno de estos datos:
 - nombres o apellidos (de cualquier persona)

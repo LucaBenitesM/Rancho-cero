@@ -62,16 +62,44 @@ function descargarAprobadas(familias: Familias) {
     `Descargadas el ${fecha(hoy.getTime())}. Textos anónimos, revisados y aprobados por el equipo.\n\n` +
     bloques.join("\n\n────────────────────\n\n") +
     "\n";
-  const url = URL.createObjectURL(new Blob([contenido], { type: "text/plain;charset=utf-8" }));
+  const nombre = `historias-aprobadas-${hoy.toISOString().slice(0, 10)}.txt`;
+  const archivo = new File([contenido], nombre, { type: "text/plain;charset=utf-8" });
+
+  // En iPhone/iPad la hoja de compartir permite "Guardar en Archivos".
+  if (esIOS() && navigator.canShare?.({ files: [archivo] })) {
+    navigator.share({ files: [archivo], title: "Historias aprobadas" }).catch((err) => {
+      if (err instanceof Error && err.name === "AbortError") return; // canceló
+      descargarConEnlace(archivo, nombre);
+    });
+    return;
+  }
+  descargarConEnlace(archivo, nombre);
+}
+
+function esIOS(): boolean {
+  return (
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
+  );
+}
+
+// El enlace tiene que estar en el documento y la URL no se puede revocar en el
+// acto: Safari (iOS) la lee después del click y si no, no descarga nada.
+function descargarConEnlace(archivo: Blob, nombre: string) {
+  const url = URL.createObjectURL(archivo);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `historias-aprobadas-${hoy.toISOString().slice(0, 10)}.txt`;
+  a.download = nombre;
+  a.rel = "noopener";
+  document.body.appendChild(a);
   a.click();
-  URL.revokeObjectURL(url);
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
 
 function ListaHistorias() {
   const familias = useQuery(api.historias.listar);
+  const esCoordinador = useQuery(api.roles.miRol) === "coordinador";
   const [filtro, setFiltro] = useState<Filtro>("todas");
 
   if (familias === undefined) {
@@ -144,14 +172,15 @@ function ListaHistorias() {
                       {nivel.label} · {f.puntajeFinal}
                     </span>
                   </div>
-                  {/* TODO(roles): mostrar este enlace solo a coordinadores. */}
-                  <Link
-                    href={`/historia/${f.casoId}`}
-                    className="inline-flex items-center gap-1.5 rounded-full px-2 py-1.5 text-xs font-semibold text-oliva underline decoration-manteca decoration-2 underline-offset-4 hover:text-oliva-oscuro"
-                  >
-                    <PenLine className="size-3.5" />
-                    Escribir y aprobar
-                  </Link>
+                  {esCoordinador && (
+                    <Link
+                      href={`/historia/${f.casoId}`}
+                      className="inline-flex items-center gap-1.5 rounded-full px-2 py-1.5 text-xs font-semibold text-oliva underline decoration-manteca decoration-2 underline-offset-4 hover:text-oliva-oscuro"
+                    >
+                      <PenLine className="size-3.5" />
+                      Escribir y aprobar
+                    </Link>
+                  )}
                 </header>
 
                 <ul className="space-y-3">

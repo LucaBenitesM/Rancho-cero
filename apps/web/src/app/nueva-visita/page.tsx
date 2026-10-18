@@ -10,7 +10,7 @@ import {
   type CampoFicha,
   type GrupoFicha,
 } from "@rancho-cero/backend/convex/ficha";
-import { Button } from "@rancho-cero/ui/components/button";
+import { Button, buttonVariants } from "@rancho-cero/ui/components/button";
 import {
   Card,
   CardContent,
@@ -21,8 +21,9 @@ import {
 import { Checkbox } from "@rancho-cero/ui/components/checkbox";
 import { Label } from "@rancho-cero/ui/components/label";
 import { useAction, useMutation } from "convex/react";
-import { Camera, Mic, TriangleAlert } from "lucide-react";
-import { useRef, useState } from "react";
+import { Camera, Check, CircleCheck, Mic, TriangleAlert } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import GrabadorAudio from "@/components/grabador-audio";
@@ -77,7 +78,19 @@ function etiquetaConfianza(c: CampoFicha) {
 
 // "faltan-datos": la IA dejó demasiados campos dudosos; se piden más audio o
 // fotos y la ficha no se muestra hasta volver a procesar.
-type Paso = "carga" | "procesando" | "faltan-datos" | "ficha";
+// "guardado": la ficha se guardó y el formulario quedó limpio.
+type Paso = "carga" | "procesando" | "faltan-datos" | "ficha" | "guardado";
+
+// Etapas que se muestran mientras se procesa. La subida es real; las de la IA
+// corren en una sola llamada, así que avanzan por tiempo (la última espera
+// hasta que la IA responda).
+const ETAPAS = [
+  "Subiendo fotos y audio...",
+  "Transcribiendo audio...",
+  "Analizando fotos...",
+  "Armando la ficha...",
+];
+const SEGUNDOS_POR_ETAPA = 25;
 
 // Convierte errores técnicos (p. ej. "Anthropic devolvió 400: {...}") en un
 // mensaje presentable para la demo, sin volcar el detalle de la API.
@@ -103,6 +116,7 @@ function NuevaVisita() {
   const agregarDatos = useMutation(api.casos.agregarDatos);
 
   const [paso, setPaso] = useState<Paso>("carga");
+  const [etapa, setEtapa] = useState(0);
   const [consentimiento, setConsentimiento] = useState(false);
   const [fotos, setFotos] = useState<File[]>([]);
   const [audio, setAudio] = useState<File | null>(null);
@@ -124,6 +138,13 @@ function NuevaVisita() {
   const fotosSubidas = useRef(new WeakMap<File, Id<"_storage">>());
   // Fotos con las que se procesó la última vez, para saber si cambiaron.
   const fotosProcesadas = useRef<File[]>([]);
+
+  // Avanza las etapas de la IA por tiempo, sin pasar de la última.
+  useEffect(() => {
+    if (paso !== "procesando" || etapa < 1 || etapa >= ETAPAS.length - 1) return;
+    const t = setTimeout(() => setEtapa((e) => e + 1), SEGUNDOS_POR_ETAPA * 1000);
+    return () => clearTimeout(t);
+  }, [paso, etapa]);
 
   // Sube un archivo al storage de Convex y devuelve su storageId tipado.
   async function subirArchivo(file: File): Promise<Id<"_storage">> {
@@ -154,6 +175,7 @@ function NuevaVisita() {
 
   // Llama a la IA con todo lo que tiene el caso y decide qué pantalla mostrar.
   async function correrIA(id: Id<"casos">) {
+    setEtapa(1);
     const res = await procesarVisita({ casoId: id });
     fotosProcesadas.current = fotos;
     setTranscripcion(res.transcripcion);
@@ -202,6 +224,7 @@ function NuevaVisita() {
     }
 
     setPaso("procesando");
+    setEtapa(0);
     setTranscripcionFallo(false);
     try {
       const fotosIds = await subirFotos(fotos);
@@ -244,6 +267,7 @@ function NuevaVisita() {
     }
 
     setPaso("procesando");
+    setEtapa(0);
     setTranscripcionFallo(false);
     try {
       const fotosIds = await subirFotos(fotos);
@@ -282,12 +306,39 @@ function NuevaVisita() {
     });
   }
 
+  // "Está bien así": el voluntario confirma el campo como está, aunque quede
+  // "sin dato" (aporta 0 al puntaje).
+  function aceptarCampo(clave: string) {
+    setFicha((prev) =>
+      prev ? { ...prev, [clave]: { ...prev[clave], dudoso: false, motivoDuda: "" } } : prev
+    );
+  }
+
+  // Deja el formulario como nuevo, para que volver a procesar no repita el
+  // caso que ya se guardó.
+  function limpiarFormulario() {
+    setConsentimiento(false);
+    setFotos([]);
+    setAudio(null);
+    setCasoId(null);
+    setTranscripcion("");
+    setTranscripcionFallo(false);
+    setFicha(null);
+    setClavesFaltantes([]);
+    setAudioExtra(null);
+    setCantidadAudios(0);
+    setIntento((n) => n + 1); // reinicia los grabadores
+    fotosProcesadas.current = [];
+  }
+
   async function guardar() {
     if (!casoId || !ficha) return;
     setGuardando(true);
     try {
       await guardarCorreccion({ casoId, campos: ficha as any });
-      toast.success("Ficha guardada. El caso entra al ranking.");
+      limpiarFormulario();
+      setPaso("guardado");
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
       console.error(err);
       toast.error(mensajeAmigable(err));
@@ -358,7 +409,7 @@ function NuevaVisita() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <GrabadorAudio onAudio={setAudio} maxSegundos={120} />
+              <GrabadorAudio key={intento} onAudio={setAudio} maxSegundos={120} />
             </CardContent>
           </Card>
 
@@ -376,11 +427,57 @@ function NuevaVisita() {
 
       {paso === "procesando" && (
         <Card>
-          <CardContent className="flex flex-col items-center gap-3 py-12">
+          <CardContent className="flex flex-col items-center gap-5 py-12" aria-live="polite">
             <div className="size-10 animate-spin rounded-full border-4 border-salvia-suave border-t-oliva" />
-            <p className="text-center text-base text-muted-foreground">
-              Transcribiendo el audio y completando la ficha…
+            <ol className="space-y-2.5">
+              {ETAPAS.map((texto, i) => (
+                <li
+                  key={texto}
+                  className={`flex items-center gap-2.5 text-base ${
+                    i === etapa
+                      ? "font-semibold text-oliva-oscuro"
+                      : i < etapa
+                        ? "text-muted-foreground"
+                        : "text-muted-foreground/50"
+                  }`}
+                >
+                  {i < etapa ? (
+                    <Check className="size-4 shrink-0 text-oliva" aria-label="Listo" />
+                  ) : (
+                    <span
+                      className={`mx-1 size-2 shrink-0 rounded-full ${i === etapa ? "bg-oliva" : "bg-border"}`}
+                      aria-hidden
+                    />
+                  )}
+                  {texto}
+                </li>
+              ))}
+            </ol>
+            <p className="text-center text-sm text-muted-foreground">
+              Puede tardar hasta 2 minutos. No cierres esta pantalla.
             </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {paso === "guardado" && (
+        <Card>
+          <CardContent className="flex flex-col items-center gap-4 py-12 text-center" role="status">
+            <CircleCheck className="size-12 text-oliva" aria-hidden />
+            <div className="space-y-1">
+              <p className="font-heading text-xl font-bold text-oliva-oscuro">Ficha guardada</p>
+              <p className="text-base text-muted-foreground">
+                El caso ya está en el ranking con su puntaje de urgencia.
+              </p>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Link href="/ranking" className={buttonVariants({ variant: "acento", size: "lg" })}>
+                Ver en el ranking
+              </Link>
+              <Button type="button" variant="outline" size="lg" onClick={() => setPaso("carga")}>
+                Cargar otra visita
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}
@@ -494,7 +591,13 @@ function NuevaVisita() {
           </div>
 
           {ORDEN_GRUPOS.map((grupo) => (
-            <FichaEditor key={grupo} grupo={grupo} ficha={ficha} onCampo={actualizarCampo} />
+            <FichaEditor
+              key={grupo}
+              grupo={grupo}
+              ficha={ficha}
+              onCampo={actualizarCampo}
+              onAceptar={aceptarCampo}
+            />
           ))}
 
           <div className="flex flex-col gap-3 sm:flex-row">
@@ -516,10 +619,12 @@ function FichaEditor({
   grupo,
   ficha,
   onCampo,
+  onAceptar,
 }: {
   grupo: GrupoFicha;
   ficha: FichaEditable;
   onCampo: (clave: string, cambios: Partial<CampoFicha>) => void;
+  onAceptar: (clave: string) => void;
 }) {
   const defs = CAMPOS_FICHA.filter((d) => d.grupo === grupo);
   const esSoloAudio = defs.every((d) => d.fuente.startsWith("audio"));
@@ -579,13 +684,14 @@ function FichaEditor({
               {campo.dudoso && (
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="text-sm text-urgencia-alta-texto">La IA duda: {campo.motivoDuda}</p>
-                  {/* Si el valor propuesto está bien, se acepta sin cambiarlo. */}
+                  {/* Si el valor propuesto está bien, se acepta sin cambiarlo
+                      (también vale dejarlo "sin dato"). */}
                   <button
                     type="button"
-                    onClick={() => onCampo(def.clave, {})}
+                    onClick={() => onAceptar(def.clave)}
                     className="shrink-0 rounded-full border border-urgencia-alta/50 bg-card px-3 py-1.5 text-xs font-semibold text-urgencia-alta-texto transition-colors hover:bg-urgencia-alta/10"
                   >
-                    Está bien así
+                    {campo.valor ? "Está bien así" : "Dejar sin dato"}
                   </button>
                 </div>
               )}
