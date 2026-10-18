@@ -108,7 +108,11 @@ function descargarFichaA4(
 
   const nivelTexto = (campoClave: string, puntos: number) => nivelDe(campoClave, puntos).texto;
   const evidencias = caso.evidencias ?? {};
-  const fotos = caso.fotos ?? [];
+  // Rutas relativas (/imagenes/...) a absolutas: el informe se abre en una
+  // ventana about:blank donde las relativas no resuelven al dominio de la app.
+  const fotos = (caso.fotos ?? []).map((u) =>
+    u.startsWith("/") ? `${window.location.origin}${u}` : u
+  );
 
   const fotosHtml = fotos.length
     ? `<section class="fotos">
