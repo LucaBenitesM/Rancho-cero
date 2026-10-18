@@ -588,6 +588,11 @@ export const obtener = query({
     const ajuste = extraerAjuste(doc);
     const r = calcularUrgencia(campos, doc.relevadoEn, ahora, ajuste);
 
+    // URLs servibles de las fotos subidas (para mostrarlas en el informe).
+    const fotos = (
+      await Promise.all((doc.fotos ?? []).map((sid) => ctx.storage.getUrl(sid as Id<"_storage">)))
+    ).filter((u): u is string => Boolean(u));
+
     return {
       id: doc._id,
       alias: doc.alias ?? "Familia",
@@ -599,7 +604,8 @@ export const obtener = query({
       relevadoEn: doc.relevadoEn,
       resultado: r,
       ajuste,
-      // Para el informe descargable: evidencia por campo y transcripción.
+      // Para el informe descargable: fotos, evidencia por campo y transcripción.
+      fotos,
       evidencias: extraerEvidencias(doc),
       transcripcion: doc.audioTranscripcion ?? "",
     };

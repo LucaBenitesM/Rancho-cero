@@ -108,6 +108,16 @@ function descargarFichaA4(
 
   const nivelTexto = (campoClave: string, puntos: number) => nivelDe(campoClave, puntos).texto;
   const evidencias = caso.evidencias ?? {};
+  const fotos = caso.fotos ?? [];
+
+  const fotosHtml = fotos.length
+    ? `<section class="fotos">
+         <h2 class="seccion">Fotos de la vivienda (${fotos.length})</h2>
+         <div class="galeria">
+           ${fotos.map((u, i) => `<figure><img src="${esc(u)}" alt="Foto ${i + 1} de la vivienda" /><figcaption>Foto ${i + 1}</figcaption></figure>`).join("")}
+         </div>
+       </section>`
+    : "";
 
   const bloquesHtml = BLOQUES.map((bloque) => {
     const filas = bloque.campos
@@ -198,6 +208,11 @@ function descargarFichaA4(
   .transcripcion { margin-top: 14px; border: 1px solid #e4e0d2; border-radius: 8px; padding: 10px 12px; font-size: 11px; color: #555; break-inside: avoid; }
   .transcripcion h3 { margin: 0 0 4px; font-size: 12px; color: #3b3d26; }
   .transcripcion p { margin: 0; white-space: pre-wrap; line-height: 1.5; }
+  .fotos { margin-top: 6px; }
+  .galeria { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .galeria figure { margin: 0; break-inside: avoid; }
+  .galeria img { width: 100%; height: 150px; object-fit: cover; border-radius: 6px; border: 1px solid #e4e0d2; display: block; }
+  .galeria figcaption { font-size: 10px; color: #888; margin-top: 3px; text-align: center; }
   footer { margin-top: 16px; border-top: 1px solid #e4e0d2; padding-top: 8px; font-size: 10px; color: #999; text-align: center; }
   @media screen { body { background: #ddd; padding: 20px; } .doc { background: #fff; padding: 16mm; box-shadow: 0 2px 12px rgba(0,0,0,.15); } .print-hint { text-align:center; font-size:12px; color:#555; margin-bottom:12px; } }
   @media print { .print-hint { display: none; } }
@@ -223,6 +238,7 @@ function descargarFichaA4(
     ${ajusteHtml}
     <h2 class="seccion">Informe completo — desglose fundamentado</h2>
     ${bloquesHtml}
+    ${fotosHtml}
     ${
       caso.transcripcion
         ? `<div class="transcripcion"><h3>Transcripción del audio de la visita</h3><p>${esc(caso.transcripcion)}</p></div>`
@@ -230,7 +246,24 @@ function descargarFichaA4(
     }
     <footer>Datos de uso interno de Cireneos. El puntaje de urgencia se calcula con la tabla de criterios de Cireneos.</footer>
   </div>
-  <script>window.addEventListener("load", function(){ setTimeout(function(){ window.print(); }, 300); });<\/script>
+  <script>
+    window.addEventListener("load", function(){
+      // Espera a que las imágenes terminen de cargar antes de imprimir,
+      // para que las fotos aparezcan en el PDF.
+      var imgs = Array.prototype.slice.call(document.images);
+      var pendientes = imgs.filter(function(i){ return !i.complete; }).length;
+      var impreso = false;
+      function listo(){ if (impreso) return; impreso = true; setTimeout(function(){ window.print(); }, 300); }
+      if (pendientes === 0) { listo(); return; }
+      imgs.forEach(function(img){
+        if (img.complete) return;
+        img.addEventListener("load", function(){ if (--pendientes === 0) listo(); });
+        img.addEventListener("error", function(){ if (--pendientes === 0) listo(); });
+      });
+      // Red de seguridad: imprime igual tras 5 s aunque alguna imagen no cargue.
+      setTimeout(listo, 5000);
+    });
+  <\/script>
 </body></html>`;
 
   const win = window.open("", "_blank", "width=820,height=1000");
