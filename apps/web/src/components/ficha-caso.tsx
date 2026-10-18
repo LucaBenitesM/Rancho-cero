@@ -3,7 +3,7 @@
 import { api } from "@rancho-cero/backend/convex/_generated/api";
 import type { Id } from "@rancho-cero/backend/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
-import { Download, MapPin, PenLine, Phone, Sparkles, User, X } from "lucide-react";
+import { Download, PenLine, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -107,6 +107,7 @@ function descargarFichaA4(
   });
 
   const nivelTexto = (campoClave: string, puntos: number) => nivelDe(campoClave, puntos).texto;
+  const evidencias = caso.evidencias ?? {};
 
   const bloquesHtml = BLOQUES.map((bloque) => {
     const filas = bloque.campos
@@ -116,15 +117,17 @@ function descargarFichaA4(
     const subtotal = filas.reduce((acc, a) => acc + a.aporte, 0);
     const maxBloque = filas.reduce((acc, a) => acc + a.peso * 3, 0);
     const filasHtml = filas
-      .map(
-        (a) => `
-        <tr>
+      .map((a) => {
+        const ev = evidencias[a.campo];
+        return `
+        <tr class="fila">
           <td class="campo">${esc(a.etiqueta)}</td>
-          <td class="valor">${esc(a.textoValor || "—")}</td>
+          <td class="valor">${esc(a.textoValor || "Sin dato")}</td>
           <td class="nivel">${esc(nivelTexto(a.campo, a.puntos))}</td>
-          <td class="pts">${esc(a.aporte)} / ${esc(a.peso * 3)}</td>
-        </tr>`
-      )
+          <td class="pts">${esc(a.aporte)} / ${esc(a.peso * 3)}<span class="peso">peso ${esc(a.peso)}</span></td>
+        </tr>
+        ${ev ? `<tr class="fila-ev"><td></td><td colspan="3" class="ev">Fundamento: ${esc(ev)}</td></tr>` : ""}`;
+      })
       .join("");
     return `
       <section class="bloque">
@@ -178,21 +181,29 @@ function descargarFichaA4(
   .contacto div { font-size: 12px; }
   .contacto span { display: block; color: #888; font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
   .explicacion { background: #f3f4ea; border-left: 4px solid #8E9460; padding: 10px 12px; border-radius: 6px; font-size: 12px; margin-bottom: 14px; }
+  .seccion { font-size: 13px; color: #3b3d26; margin: 16px 0 8px; padding-bottom: 4px; border-bottom: 1px solid #e4e0d2; }
   .ajuste { border: 1px solid #e4e0d2; border-radius: 8px; padding: 10px 12px; margin-bottom: 14px; font-size: 12px; }
   .ajuste h3 { margin: 0 0 4px; font-size: 13px; }
   .ajuste .ev { color: #777; font-style: italic; }
   .bloque { margin-bottom: 12px; break-inside: avoid; }
   .bloque-head { display: flex; justify-content: space-between; background: #eef0e4; border-radius: 6px 6px 0 0; padding: 6px 10px; font-size: 12px; font-weight: 700; color: #3b3d26; }
   table { width: 100%; border-collapse: collapse; font-size: 11px; }
-  th, td { text-align: left; padding: 5px 10px; border-bottom: 1px solid #ececec; }
+  th, td { text-align: left; padding: 5px 10px; border-bottom: 1px solid #ececec; vertical-align: top; }
   th { background: #fafafa; font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: #888; }
   td.pts, th:last-child { text-align: right; white-space: nowrap; }
+  td.pts .peso { display: block; font-size: 9px; font-weight: 400; color: #aaa; }
+  .fila td { border-bottom: none; }
+  .fila-ev td { border-bottom: 1px solid #ececec; padding-top: 0; }
+  .ev { font-size: 10px; color: #777; font-style: italic; line-height: 1.4; }
+  .transcripcion { margin-top: 14px; border: 1px solid #e4e0d2; border-radius: 8px; padding: 10px 12px; font-size: 11px; color: #555; break-inside: avoid; }
+  .transcripcion h3 { margin: 0 0 4px; font-size: 12px; color: #3b3d26; }
+  .transcripcion p { margin: 0; white-space: pre-wrap; line-height: 1.5; }
   footer { margin-top: 16px; border-top: 1px solid #e4e0d2; padding-top: 8px; font-size: 10px; color: #999; text-align: center; }
   @media screen { body { background: #ddd; padding: 20px; } .doc { background: #fff; padding: 16mm; box-shadow: 0 2px 12px rgba(0,0,0,.15); } .print-hint { text-align:center; font-size:12px; color:#555; margin-bottom:12px; } }
   @media print { .print-hint { display: none; } }
 </style></head>
 <body>
-  <div class="print-hint">Usá “Guardar como PDF” en el diálogo de impresión para descargar la ficha.</div>
+  <div class="print-hint">Usá “Guardar como PDF” en el diálogo de impresión para descargar el informe completo.</div>
   <div class="doc">
     <header>
       <div>
@@ -210,7 +221,13 @@ function descargarFichaA4(
     ${contacto ? `<div class="contacto">${contacto}</div>` : ""}
     <div class="explicacion"><strong>Explicación:</strong> ${esc(r.explicacion)}</div>
     ${ajusteHtml}
+    <h2 class="seccion">Informe completo — desglose fundamentado</h2>
     ${bloquesHtml}
+    ${
+      caso.transcripcion
+        ? `<div class="transcripcion"><h3>Transcripción del audio de la visita</h3><p>${esc(caso.transcripcion)}</p></div>`
+        : ""
+    }
     <footer>Datos de uso interno de Cireneos. El puntaje de urgencia se calcula con la tabla de criterios de Cireneos.</footer>
   </div>
   <script>window.addEventListener("load", function(){ setTimeout(function(){ window.print(); }, 300); });<\/script>
@@ -302,6 +319,12 @@ function Contenido({
   const decidirAjuste = useMutation(api.casos.decidirAjuste);
   const [decidiendo, setDecidiendo] = useState(false);
 
+  const fecha = new Date(caso.relevadoEn).toLocaleDateString("es-UY", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+
   // El coordinador acepta o rechaza el ajuste sugerido por la IA.
   async function decidir(decision: "aceptado" | "rechazado") {
     setDecidiendo(true);
@@ -320,164 +343,117 @@ function Contenido({
     }
   }
 
+  const contacto: { etiqueta: string; valor: string }[] = [
+    caso.nombreRepresentante && { etiqueta: "Referente", valor: caso.nombreRepresentante },
+    caso.telefono && { etiqueta: "Teléfono", valor: caso.telefono },
+    caso.direccion && { etiqueta: "Dirección", valor: caso.direccion },
+    caso.barrio && caso.barrio !== "—" && { etiqueta: "Barrio / localidad", valor: caso.barrio },
+  ].filter(Boolean) as { etiqueta: string; valor: string }[];
+
   return (
     <>
-      {/* Cabecera */}
-      <div className="relative overflow-hidden rounded-t-3xl bg-oliva p-5 text-white sm:p-6">
-        <div className="flex items-start justify-between gap-2">
-          <div>
-            <h2 className="text-xl font-bold">{caso.alias}</h2>
-            <p className="mt-0.5 flex items-center gap-1 text-sm text-white/85">
-              <MapPin className="size-3.5" />
-              {caso.barrio}
-            </p>
-          </div>
-          <CerrarBtn onClose={onClose} />
-        </div>
+      {/* Barra de acciones (no es parte del documento) */}
+      <div className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-border/60 bg-crema/95 px-4 py-2.5 backdrop-blur print:hidden">
+        <button
+          type="button"
+          onClick={() => descargarFichaA4(caso)}
+          className="inline-flex items-center gap-2 rounded-full border border-salvia/60 bg-card px-4 py-1.5 text-xs font-semibold text-oliva-oscuro transition-colors hover:bg-salvia-suave"
+        >
+          <Download className="size-3.5" />
+          Descargar informe completo
+        </button>
+        <CerrarBtn onClose={onClose} />
+      </div>
 
-        <div className="mt-4 flex items-end gap-4">
-          <div>
-            <div className="font-heading text-5xl leading-none font-extrabold text-manteca tabular-nums">
-              {r.puntajeFinal}
+      {/* El documento — se ve igual que el PDF descargable */}
+      <div className="bg-[#ddd] p-4 sm:p-6">
+        <article className="mx-auto max-w-[180mm] rounded-sm bg-white p-7 text-[#1F1F1A] shadow-[0_2px_16px_rgb(0_0_0/0.12)] sm:p-10">
+          {/* Cabecera */}
+          <header className="flex items-end justify-between gap-4 border-b-[3px] border-[#545637] pb-2.5">
+            <div>
+              <h1 className="text-[22px] font-bold text-[#3b3d26]">{caso.alias}</h1>
+              <p className="mt-0.5 text-xs text-[#666]">
+                Ficha de urgencia · Cireneos · Relevado el {fecha}
+              </p>
             </div>
-            <div className="mt-1.5 text-[10px] font-semibold tracking-[0.15em] text-white/80 uppercase">
-              puntaje final
+            <div className="text-right">
+              <div className="text-[34px] leading-none font-bold text-[#545637] tabular-nums">
+                {r.puntajeFinal}
+              </div>
+              <div className="text-[10px] font-semibold tracking-[0.12em] text-[#888] uppercase">
+                Puntaje final
+              </div>
             </div>
-          </div>
-          <div className="mb-0.5 flex flex-1 flex-wrap gap-1.5 text-[11px] font-medium">
-            <span className="rounded-full bg-white/15 px-2.5 py-1">Tabla: {r.total}/135</span>
-            <span className="rounded-full bg-white/15 px-2.5 py-1">Base: {r.base}</span>
-            <span className="rounded-full bg-white/15 px-2.5 py-1">
+          </header>
+
+          {/* Meta */}
+          <div className="mt-3.5 flex flex-wrap gap-2 text-[11px] text-[#444]">
+            <span className="rounded-full bg-[#f1efe6] px-2.5 py-0.5">Tabla: {r.total} / 135</span>
+            <span className="rounded-full bg-[#f1efe6] px-2.5 py-0.5">Base: {r.base}</span>
+            <span className="rounded-full bg-[#f1efe6] px-2.5 py-0.5">
               Espera: +{r.espera} ({r.mesesEspera} {r.mesesEspera === 1 ? "mes" : "meses"})
             </span>
-            <span className="rounded-full bg-white/15 px-2.5 py-1">
+            <span className="rounded-full bg-[#f1efe6] px-2.5 py-0.5">
               Ajuste:{" "}
               {r.ajusteAplicado === 0
                 ? "—"
                 : `${r.ajusteAplicado > 0 ? "+" : ""}${Math.round(r.ajusteAplicado * 100)}%`}
             </span>
           </div>
-        </div>
-      </div>
 
-      <div className="p-5 sm:p-6">
-        {/* Datos de contacto (uso interno) + descarga */}
-        {(caso.nombreRepresentante || caso.telefono || caso.direccion) && (
-          <div className="mb-4 rounded-2xl border border-border bg-card p-4 shadow-sm">
-            <div className="mb-2 font-heading text-[11px] font-bold tracking-[0.12em] text-oliva uppercase">
-              Datos de la familia
+          {/* Datos de la familia */}
+          {contacto.length > 0 && (
+            <div className="mt-3.5 grid grid-cols-2 gap-x-5 gap-y-1.5 rounded-[10px] border border-[#e4e0d2] bg-[#faf8f2] px-3.5 py-3">
+              {contacto.map((c) => (
+                <div key={c.etiqueta} className="text-xs">
+                  <span className="block text-[10px] tracking-[0.08em] text-[#888] uppercase">
+                    {c.etiqueta}
+                  </span>
+                  <strong className="font-semibold">{c.valor}</strong>
+                </div>
+              ))}
             </div>
-            <div className="grid gap-2 text-sm sm:grid-cols-2">
-              {caso.nombreRepresentante && (
-                <div className="flex items-center gap-2">
-                  <User className="size-3.5 shrink-0 text-oliva" />
-                  <span>{caso.nombreRepresentante}</span>
+          )}
+
+          {/* Explicación */}
+          <div className="mt-3.5 rounded-md border-l-4 border-[#8E9460] bg-[#f3f4ea] px-3 py-2.5 text-xs leading-relaxed">
+            <strong>Explicación:</strong> {r.explicacion}
+          </div>
+
+          {/* Ajuste de la IA */}
+          {caso.ajuste && (
+            <div className="mt-3.5 rounded-lg border border-[#e4e0d2] px-3 py-2.5 text-xs">
+              <h3 className="mb-1 font-bold">
+                Ajuste sugerido por IA ({caso.ajuste.porcentaje > 0 ? "+" : ""}
+                {caso.ajuste.porcentaje}%) · <span className="capitalize">{caso.ajuste.estado}</span>
+              </h3>
+              <p className="text-[#555]">{caso.ajuste.motivo}</p>
+              <p className="mt-1 text-[#777] italic">{caso.ajuste.evidencia}</p>
+              {/* Decisión del coordinador (interactivo, fuera del PDF) */}
+              {caso.ajuste.estado === "sugerido" && caso.estado !== "relevado" && (
+                <div className="mt-2.5 flex gap-2 print:hidden">
+                  <button
+                    type="button"
+                    onClick={() => decidir("aceptado")}
+                    disabled={decidiendo}
+                    className="rounded-full bg-oliva px-4 py-1.5 text-xs font-semibold text-white hover:bg-oliva-oscuro disabled:opacity-50"
+                  >
+                    Aceptar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => decidir("rechazado")}
+                    disabled={decidiendo}
+                    className="rounded-full border border-salvia/60 bg-card px-4 py-1.5 text-xs font-semibold text-oliva-oscuro hover:bg-salvia-suave disabled:opacity-50"
+                  >
+                    Rechazar
+                  </button>
                 </div>
               )}
-              {caso.telefono && (
-                <div className="flex items-center gap-2">
-                  <Phone className="size-3.5 shrink-0 text-oliva" />
-                  <a href={`tel:${caso.telefono.replace(/\s+/g, "")}`} className="hover:underline">
-                    {caso.telefono}
-                  </a>
-                </div>
-              )}
-              {caso.direccion && (
-                <div className="flex items-center gap-2 sm:col-span-2">
-                  <MapPin className="size-3.5 shrink-0 text-oliva" />
-                  <span>{caso.direccion}</span>
-                </div>
-              )}
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Descargar ficha como documento A4 (imprimir → Guardar como PDF) */}
-        <button
-          type="button"
-          onClick={() => descargarFichaA4(caso)}
-          className="mb-4 flex w-full items-center justify-center gap-2 rounded-full border border-salvia/60 bg-card px-5 py-2.5 text-sm font-semibold text-oliva-oscuro transition-colors hover:bg-salvia-suave"
-        >
-          <Download className="size-4" />
-          Descargar ficha (A4)
-        </button>
-
-        {/* Explicación */}
-        <div className="mb-4 flex gap-3 rounded-2xl border border-salvia/30 bg-salvia-suave/70 p-4">
-          <Sparkles className="mt-0.5 size-4 shrink-0 text-oliva" />
-          <div>
-            <div className="mb-1 font-heading text-[11px] font-bold tracking-[0.12em] text-oliva uppercase">
-              Explicación
-            </div>
-            <p className="text-sm leading-relaxed text-foreground/85">{r.explicacion}</p>
-          </div>
-        </div>
-
-        {/* Ajuste de la IA */}
-        {caso.ajuste && (
-          <div className="mb-4 rounded-2xl border border-border bg-card p-4 text-sm shadow-sm">
-            <div className="mb-1.5 flex items-center justify-between">
-              <span className="font-semibold">
-                Ajuste sugerido por IA {caso.ajuste.porcentaje > 0 ? "+" : ""}
-                {caso.ajuste.porcentaje}%
-              </span>
-              <span
-                className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold capitalize ${
-                  caso.ajuste.estado === "aceptado"
-                    ? "bg-salvia-suave text-oliva-oscuro"
-                    : caso.ajuste.estado === "rechazado"
-                      ? "bg-urgencia-critica/12 text-urgencia-critica-texto"
-                      : "bg-manteca/60 text-urgencia-media-texto"
-                }`}
-              >
-                {caso.ajuste.estado}
-              </span>
-            </div>
-            <p className="text-muted-foreground">{caso.ajuste.motivo}</p>
-            <p className="mt-1 italic text-muted-foreground/80">{caso.ajuste.evidencia}</p>
-            {caso.ajuste.estado === "sugerido" && caso.estado !== "relevado" && (
-              <div className="mt-3 flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => decidir("aceptado")}
-                  disabled={decidiendo}
-                  className="rounded-full bg-oliva px-4 py-2 text-xs font-semibold text-white hover:bg-oliva-oscuro disabled:opacity-50"
-                >
-                  Aceptar
-                </button>
-                <button
-                  type="button"
-                  onClick={() => decidir("rechazado")}
-                  disabled={decidiendo}
-                  className="rounded-full border border-salvia/60 bg-card px-4 py-2 text-xs font-semibold text-oliva-oscuro hover:bg-salvia-suave disabled:opacity-50"
-                >
-                  Rechazar
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Historia para donantes: la escribe la IA y la aprueba el coordinador. */}
-        {caso.estado !== "relevado" && (
-          <Link
-            href={`/historia/${caso.id}`}
-            className="mb-5 flex h-12 items-center justify-center gap-2 rounded-full bg-manteca px-5 text-sm font-bold tracking-wide text-tinta uppercase shadow-sm transition-colors hover:bg-manteca-oscuro"
-          >
-            <PenLine className="size-4" />
-            Escribir y aprobar historia
-          </Link>
-        )}
-
-        {/* Desglose por bloque de la tabla de Cireneos */}
-        <div className="space-y-5">
-          <div className="flex items-center justify-between">
-            <h3 className="text-base font-bold text-oliva-oscuro">Desglose de la evaluación</h3>
-            <span className="text-xs text-muted-foreground">
-              Total: <span className="font-semibold text-foreground">{r.total}</span> / 135
-            </span>
-          </div>
-
+          {/* Desglose por bloque — tablas como en el documento */}
           {BLOQUES.map((bloque) => {
             const filas = bloque.campos
               .map((c) => porCampo.get(c))
@@ -486,68 +462,59 @@ function Contenido({
             const subtotal = filas.reduce((acc, a) => acc + a.aporte, 0);
             const maxBloque = filas.reduce((acc, a) => acc + a.peso * 3, 0);
             return (
-              <div
-                key={bloque.titulo}
-                className="overflow-hidden rounded-2xl border border-border/80 bg-card shadow-sm"
-              >
-                {/* Encabezado del bloque */}
-                <div className="flex items-center justify-between border-b border-border/70 bg-salvia-suave/70 px-4 py-2.5">
-                  <span className="font-heading text-xs font-bold text-oliva-oscuro">{bloque.titulo}</span>
-                  <span className="text-[11px] font-semibold text-oliva">
+              <section key={bloque.titulo} className="mt-3">
+                <div className="flex items-center justify-between rounded-t-md bg-[#eef0e4] px-2.5 py-1.5 text-xs font-bold text-[#3b3d26]">
+                  <span>{bloque.titulo}</span>
+                  <span>
                     {subtotal} / {maxBloque} pts
                   </span>
                 </div>
-
-                {/* Campos del bloque */}
-                <div className="divide-y divide-border/60">
-                  {filas.map((a) => {
-                    const nivel = nivelDe(a.campo, a.puntos);
-                    return (
-                      <div key={a.campo} className="flex items-center gap-3 px-4 py-3">
-                        {/* Identidad del campo */}
-                        <div className="min-w-0 flex-1">
-                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                            <span className="text-sm font-semibold">{a.etiqueta}</span>
-                            <span
-                              className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${nivel.chip}`}
-                            >
-                              <span className={`h-1.5 w-1.5 rounded-full ${nivel.punto}`} />
-                              {nivel.texto}
-                            </span>
-                          </div>
-                          <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                            {a.textoValor}
-                          </p>
-                        </div>
-
-                        {/* Aporte al puntaje */}
-                        <div className="shrink-0 text-right">
-                          <div className="text-sm font-semibold tabular-nums">{a.aporte}</div>
-                          <div className="text-[10px] text-muted-foreground">
-                            de {a.peso * 3} pts
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+                <table className="w-full border-collapse text-[11px]">
+                  <thead>
+                    <tr className="bg-[#fafafa] text-[10px] tracking-[0.05em] text-[#888] uppercase">
+                      <th className="border-b border-[#ececec] px-2.5 py-1.5 text-left">Campo</th>
+                      <th className="border-b border-[#ececec] px-2.5 py-1.5 text-left">Observación</th>
+                      <th className="border-b border-[#ececec] px-2.5 py-1.5 text-left">Nivel</th>
+                      <th className="border-b border-[#ececec] px-2.5 py-1.5 text-right">Puntaje</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filas.map((a) => (
+                      <tr key={a.campo}>
+                        <td className="border-b border-[#ececec] px-2.5 py-1.5">{a.etiqueta}</td>
+                        <td className="border-b border-[#ececec] px-2.5 py-1.5">
+                          {a.textoValor || "—"}
+                        </td>
+                        <td className="border-b border-[#ececec] px-2.5 py-1.5">
+                          {nivelDe(a.campo, a.puntos).texto}
+                        </td>
+                        <td className="border-b border-[#ececec] px-2.5 py-1.5 text-right whitespace-nowrap">
+                          {a.aporte} / {a.peso * 3}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </section>
             );
           })}
-        </div>
 
-        {/* Leyenda de niveles */}
-        <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
-          <span className="font-medium">Nivel de carencia:</span>
-          <span className="inline-flex items-center gap-1"><span className="size-2 rounded-full bg-urgencia-baja" /> Sin carencia</span>
-          <span className="inline-flex items-center gap-1"><span className="size-2 rounded-full bg-urgencia-media" /> Medio</span>
-          <span className="inline-flex items-center gap-1"><span className="size-2 rounded-full bg-urgencia-alta" /> Alto</span>
-          <span className="inline-flex items-center gap-1"><span className="size-2 rounded-full bg-urgencia-critica" /> Crítico</span>
-        </div>
+          {/* Historia (interactivo, fuera del PDF) */}
+          {caso.estado !== "relevado" && (
+            <Link
+              href={`/historia/${caso.id}`}
+              className="mt-5 flex h-11 items-center justify-center gap-2 rounded-full bg-manteca px-5 text-sm font-bold tracking-wide text-tinta uppercase shadow-sm transition-colors hover:bg-manteca-oscuro print:hidden"
+            >
+              <PenLine className="size-4" />
+              Escribir y aprobar historia
+            </Link>
+          )}
 
-        <p className="mt-3 text-center text-[10px] text-muted-foreground">
-          El puntaje de urgencia se calcula con la tabla de criterios de Cireneos.
-        </p>
+          <footer className="mt-4 border-t border-[#e4e0d2] pt-2 text-center text-[10px] text-[#999]">
+            Datos de uso interno de Cireneos. El puntaje de urgencia se calcula con la tabla de
+            criterios de Cireneos.
+          </footer>
+        </article>
       </div>
     </>
   );

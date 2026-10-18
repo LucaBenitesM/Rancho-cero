@@ -38,6 +38,10 @@ interface SeedCaso {
   alias: string;
   barrio: string;
   diasAtras: number;
+  // Datos de contacto de muestra (uso interno; no afectan el puntaje).
+  representante?: string;
+  telefono?: string;
+  direccion?: string;
   transcripcion?: string; // guion del audio (demo/GUIA-DEMO.md)
   campos: Record<string, string>;
   evidencias?: Record<string, string>; // si falta, se usa EVIDENCIA
@@ -54,6 +58,9 @@ const SEED: SeedCaso[] = [
     // Muy urgente. Fotos y guion del audio: demo/familia-a-muy-urgente/ (ver demo/GUIA-DEMO.md)
     alias: "Familia A",
     barrio: "Barrio Esperanza",
+    representante: "María Fernández",
+    telefono: "099 123 456",
+    direccion: "Calle Los Ceibos 1234, Barrio Esperanza",
     diasAtras: 125,
     transcripcion:
       "Bueno, estamos acá en la casa... es todo de chapa y madera, el techo no tiene nada abajo, " +
@@ -114,6 +121,9 @@ const SEED: SeedCaso[] = [
   {
     alias: "Familia B",
     barrio: "Las Piedras",
+    representante: "Juan Rodríguez",
+    telefono: "098 234 567",
+    direccion: "Av. Artigas 567, Las Piedras",
     diasAtras: 120,
     campos: {
       pared: "precaria",
@@ -145,6 +155,9 @@ const SEED: SeedCaso[] = [
   {
     alias: "Familia C",
     barrio: "Nuevo Amanecer",
+    representante: "Lucía Pereyra",
+    telefono: "091 345 678",
+    direccion: "Camino Maldonado 890, Nuevo Amanecer",
     diasAtras: 75,
     campos: {
       pared: "precaria",
@@ -171,6 +184,9 @@ const SEED: SeedCaso[] = [
     // Intermedia (lleva tiempo esperando). Fotos y guion del audio: demo/familia-d-intermedia-espera/ (ver demo/GUIA-DEMO.md)
     alias: "Familia D",
     barrio: "Barrio Esperanza",
+    representante: "Carlos Methol",
+    telefono: "092 456 789",
+    direccion: "Calle Las Acacias 45, Barrio Esperanza",
     diasAtras: 215,
     transcripcion:
       "Es una casa de bloque, sin revocar. El techo es chapa sola, sin aislación. El piso es " +
@@ -232,6 +248,9 @@ const SEED: SeedCaso[] = [
     // Intermedia (desalojo inmediato). Fotos y guion del audio: demo/familia-e-intermedia-desalojo/ (ver demo/GUIA-DEMO.md)
     alias: "Familia E",
     barrio: "Km 14",
+    representante: "Sandra Gómez",
+    telefono: "094 567 890",
+    direccion: "Ruta 8 Km 14, asentamiento El Monte",
     diasAtras: 35,
     transcripcion:
       "La casa es de madera, tiene un cielorraso de espuma que pusieron ellos. El piso es " +
@@ -292,6 +311,9 @@ const SEED: SeedCaso[] = [
   {
     alias: "Familia F",
     barrio: "Las Piedras",
+    representante: "Diego Larrosa",
+    telefono: "095 678 901",
+    direccion: "Calle Treinta y Tres 210, Las Piedras",
     diasAtras: 30,
     campos: {
       pared: "material_sin_revoque",
@@ -317,6 +339,9 @@ const SEED: SeedCaso[] = [
   {
     alias: "Familia G",
     barrio: "Nuevo Amanecer",
+    representante: "Valeria Núñez",
+    telefono: "096 789 012",
+    direccion: "Pasaje Los Fresnos 12, Nuevo Amanecer",
     diasAtras: 20,
     campos: {
       pared: "precaria",
@@ -343,6 +368,9 @@ const SEED: SeedCaso[] = [
     // Poco urgente. Fotos y guion del audio: demo/familia-h-poco-urgente/ (ver demo/GUIA-DEMO.md)
     alias: "Familia H",
     barrio: "Km 14",
+    representante: "Roberto Silva",
+    telefono: "097 890 123",
+    direccion: "Ruta 8 Km 14, calle interna s/n",
     diasAtras: 65,
     transcripcion:
       "Esta casa está bastante bien, eh. Es de material, revocada, con techo de losa. El piso es " +
@@ -443,6 +471,9 @@ async function sembrar(ctx: MutationCtx) {
       consentimiento: true,
       alias: s.alias,
       barrio: s.barrio,
+      nombreRepresentante: s.representante,
+      telefono: s.telefono,
+      direccion: s.direccion,
       fotos: [],
       audioTranscripcion: s.transcripcion,
       ...campos,
@@ -568,6 +599,9 @@ export const obtener = query({
       relevadoEn: doc.relevadoEn,
       resultado: r,
       ajuste,
+      // Para el informe descargable: evidencia por campo y transcripción.
+      evidencias: extraerEvidencias(doc),
+      transcripcion: doc.audioTranscripcion ?? "",
     };
   },
 });
@@ -598,6 +632,17 @@ export function extraerCampos(doc: Doc<"casos">): Record<string, string> {
   for (const c of CAMPOS_URGENCIA) {
     const campoDoc = (doc as unknown as Record<string, { valor: string }>)[c];
     out[c] = campoDoc?.valor ?? "";
+  }
+  return out;
+}
+
+// Evidencia de cada campo (de dónde salió el dato: cita del audio o la foto).
+// Se usa para fundamentar cada punto en el informe descargable.
+export function extraerEvidencias(doc: Doc<"casos">): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const c of CAMPOS_URGENCIA) {
+    const campoDoc = (doc as unknown as Record<string, { evidencia?: string }>)[c];
+    out[c] = campoDoc?.evidencia ?? "";
   }
   return out;
 }
